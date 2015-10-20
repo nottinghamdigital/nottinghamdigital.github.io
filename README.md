@@ -1,10 +1,10 @@
 # [Nottingham Digital](http://nottingham.digital/)
 
-A place to find digital events and organisations in Nottingham
+A place to find digital events and organisations in Nottingham.
 
 ## Contributing
 
-To contribute changes to the pages here, just creat a pull request.
+To contribute changes to the pages here, just create and submit a pull request.
 
 ## Creator
 
