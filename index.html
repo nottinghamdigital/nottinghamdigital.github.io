@@ -4,8 +4,9 @@
 
 	<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
 	<title>Nottingham Digital: what’s on</title>
-	<link href="css/reset.css" media="screen" rel="stylesheet" type="text/css" />
-	<link href="css/core.css" media="screen" rel="stylesheet" type="text/css" />
+	<link href="/css/reset.css" media="screen" rel="stylesheet" type="text/css" />
+	<link href="/css/core.css" media="screen" rel="stylesheet" type="text/css" />
+	<link href="/font-awesome/css/font-awesome.min.css" media="screen" rel="stylesheet" type="text/css" />
 
 </head>
 <body>
@@ -127,7 +128,7 @@
                     }
             ).done(function(data) {
                if(data.group) {
-                   $(node).parent().parent().append('<span>Next event: ' + data.date_time + '</span>');
+                   $(node).parent().parent().append('<span><i class="fa fa-calendar"></i> <a href="' + data.event_url + '">' + data.date_time + '</a> </span>');
                }
             });
         });
