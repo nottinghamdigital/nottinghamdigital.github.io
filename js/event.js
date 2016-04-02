@@ -2,13 +2,17 @@
  * Usage
  *
  * var eventApi = new ndEvent("http://notts-digital.pavlakis.info/index.php");
+ * eventApi.load(groupsArray);
  * eventApi.getByGroup("PHPMinds");
+ *
+ * Note: Dealing with async events. Wrap around $(document).ajaxStop(function(){}); or use Promises
  */
 
 
 var ndEvent = function (apiUrl){
     this.apiUrl = apiUrl;
     this.events = [];
+
     if (!window.localStorage) {
         this.cache = false;
     } else {
@@ -29,6 +33,7 @@ ndEvent.prototype.getByGroup = function(groupName){
 
 ndEvent.prototype.fetchGroup = function(groupName){
     var thisScope = this;
+
     $.ajax(
         {
             method: "GET",
@@ -36,7 +41,7 @@ ndEvent.prototype.fetchGroup = function(groupName){
             data: {group: groupName}
         }
     ).done(function(data) {
-        if(data.group) {
+        if(data) {
             thisScope.addEvent(groupName, data);
         }
     });
@@ -99,4 +104,13 @@ ndEvent.prototype.refreshCache = function() {
   } else {
       this.cache.setItem('expiry', new Date(new Date().getTime() + 24 * 60 * 60 * 1000));
   }
+};
+
+ndEvent.prototype.load = function (groupsArray) {
+
+    var thisScope = this;
+
+    groupsArray.forEach(function(groupName){
+        thisScope.getByGroup(groupName);
+    });
 };

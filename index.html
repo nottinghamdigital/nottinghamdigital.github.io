@@ -108,6 +108,7 @@
 	</footer>
 
     <script src="/js/jquery.js"></script>
+    <script src="/js/event.js"></script>
 <script>
   (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
   (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -121,23 +122,35 @@
 
 <script>
     $(document).ready(function(){
-        var groupName = '';
-        $('.vcard a').each(function(index, node){
-            groupName = $(this).html();
-            $.ajax(
-                    {
-                        method: "GET",
-                        url: "http://notts-digital.pavlakis.info/index.php",
-                        data: {group: groupName}
-                    }
-            ).done(function(data) {
-               if(data.group) {
-                   $(node).parent().parent().append('<span><i class="fa fa-calendar"></i> <a href="' + data.event_url + '">' + data.date_time + '</a> </span>');
-               }
-            });
+        var eventApi = new ndEvent("http://notts-digital.pavlakis.info/index.php"),
+            groupNodes = $('.vcard a'),
+            groups = groupNodes.map(function(){
+                return $.trim($(this).text());
+            }).get();
+
+        eventApi.load(groups);
+
+        // It waits until all ajax calls on the page have finished
+        $.ajax(); // dummy workaround for ajaxStop to always fire
+        $(document).ajaxStop(function(){
+
+            renderEvents(groupNodes, eventApi);
         });
 
     });
+
+    function renderEvents(groupNodes, eventApi) {
+        groupNodes.each(function(index, node){
+            var groupName = $.trim($(this).html());
+
+            if(eventApi.getByGroup(groupName) && eventApi.getByGroup(groupName).group) {
+
+                var data = eventApi.getByGroup(groupName);
+                $(node).parent().parent().append('<span><i class="fa fa-calendar"></i> <a href="' + data.event_url + '">' + data.date_time + '</a> </span>');
+            }
+
+        });
+    }
 </script>
 
 </body>
