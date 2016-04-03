@@ -1,3 +1,7 @@
+
+
+
+
 /**
  * Usage
  *
@@ -135,3 +139,29 @@ ndEvent.prototype.load = function (groupsArray) {
         thisScope.getByGroup(groupName);
     });
 };
+
+
+/**
+    Initialisation code 
+**/
+
+
+(function($){
+
+    var arguments = {
+          "api":"http://notts-digital.pavlakis.info/index.php",
+          
+      }
+        var eventApi = new ndEvent(arguments),
+            groupNodes = $('.vcard a'),
+            groups = groupNodes.map(function(){
+                return $.trim($(this).text());
+            }).get();
+
+        eventApi.load(groups);
+
+
+        eventApi.renderEvents(groupNodes);
+       
+
+   })(jQuery);
