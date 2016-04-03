@@ -9,10 +9,10 @@
  */
 
 
-var ndEvent = function (apiUrl){
-    this.apiUrl = apiUrl;
+var ndEvent = function (args){
+    this.apiUrl = args.api;
     this.events = [];
-
+   
     if (!window.localStorage) {
         this.cache = false;
     } else {
@@ -20,6 +20,27 @@ var ndEvent = function (apiUrl){
         this.refreshCache();
     }
 };
+
+ndEvent.prototype.renderEvents = function(groupNodes) {
+
+        var self = this 
+        $.ajax(); // dummy workaround for ajaxStop to always fire
+        $(document).ajaxStop(function(){
+        groupNodes.each(function(index, node){
+            
+            var groupName = $.trim($(node).html());
+
+            if(self.getByGroup(groupName) && self.getByGroup(groupName).group) {
+
+                var data = self.getByGroup(groupName);
+                $(node).parent().parent().append('<span><i class="fa fa-calendar"></i> <a href="' + data.event_url + '">' + data.date_time + '</a> </span>');
+            }
+
+        });
+    });
+    
+};
+
 
 ndEvent.prototype.getByGroup = function(groupName){
 
