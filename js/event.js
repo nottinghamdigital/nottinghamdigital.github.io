@@ -13,7 +13,7 @@
  */
 
 
-var ndEvent = function (args){
+var NDEvent = function (args){
     this.apiUrl = args.api;
     this.events = [];
    
@@ -25,11 +25,10 @@ var ndEvent = function (args){
     }
 };
 
-ndEvent.prototype.renderEvents = function(groupNodes) {
+NDEvent.prototype.renderEvents = function(groupNodes) {
 
-        var self = this 
-        $.ajax(); // dummy workaround for ajaxStop to always fire
-        $(document).ajaxStop(function(){
+        var self = this;
+
         groupNodes.each(function(index, node){
             
             var groupName = $.trim($(node).html());
@@ -41,12 +40,12 @@ ndEvent.prototype.renderEvents = function(groupNodes) {
             }
 
         });
-    });
+
     
 };
 
 
-ndEvent.prototype.getByGroup = function(groupName){
+NDEvent.prototype.getByGroup = function(groupName){
 
     if (!this.isCached(groupName)) {
         this.fetchGroup(groupName);
@@ -56,8 +55,8 @@ ndEvent.prototype.getByGroup = function(groupName){
 
 };
 
-ndEvent.prototype.fetchGroup = function(groupName){
-    var thisScope = this;
+NDEvent.prototype.fetchGroup = function(groupName){
+    var self = this;
 
     $.ajax(
         {
@@ -67,12 +66,12 @@ ndEvent.prototype.fetchGroup = function(groupName){
         }
     ).done(function(data) {
         if(data) {
-            thisScope.addEvent(groupName, data);
+            self.addEvent(groupName, data);
         }
     });
 };
 
-ndEvent.prototype.addEvent = function(groupName, data) {
+NDEvent.prototype.addEvent = function(groupName, data) {
     if (this.cache) {
         if (!this.isCached(groupName)) {
             this.cache.setItem(groupName, JSON.stringify(data));
@@ -82,7 +81,7 @@ ndEvent.prototype.addEvent = function(groupName, data) {
     }
 };
 
-ndEvent.prototype.getEvent = function(groupName) {
+NDEvent.prototype.getEvent = function(groupName) {
     if (!this.cache) {
         if (groupName in this.events) {
             return this.events[groupName];
@@ -92,7 +91,7 @@ ndEvent.prototype.getEvent = function(groupName) {
     return this.getFromCache(groupName);
 };
 
-ndEvent.prototype.isCached = function(groupName) {
+NDEvent.prototype.isCached = function(groupName) {
 
     if (!this.cache) {
         if (groupName in this.events) {
@@ -108,14 +107,14 @@ ndEvent.prototype.isCached = function(groupName) {
     return true;
 };
 
-ndEvent.prototype.getFromCache = function(groupName) {
+NDEvent.prototype.getFromCache = function(groupName) {
     if (this.isCached(groupName)) {
         return JSON.parse(this.cache.getItem(groupName));
     }
 }
 
 // tomorrow's calculation taken from SO link: http://stackoverflow.com/questions/9444745/javascript-how-to-get-tomorrows-date-in-format-dd-mm-yy
-ndEvent.prototype.refreshCache = function() {
+NDEvent.prototype.refreshCache = function() {
   if (!this.cache) {
       return false;
   }
@@ -131,12 +130,12 @@ ndEvent.prototype.refreshCache = function() {
   }
 };
 
-ndEvent.prototype.load = function (groupsArray) {
+NDEvent.prototype.load = function (groupsArray) {
 
-    var thisScope = this;
+    var self = this;
 
     groupsArray.forEach(function(groupName){
-        thisScope.getByGroup(groupName);
+        self.getByGroup(groupName);
     });
 };
 
@@ -149,19 +148,22 @@ ndEvent.prototype.load = function (groupsArray) {
 (function($){
 
     var arguments = {
-          "api":"http://notts-digital.pavlakis.info/index.php",
-          
-      }
-        var eventApi = new ndEvent(arguments),
-            groupNodes = $('.vcard a'),
-            groups = groupNodes.map(function(){
-                return $.trim($(this).text());
-            }).get();
+          "api":"http://notts-digital.pavlakis.info/index.php"
+      };
 
-        eventApi.load(groups);
+    var eventApi = new NDEvent(arguments),
+        groupNodes = $('.vcard a'),
+        groups = groupNodes.map(function(){
+            return $.trim($(this).text());
+        }).get();
 
+    eventApi.load(groups);
+
+    $.ajax(); // dummy workaround for ajaxStop to always fire
+    $(document).ajaxStop(function(){
 
         eventApi.renderEvents(groupNodes);
-       
-
-   })(jQuery);
+    });
+        
+   }
+)(jQuery);
