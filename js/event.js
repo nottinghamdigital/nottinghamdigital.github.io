@@ -121,7 +121,7 @@ NDEvent.prototype.refreshCache = function() {
 
   if (this.cache.getItem('expiry')) {
       // reset if more than 24 hours
-      if (new Date() > this.cache.getItem('expiry')) {
+      if (new Date() > Date.parse(this.cache.getItem('expiry'))) {
           this.cache.clear();
           this.cache.setItem('expiry', new Date(new Date().getTime() + 24 * 60 * 60 * 1000));
       }
