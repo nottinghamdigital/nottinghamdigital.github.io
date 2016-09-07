@@ -149,7 +149,7 @@ ndEvent.prototype.load = function (groupsArray) {
 (function($){
 
     var arguments = {
-          "api":"http://notts-digital.pavlakis.info/index.php",
+          "api":"https://notts-digital.pavlakis.info/index.php",
           
       }
         var eventApi = new ndEvent(arguments),
