@@ -1,180 +1,180 @@
 @charset 'utf-8';
 
 html {
-	background: #eee;
+    background: #eee;
 }
 body {
-	background: #fff;
-	border: 1px solid #ddd;
-	color: #222;
-	font: 100%/1.5em "Helvetica Neue",Arial,Helvetica,sans-serif;
-	margin: 0 auto;
-	padding: 0 16px;
-	width: 752px;
+    background: #fff;
+    border: 1px solid #ddd;
+    color: #222;
+    font: 100%/1.5em "Helvetica Neue",Arial,Helvetica,sans-serif;
+    margin: 0 auto;
+    padding: 0 16px;
+    width: 752px;
 }
 
 a,
 a:link,
 a:visited {
-	color: #339;
+    color: #339;
 }
 a:active,
 a:hover {
-	color: #00f;
+    color: #00f;
 }
 
 h1 {
-	color: #000;
-	font-size: 2em;
-	line-height: 1.5em;
+    color: #000;
+    font-size: 2em;
+    line-height: 1.5em;
 }
 h2 {
-	font-size: 1.5em;
-	line-height: 1em;
+    font-size: 1.5em;
+    line-height: 1em;
 }
 h3 {
-	font-size: 1.25em;
-	line-height: 1.2em;
+    font-size: 1.25em;
+    line-height: 1.2em;
 }
 
 article,
 footer,
 header,
 nav {
-	display: block;
+    display: block;
 }
 
 body > header {
-	padding: 3em 0;
+    padding: 3em 0;
 }
 body > article > section {
-	clear: both;
-	float: left;
-	width: 100%;
+    clear: both;
+    float: left;
+    width: 100%;
 }
 body > article > section > header {
-	clear: both;
-	text-align: right;
-	transform-origin: 23.5em 25em;
-	transform: rotate(-90deg);
-	-ms-transform-origin: 23.5em 25em;
-	-ms-transform: rotate(-90deg);
-	-moz-transform-origin: 23.5em 25em;
-	-moz-transform: rotate(-90deg);
-	-o-transform-origin: 23.5em 25em;
-	-o-transform: rotate(-90deg);
-	-webkit-transform-origin: 23.5em 25em;
-	-webkit-transform: rotate(-90deg);
+    clear: both;
+    text-align: right;
+    transform-origin: 23.5em 25em;
+    transform: rotate(-90deg);
+    -ms-transform-origin: 23.5em 25em;
+    -ms-transform: rotate(-90deg);
+    -moz-transform-origin: 23.5em 25em;
+    -moz-transform: rotate(-90deg);
+    -o-transform-origin: 23.5em 25em;
+    -o-transform: rotate(-90deg);
+    -webkit-transform-origin: 23.5em 25em;
+    -webkit-transform: rotate(-90deg);
 }
 body > article > section > header h2 {
-	background: #fff;
-	border: 0 solid #ddd;
-	border-width: 1px 1px 0;
-	float: right;
-	margin: -1.5em 0 17px;
-	padding: 0.5em 0.5em 7px;
+    background: #fff;
+    border: 0 solid #ddd;
+    border-width: 1px 1px 0;
+    float: right;
+    margin: -1.5em 0 17px;
+    padding: 0.5em 0.5em 7px;
 }
 body > footer {
-	background: #eee;
-	border-top: 1px solid #ddd;
-	clear: both;
-	color: #ccc;
-	margin: 0 -17px -1px;
-	padding: 1.5em 17px 3em;
+    background: #eee;
+    border-top: 1px solid #ddd;
+    clear: both;
+    color: #ccc;
+    margin: 0 -17px -1px;
+    padding: 1.5em 17px 3em;
 }
 body > footer a {
-	color: #ccc;
+    color: #ccc;
 }
 
 .add_event {
-	float: right;
-	margin-top: -3em;
+    float: right;
+    margin-top: -3em;
 }
 .add_event a {
-	background: #ff9;
-	display: block;
-	padding: 0.75em;
+    background: #ff9;
+    display: block;
+    padding: 0.75em;
 }
 
 .events {
-	float: left;
-	padding: 0;
-	width: 100%;
+    float: left;
+    padding: 0;
+    width: 100%;
 }
 .events li {
-	border: 0.5em solid #eee;
-	float: left;
-	height: 8.5em;
-	margin: 0 0 1em 16px;
-	padding: 0.5em;
-	width: 208px;
+    border: 0.5em solid #eee;
+    float: left;
+    height: 8.5em;
+    margin: 0 0 1em 16px;
+    padding: 0.5em;
+    width: 208px;
 }
 .events li:nth-child(3n-2) {
-	clear: left;
-	margin-left: 0;
+    clear: left;
+    margin-left: 0;
 }
 
 .events .refreshedinburgh {
-	border-color: #a2b935;
+    border-color: #a2b935;
 }
 .events .bcs {
-	border-color: #063;
+    border-color: #063;
 }
 .events .techmeetup {
-	border-color: #685c4e;
+    border-color: #685c4e;
 }
 .events .scotrug {
-	border-color: #c61a1a;
+    border-color: #c61a1a;
 }
 .events .macmacdev {
-	border-color: #666c78;
+    border-color: #666c78;
 }
 .events .edmug {
-	border-color: #333333;
+    border-color: #333333;
 }
 .events .edlug {
-	border-color: #0000ff;
+    border-color: #0000ff;
 }
 .events .edinburghpm {
-	border-color: #336699;
+    border-color: #336699;
 }
 .events .supa {
-	border-color: #ff9805;
+    border-color: #ff9805;
 }
 .events .mathsjam {
-	border-color: #b95647;
+    border-color: #b95647;
 }
 .events .jugscotland {
-	border-color: #003366;
+    border-color: #003366;
 }
 .events .edpug {
-	border-color: #008cd9;
+    border-color: #008cd9;
 }
 .events .hacklab {
-	border-color: #545d64;
+    border-color: #545d64;
 }
 .events .edcm {
-	border-color: #990000;
+    border-color: #990000;
 }
 .events .edinburghpug {
-	border-color: #ffc532;
+    border-color: #ffc532;
 }
 .events .edlambda {
-	border-color: #c6dcdc;
+    border-color: #c6dcdc;
 }
 .events .ewdd {
-	border-color: #a93742;
+    border-color: #a93742;
 }
 .events .pyladies {
-	border-color: #e61543;
+    border-color: #e61543;
 }
 .events .edinburghjs {
-	border-color: #0f67ba;
+    border-color: #0f67ba;
 }
 .events .tba {
-	color: #ccc;
+    color: #ccc;
 }
 
 .hidden {
-	display: none;
+    display: none;
 }
