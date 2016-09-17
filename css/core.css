@@ -18,6 +18,7 @@ html {
 }
 
 body {
+    background: #eee;
 }
 
 a,
@@ -33,23 +34,35 @@ a:active {
 
 h1,
 h2,
+h3,
+p,
+ol,
+ul {
+    margin: 0 0 10px;
+}
+
+h1,
+h2,
 h3 {
     color: #000;
 }
 
 h1 {
-    font-size: 2em;
-    line-height: 1.5em;
+    padding-top: 20px;
+    font-size: 24px;
+    font-size: 1.5rem;
 }
 
 h2 {
-    font-size: 1.5em;
-    line-height: 1em;
+    padding-top: 20px;
+    font-size: 20px;
+    font-size: 1.25rem;
 }
 
 h3 {
-    font-size: 1.25em;
-    line-height: 1.2em;
+    padding-top: 10px;
+    font-size: 16px;
+    font-size: 1rem;
 }
 
 article,
@@ -66,16 +79,15 @@ GENERAL
 
 .container {
     margin: 0 auto;
-    max-width: 800px;
+    padding: 20px;
+    max-width: 500px;
+    background: #fff;
 }
 
 .header {
 }
 
 section {
-    clear: both;
-    float: left;
-    width: 100%;
 }
 
 .footer {
@@ -92,13 +104,46 @@ EVENTS
 
 .directory {}
 
+.note {
+    padding: 10px;
+    background: #ffc;
+    font-size: 12px;
+    font-size: 0.75rem;
+}
+
 .events {
+    margin: 20px 0;
+    border-top: 1px solid #eee;
     padding: 0;
     width: 100%;
+    list-style: none;
 }
 
 .event {
-    margin: 0 0 1em;
+    border-bottom: 1px solid #eee;
+    padding: 20px 0;
+}
+
+.event > :last-child {
+    margin-bottom: 0;
+}
+
+.event__title {
+    margin-bottom: 0;
+    padding-top: 0;
+}
+
+.event__title a {
+    text-decoration: none;
+}
+
+.event__summary {
+}
+
+.event__date {
+    color: #999;
+    font-size: 12px;
+    font-size: 0.75rem;
 }
 
 
