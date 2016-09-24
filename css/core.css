@@ -112,6 +112,7 @@ HEADER
 .site-strap {}
 
 .filters {
+    margin: 20px 0;
     padding: 0;
     list-style: none;
 }

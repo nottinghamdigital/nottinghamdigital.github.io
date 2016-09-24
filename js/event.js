@@ -170,7 +170,7 @@ NDEvent.prototype.load = function (groupsArray) {
     });
 
     var $filterList = $('<ul class="filters"></ul>');
-    $('.site-strap').after($filterList);
+    $('.header').append($filterList);
     $filterList.append('<li class="filter filter--all filter--active" data-filter="all"><span>All</span></li>');
     $filterList.append('<li class="filter filter--tech" data-filter="tech"><span>Tech</span></li>');
     $filterList.append('<li class="filter filter--design" data-filter="design"><span>Design</span></li>');
