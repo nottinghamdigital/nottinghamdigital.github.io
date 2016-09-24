@@ -16,7 +16,7 @@
 var NDEvent = function (args){
     this.apiUrl = args.api;
     this.events = [];
-   
+
     if (!window.localStorage) {
         this.cache = false;
     } else {
@@ -30,18 +30,22 @@ NDEvent.prototype.renderEvents = function(groupNodes) {
         var self = this;
 
         groupNodes.each(function(index, node){
-            
+
             var groupName = $.trim($(node).html());
 
             if(self.getByGroup(groupName) && self.getByGroup(groupName).group) {
 
                 var data = self.getByGroup(groupName);
-                $(node).parent().parent().append('<span><i class="fa fa-calendar"></i> <a href="' + data.event_url + '">' + data.date_time + '</a> </span>');
+                var date = data.date_time;
+                date = date.replace('at ', '');
+                // Wednesday 5th October 2016 7:00pm
+                var niceDate = moment(date, 'dddd Do MMMM YYYY h:mma').format('Do MMMM');
+                $(node).parent().parent().find('.event__date').append(' — Next: <a class="event__next" href="' + data.event_url + '" title="' + data.date_time + '">' + niceDate + '</a>');
             }
 
         });
 
-    
+
 };
 
 
@@ -141,7 +145,7 @@ NDEvent.prototype.load = function (groupsArray) {
 
 
 /**
-    Initialisation code 
+    Initialisation code
 **/
 
 
@@ -166,6 +170,6 @@ NDEvent.prototype.load = function (groupsArray) {
 
         eventApi.renderEvents(groupNodes);
     });
-        
+
    }
 )(jQuery);

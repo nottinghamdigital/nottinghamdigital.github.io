@@ -21,10 +21,9 @@ body {
     background: #eee;
 }
 
-a,
-a:link,
-a:visited {
+a {
     color: #00c;
+    transition: color 0.3s ease;
 }
 
 a:hover,
@@ -131,6 +130,8 @@ EVENTS
 .event__title {
     margin-bottom: 0;
     padding-top: 0;
+    font-size: 18px;
+    font-size: 1.125rem;
 }
 
 .event__title a {
@@ -138,12 +139,25 @@ EVENTS
 }
 
 .event__summary {
+    margin-bottom: 5px;
 }
 
 .event__date {
     color: #999;
     font-size: 12px;
     font-size: 0.75rem;
+}
+
+.event__date .icon {
+    display: inline-block;
+    vertical-align: middle;
+    position: relative;
+    top: -1px;
+    width: 1em;
+}
+
+.event__next {
+    color: #999;
 }
 
 
