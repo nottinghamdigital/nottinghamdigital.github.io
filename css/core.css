@@ -111,8 +111,75 @@ HEADER
 
 .site-strap {}
 
+.filters {
+    padding: 0;
+    list-style: none;
+}
 
+.filter {
+    display: inline-block;
+    cursor: pointer;
+    font-size: 12px;
+    font-size: 0.75em;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
 
+.filter + .filter {
+    margin-left: 10px;
+}
+
+.filter span {
+    display: inline-block;
+    border: 2px solid #000;
+    padding: 4px 8px 2px;
+    /*background: #ccc;*/
+    font-weight: bold;
+    /*color: #fff;*/
+    line-height: ;
+    border-radius: 20px;
+    -webkit-font-smoothing: antialiased;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.filter--all span {
+    border-color: #000;
+}
+
+.filter--all.filter--active span {
+    background: #000;
+    color: #fff;
+}
+
+.filter--tech span {
+    border-color: #F44E36;
+}
+
+.filter--tech.filter--active span {
+    background: #F44E36;
+    color: #fff;
+}
+
+.filter--design span {
+    border-color: #3EC4AC;
+}
+
+.filter--design.filter--active span {
+    background: #3EC4AC;
+    color: #fff;
+}
+
+.filter--ops span {
+    border-color: #F4BA4F;
+}
+
+.filter--ops.filter--active span {
+    background: #F4BA4F;
+    color: #fff;
+}
 
 /*========================================
 EVENTS

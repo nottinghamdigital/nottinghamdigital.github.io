@@ -152,9 +152,8 @@ NDEvent.prototype.load = function (groupsArray) {
 (function($){
 
     var arguments = {
-
-          "api":"https://notts-digital.pavlakis.info/index.php"
-      };
+        "api":"https://notts-digital.pavlakis.info/index.php"
+    };
 
 
     var eventApi = new NDEvent(arguments),
@@ -167,9 +166,24 @@ NDEvent.prototype.load = function (groupsArray) {
 
     $.ajax(); // dummy workaround for ajaxStop to always fire
     $(document).ajaxStop(function(){
-
         eventApi.renderEvents(groupNodes);
     });
 
-   }
-)(jQuery);
+    var $filterList = $('<ul class="filters"></ul>');
+    $('.site-strap').after($filterList);
+    $filterList.append('<li class="filter filter--all filter--active" data-filter="all"><span>All</span></li>');
+    $filterList.append('<li class="filter filter--tech" data-filter="tech"><span>Tech</span></li>');
+    $filterList.append('<li class="filter filter--design" data-filter="design"><span>Design</span></li>');
+    $filterList.append('<li class="filter filter--ops" data-filter="ops"><span>Ops</span></li>');
+    $('[data-filter]').on('click', function(e){
+        e.preventDefault();
+        var filterSelected = $(this).data('filter');
+        $('.filter').removeClass('filter--active').filter('[data-filter="'+filterSelected+'"]').addClass('filter--active');
+        if (filterSelected == 'all') {
+            $('.event').show();
+        } else {
+            $('.event').hide().filter('[data-theme="'+filterSelected+'"]').show();
+        }
+    });
+
+})(jQuery);
