@@ -22,7 +22,7 @@ body {
 }
 
 a {
-    color: #00c;
+    color: #2B427E;
     transition: color 0.3s ease;
 }
 
@@ -44,6 +44,7 @@ h1,
 h2,
 h3 {
     color: #000;
+    line-height: 1;
 }
 
 h1 {
@@ -113,34 +114,97 @@ EVENTS
 
 .events {
     margin: 20px 0;
-    border-top: 1px solid #eee;
+    /*border-top: 1px solid #eee;*/
     padding: 0;
     width: 100%;
     list-style: none;
 }
 
+.events > :last-child {
+    margin-bottom: 0;
+}
+
 .event {
-    border-bottom: 1px solid #eee;
-    padding: 20px 0;
+    position: relative;
+    margin-bottom: 10px;
+    border: 1px solid #eee;
+    /*padding: 20px 20px 20px 60px;*/
+    /*padding: 20px 20px 20px 50px;*/
+    padding: 40px 20px 20px 20px;
 }
 
 .event > :last-child {
     margin-bottom: 0;
 }
 
+.event__theme {
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    right: -1px;
+    padding: 5px;
+    /*padding: 10px;*/
+    /*width: 40px;*/
+}
+
+@media screen and (min-width: 600px) {
+    .event {
+        padding: 20px 20px 20px 50px;
+    }
+
+    .event__theme {
+        top: -1px;
+        bottom: -1px;
+        left: -1px;
+        right: auto;
+    }
+}
+
+.event__theme--tech {
+     /*background: #E3588B;*/
+     /*background: #F1ACC5;*/
+    /*background: #EC7342;*/
+    /*background: #4AC7C1;*/
+    background: #F44E36;
+}
+
+.event__theme--design {
+     /*background: #72BFC0;*/
+     /*background: #FBE7B4;*/
+    /*background: #5DCAB0;*/
+    /*background: #5D3C95;*/
+    background: #3EC4AC;
+}
+
+.event__theme--ops {
+     /*background: #F7CE68;*/
+     /*background: #B9DFE0;*/
+    /*background: #BF327D;*/
+    /*background: #F7C01D;*/
+    background: #F4BA4F;
+}
+
+.event__theme .icon {
+    display: block;
+    vertical-align: top;
+    width: 20px;
+}
+
 .event__title {
-    margin-bottom: 0;
-    padding-top: 0;
+    margin-bottom: 10px;
+    padding-top: 10px;
     font-size: 18px;
     font-size: 1.125rem;
+    line-height: 1;
 }
 
 .event__title a {
+    color: #000;
     text-decoration: none;
 }
 
 .event__summary {
-    margin-bottom: 5px;
+    margin-bottom: 10px;
 }
 
 .event__date {
