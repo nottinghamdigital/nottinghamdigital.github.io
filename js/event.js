@@ -157,10 +157,12 @@ NDEvent.prototype.load = function (groupsArray) {
 
 
     var eventApi = new NDEvent(arguments),
-        groupNodes = $('.vcard a'),
+        groupNodes = $('.vcard .url'),
         groups = groupNodes.map(function(){
             return $.trim($(this).text());
         }).get();
+
+    console.log(groups);
 
     eventApi.load(groups);
 
