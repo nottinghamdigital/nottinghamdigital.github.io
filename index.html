@@ -1,136 +1,147 @@
 <!DOCTYPE html>
 <html>
 <head>
-
-	<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
-	<title>Nottingham Digital: what’s on</title>
-	<link href="css/reset.css" media="screen" rel="stylesheet" type="text/css" />
-	<link href="css/core.css" media="screen" rel="stylesheet" type="text/css" />
-	<link href="font-awesome/css/font-awesome.min.css" media="screen" rel="stylesheet" type="text/css" />
-
+    <meta charset="utf-8">
+    <title>Nottingham Digital: Design and Development Events for the Tech Community</title>
+    <meta name="description" content="A directory of meetups in Nottingham about design, development, technology, and related topics.">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css?family=Fira+Mono|Fira+Sans:400,700" rel="stylesheet">
+    <link href="css/core.css" media="screen" rel="stylesheet" type="text/css" />
 </head>
 <body>
 
-	<header>
-		<h1>Nottingham Digital: what’s on</h1>
+<div class="container">
 
-		<nav>
-			<ul>
-				<li class="add_event hidden">
-					<a href="http://sneeu.wufoo.com/forms/add-event-to-edinburgh2/">Add your event</a>
-				</li>
-			</ul>
-		</nav>
-	</header>
+<header class="header">
+    <h1 class="site-title">Nottingham Digital</h1>
+    <p class="site-strap">Local events for the tech community.</p>
+</header>
 
-	<article>
+<section class="directory">
+    <ol class="events">
 
-		<section>
-			<header><h2>Meetups</h2></header>
-			<ol class="events">
-				<li class="bcs vcard">
-					<h3><a class="fn org url" href="http://www.technottingham.com/">Tech Nottingham</a></h3>
-					<p class="who">The home of Nottingham's software community.</p>
-					<p class="when">First Monday</p>
-				</li>
-        <li class="bcs vcard">
-          <h3><a class="fn org url" href="http://www.dxnevent.com/">Design Exchange Nottingham</a></h3>
-          <p class="who">A monthly meetup about web design. </p>
-          <p class="when"></p>
+        <!-- Week 1 -->
+        <li class="event vcard" data-theme="tech">
+            <div class="event__theme event__theme--tech"><img class="icon" src="./img/tech.svg" alt="Tech"></div>
+            <h3 class="event__title"><a class="fn org url" href="http://www.technottingham.com/">Tech Nottingham</a> <a class="twitter" href="https://twitter.com/technottingham"><img class="icon" src="./img/twitter.svg" alt="Twitter"></a></h3>
+            <p class="event__summary who">Making Nottingham a better place to live & work in technology - meetups & events, community building, advocacy and education.</p>
+            <p class="event__date when"><img class="icon" src="./img/event.svg" alt="Next Event"> First Monday</p>
         </li>
-        <li class="bcs vcard">
-          <h3><a class="fn org url" href="http://www.notttuesday.com/">Nott Tuesday</a></h3>
-          <p class="who">The meetup for Nottingham’s tech scene.</p>
-          <p class="when">Third Tuesday</p>
+        <li class="event vcard" data-theme="ops">
+            <div class="event__theme event__theme--ops"><img class="icon" src="./img/ops.svg" alt="Ops"></div>
+            <h3 class="event__title"><a class="fn org url" href="https://twitter.com/NottsTest">Notts Testers</a> <a class="twitter" href="https://twitter.com/NottsTest"><img class="icon" src="./img/twitter.svg" alt="Twitter"></a></h3>
+            <p class="event__summary who">Monthly meetup of software testers.</p>
+            <p class="event__date when"><img class="icon" src="./img/event.svg" alt="Next Event"> First Wednesday</p>
         </li>
-        <li class="bcs vcard">
-          <h3><a class="fn org url" href="http://www.meetup.com/NottinghamProgrammers/">Nottingham Programmers</a></h3>
-          <p class="who">Programmers in the pub.</p>
-          <p class="when">Last Thursday</p>
+        <li class="event vcard" data-theme="tech">
+            <div class="event__theme event__theme--tech"><img class="icon" src="./img/tech.svg" alt="Tech"></div>
+             <h3 class="event__title"><a class="fn org url" href="http://www.meetup.com/Women-In-Tech-Nottingham">Women In Tech Nottingham</a> <a class="twitter" href="https://twitter.com/WIT_NOTTS"><img class="icon" src="./img/twitter.svg" alt="Twitter"></a></h3>
+            <p class="event__summary who">A meetup for tech women to mingle, and share experiences and ideas; in order to build a great tech community.</p>
+            <p class="event__date when"><img class="icon" src="./img/event.svg" alt="Next Event"> First Thursday</p>
         </li>
-        <li class="bcs vcard">
-          <h3><a class="fn org url" href="http://www.meetup.com/dotnetnotts/">dot net notts</a></h3>
-          <p class="who">Monthly .NET user group.</p>
-          <p class="when">Last Monday</p>
-        </li>
-        <li class="bcs vcard">
-          <h3><a class="fn org url" href="http://www.meetup.com/Mobile-Notts">Notts Mobile</a></h3>
-          <p class="who">All things iOS and Android.</p>
-          <p class="when">Fourth Wednesday</p>
-        </li>
-        <li class="bcs vcard">
-          <h3><a class="fn org url" href="https://twitter.com/NottsTest">Notts Testers</a></h3>
-          <p class="who">Monthly meetup of Software Testers.</p>
-          <p class="when">First Wednesday</p>
-        </li>
-        <li class="bcs vcard">
-          <h3><a class="fn org url" href="http://www.meetup.com/Nottingham-AWS-Meetup/">Nottingham AWS</a></h3>
-          <p class="who">Share ideas and learn more about AWS.</p>
-          <p class="when"></p>
-        </li>
-        <li class="bcs vcard">
-          <h3><a class="fn org url" href="http://nottsjs.org/">Notts JS</a></h3>
-          <p class="who">Javascript community in Nottingham.</p>
-          <p class="when"></p>
-        </li>
-        <li class="bcs vcard">
-          <h3><a class="fn org url" href="http://phpminds.org/">PHPMinds</a></h3>
-          <p class="who">Bringing the PHP community together.</p>
-          <p class="when">Second Thursday</p>
-        </li>
-        <li class="bcs vcard">
-          <h3><a class="fn org url" href="https://twitter.com/uxnotts">UX Notts</a></h3>
-          <p class="who">UX design</p>
-          <p class="when"></p>
-        </li>
-        <li class="bcs vcard">
-          <h3><a class="fn org url" href="http://www.meetup.com/NottAgile/">Agile Nottingham</a></h3>
-          <p class="who">Agile in Nottingham</p>
-          <p class="when">Second Last Wednesday</p>
-        </li>
-        <li class="bcs vcard">
-           <h3><a class="fn org url" href="http://www.meetup.com/Women-In-Tech-Nottingham">Women In Tech Nottingham </a></h3>
-          <p class="who">Women In Tech Nottingham</p>
-          <p class="when">First Thursday</p>
-        </li>
-         <li class="bcs vcard">
-          <h3><a class="fn org url" href="http://www.healthtech.org.uk">HealthTech Nottingham </a></h3>
-          <p class="who">HealthTech Nottingham</p>
-          <p class="when">First Thursday of the month</p>
-        </li>
-        <li class="bcs vcard">
-          <h3><a class="fn org url" href="http://www.meetup.com/NottinghamR-Nottingham-R-Users-Group/">Nottingham R User Group</a></h3>
-          <p class="who">R Users in  Nottingham</p>
-          <p class="when">Quarterly</p>
+        <li class="event vcard" data-theme="tech">
+            <div class="event__theme event__theme--tech"><img class="icon" src="./img/tech.svg" alt="Tech"></div>
+            <h3 class="event__title"><a class="fn org url" href="http://www.healthtech.org.uk">HealthTech Nottingham</a> <a class="twitter" href="https://twitter.com/HealthTechNotts"><img class="icon" src="./img/twitter.svg" alt="Twitter"></a></h3>
+            <p class="event__summary who">A free meetup for anyone working in the healthcare technologies in and around Nottingham.</p>
+            <p class="event__date when"><img class="icon" src="./img/event.svg" alt="Next Event"> First Thursday</p>
         </li>
 
-			</ol>
-		</section>
+        <!-- Week 2 -->
+        <li class="event vcard" data-theme="tech">
+            <div class="event__theme event__theme--tech"><img class="icon" src="./img/tech.svg" alt="Tech"></div>
+            <h3 class="event__title"><a class="fn org url" href="http://nottsjs.org/">Notts JS</a> <a class="twitter" href="https://twitter.com/nottsjs"><img class="icon" src="./img/twitter.svg" alt="Twitter"></a></h3>
+            <p class="event__summary who">A meetup for developers and anyone else interested in Node, JavaScript and Full Stack development.</p>
+            <p class="event__date when"><img class="icon" src="./img/event.svg" alt="Next Event"> Second Tuesday</p>
+        </li>
+        <li class="event vcard" data-theme="design">
+            <div class="event__theme event__theme--design"><img class="icon" src="./img/design.svg" alt="Design"></div>
+            <h3 class="event__title"><a class="fn org url" href="http://www.dxnevent.com/">Design Exchange Nottingham</a> <a class="twitter" href="https://twitter.com/dxnevent"><img class="icon" src="./img/twitter.svg" alt="Twitter"></a></h3>
+            <p class="event__summary who">A monthly meetup about web design, featuring inspiring talks from renowned speakers and local voices that will enrich and inspire.</p>
+            <p class="event__date when"><img class="icon" src="./img/event.svg" alt="Next Event"> Second Wednesday</p>
+        </li>
+        <li class="event vcard" data-theme="tech">
+            <div class="event__theme event__theme--tech"><img class="icon" src="./img/tech.svg" alt="Tech"></div>
+            <h3 class="event__title"><a class="fn org url" href="http://phpminds.org/">PHPMinds</a> <a class="twitter" href="https://twitter.com/phpminds"><img class="icon" src="./img/twitter.svg" alt="Twitter"></a></h3>
+            <p class="event__summary who">A PHP user group in Nottingham.</p>
+            <p class="event__date when"><img class="icon" src="./img/event.svg" alt="Next Event"> Second Thursday</p>
+        </li>
 
-    <section>
-      <header><h2>Twitter</h2></header>
-        <a class="twitter-timeline" href="https://twitter.com/dxnevent/lists/nottingham-events" data-widget-id="700654764040654851">Tweets from https://twitter.com/dxnevent/lists/nottingham-events</a> <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
-    </section>
+        <!-- Week 3 -->
+        <li class="event vcard" data-theme="ops">
+            <div class="event__theme event__theme--ops"><img class="icon" src="./img/ops.svg" alt="Ops"></div>
+            <h3 class="event__title"><a class="fn org url" href="http://www.notttuesday.com/">Nott Tuesday</a> <a class="twitter" href="https://twitter.com/notttuesday"><img class="icon" src="./img/twitter.svg" alt="Twitter"></a></h3>
+            <p class="event__summary who">Tech startup and entrepreneur event featuring insightful talks and Nottingham's Tech Startup awards.</p>
+            <p class="event__date when"><img class="icon" src="./img/event.svg" alt="Next Event"> Third Tuesday</p>
+        </li>
+        <li class="event vcard" data-theme="ops">
+            <div class="event__theme event__theme--ops"><img class="icon" src="./img/ops.svg" alt="Ops"></div>
+            <h3 class="event__title"><a class="fn org url" href="http://www.meetup.com/NottAgile/">Agile Nottingham</a> <a class="twitter" href="https://twitter.com/NottAgile"><img class="icon" src="./img/twitter.svg" alt="Twitter"></a></h3>
+            <p class="event__summary who">A group for agile Software folks with an interest in Scrum, Kanban, XP, or anything similar.</p>
+            <p class="event__date when"><img class="icon" src="./img/event.svg" alt="Next Event"> Second Last Wednesday</p>
+        </li>
 
-	</article>
+        <!-- Week 4 -->
+        <li class="event vcard" data-theme="tech">
+            <div class="event__theme event__theme--tech"><img class="icon" src="./img/tech.svg" alt="Tech"></div>
+            <h3 class="event__title"><a class="fn org url" href="http://www.meetup.com/dotnetnotts/">dot net notts</a> <a class="twitter" href="https://twitter.com/dotnetnotts"><img class="icon" src="./img/twitter.svg" alt="Twitter"></a></h3>
+            <p class="event__summary who">This is a group for anyone interested in Microsoft technologies, best practices, and frameworks.</p>
+            <p class="event__date when"><img class="icon" src="./img/event.svg" alt="Next Event"> Last Monday</p>
+        </li>
+        <li class="event vcard" data-theme="tech">
+            <div class="event__theme event__theme--tech"><img class="icon" src="./img/tech.svg" alt="Tech"></div>
+            <h3 class="event__title"><a class="fn org url" href="http://www.meetup.com/Mobile-Notts">Mobile Notts</a> <a class="twitter" href="https://twitter.com/MobileNotts"><img class="icon" src="./img/twitter.svg" alt="Twitter"></a></h3>
+            <p class="event__summary who">This is a group for anyone interested in all things iOS and Android etc. Looking to kick-start a local Mobile community to share experiences, knowledge...... and probably beer and pizza.</p>
+            <p class="event__date when"><img class="icon" src="./img/event.svg" alt="Next Event"> Fourth Wednesday</p>
+        </li>
+        <li class="event vcard" data-theme="tech">
+            <div class="event__theme event__theme--tech"><img class="icon" src="./img/tech.svg" alt="Tech"></div>
+            <h3 class="event__title"><a class="fn org url" href="http://www.meetup.com/NottinghamProgrammers/">Nottingham Programmers</a> <a class="twitter" href="https://twitter.com/NottProgs"><img class="icon" src="./img/twitter.svg" alt="Twitter"></a></h3>
+            <p class="event__summary who">A chance to meet programmers to socialise and talk about all things techie — no structure or agenda.</p>
+            <p class="event__date when"><img class="icon" src="./img/event.svg" alt="Next Event"> Last Thursday</p>
+        </li>
 
-	<footer>
-		<p>A <a href="http://sneeu.com/">sneeu.com</a> thing.</p>
-	</footer>
+        <!-- Other -->
+        <li class="event vcard" data-theme="tech">
+            <div class="event__theme event__theme--tech"><img class="icon" src="./img/tech.svg" alt="Tech"></div>
+            <h3 class="event__title"><a class="fn org url" href="http://www.meetup.com/NottinghamR-Nottingham-R-Users-Group/">Nottingham R User Group</a></h3>
+            <p class="event__summary who">A group for users of R based to meet and discuss R topics and to promote the use of R.</p>
+            <p class="event__date when"><img class="icon" src="./img/event.svg" alt="Next Event"> Quarterly</p>
+        </li>
+        <li class="event vcard" data-theme="tech">
+            <div class="event__theme event__theme--tech"><img class="icon" src="./img/tech.svg" alt="Tech"></div>
+            <h3 class="event__title"><a class="fn org url" href="http://www.meetup.com/Nottingham-AWS-Meetup/">Nottingham AWS</a> <a class="twitter" href="https://twitter.com/nottinghamaws"><img class="icon" src="./img/twitter.svg" alt="Twitter"></a></h3>
+            <p class="event__summary who">The meetups will be a chance to meet other people in the area that are interested in AWS.</p>
+            <p class="event__date when"><img class="icon" src="./img/event.svg" alt="Next Event"> No regular date</p>
+        </li>
+        <li class="event vcard" data-theme="design">
+            <div class="event__theme event__theme--design"><img class="icon" src="./img/design.svg" alt="Design"></div>
+            <h3 class="event__title"><a class="fn org url" href="https://twitter.com/uxnotts">UX Notts</a> <a class="twitter" href="https://twitter.com/uxnotts"><img class="icon" src="./img/twitter.svg" alt="Twitter"></a></h3>
+            <p class="event__summary who">A group for UX designers.</p>
+            <p class="event__date when"><img class="icon" src="./img/event.svg" alt="Next Event"> No regular date</p>
+        </li>
+    </ol>
+    <p class="note">Events ordered by their relative calendar dates. Actual order may differ from month-to-month.</p>
+</section>
 
-    <script src="js/jquery.js"></script>
-    <script src="js/event.js"></script>
+<footer class="footer">
+    <p><a href="https://github.com/nottinghamdigital/nottinghamdigital.github.io">Edit on GitHub</a> / <a href="https://github.com/sneeu/edinburgh2">Based on Edinburgh2</a></p>
+</footer>
+
+</div>
+
+<script src="js/libs.min.js"></script>
+<script src="js/event.js"></script>
+
 <script>
-  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
-  ga('create', 'UA-68899421-1', 'auto');
-  ga('send', 'pageview');
+    ga('create', 'UA-68899421-1', 'auto');
+    ga('send', 'pageview');
 
 </script>
-
 
 </body>
 </html>
