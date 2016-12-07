@@ -162,8 +162,6 @@ NDEvent.prototype.load = function (groupsArray) {
             return $.trim($(this).text());
         }).get();
 
-    console.log(groups);
-
     eventApi.load(groups);
 
     $.ajax(); // dummy workaround for ajaxStop to always fire
