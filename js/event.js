@@ -152,8 +152,11 @@ NDEvent.prototype.load = function (groupsArray) {
 (function($){
 
     var arguments = {
+
         "api":"https://notts-digital.pavlakis.info/index.php"
     };
+
+
 
 
     var eventApi = new NDEvent(arguments),
