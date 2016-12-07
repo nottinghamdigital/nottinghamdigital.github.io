@@ -16,7 +16,7 @@
 var NDEvent = function (args){
     this.apiUrl = args.api;
     this.events = [];
-   
+
     if (!window.localStorage) {
         this.cache = false;
     } else {
@@ -30,18 +30,22 @@ NDEvent.prototype.renderEvents = function(groupNodes) {
         var self = this;
 
         groupNodes.each(function(index, node){
-            
+
             var groupName = $.trim($(node).html());
 
             if(self.getByGroup(groupName) && self.getByGroup(groupName).group) {
 
                 var data = self.getByGroup(groupName);
-                $(node).parent().parent().append('<span><i class="fa fa-calendar"></i> <a href="' + data.event_url + '">' + data.date_time + '</a> </span>');
+                var date = data.date_time;
+                date = date.replace('at ', '');
+                // Wednesday 5th October 2016 7:00pm
+                var niceDate = moment(date, 'dddd Do MMMM YYYY h:mma').format('Do MMMM');
+                $(node).parent().parent().find('.event__date').append(' — Next: <a class="event__next" href="' + data.event_url + '" title="' + data.date_time + '">' + niceDate + '</a>');
             }
 
         });
 
-    
+
 };
 
 
@@ -141,7 +145,7 @@ NDEvent.prototype.load = function (groupsArray) {
 
 
 /**
-    Initialisation code 
+    Initialisation code
 **/
 
 
@@ -149,12 +153,14 @@ NDEvent.prototype.load = function (groupsArray) {
 
     var arguments = {
 
-          "api":"https://notts-digital.pavlakis.info/index.php"
-      };
+        "api":"https://notts-digital.pavlakis.info/index.php"
+    };
+
+
 
 
     var eventApi = new NDEvent(arguments),
-        groupNodes = $('.vcard a'),
+        groupNodes = $('.vcard .url'),
         groups = groupNodes.map(function(){
             return $.trim($(this).text());
         }).get();
@@ -163,9 +169,24 @@ NDEvent.prototype.load = function (groupsArray) {
 
     $.ajax(); // dummy workaround for ajaxStop to always fire
     $(document).ajaxStop(function(){
-
         eventApi.renderEvents(groupNodes);
     });
-        
-   }
-)(jQuery);
+
+    var $filterList = $('<ul class="filters"></ul>');
+    $('.header').append($filterList);
+    $filterList.append('<li class="filter filter--all filter--active" data-filter="all"><span>All</span></li>');
+    $filterList.append('<li class="filter filter--tech" data-filter="tech"><span>Tech</span></li>');
+    $filterList.append('<li class="filter filter--design" data-filter="design"><span>Design</span></li>');
+    $filterList.append('<li class="filter filter--ops" data-filter="ops"><span>Ops</span></li>');
+    $('[data-filter]').on('click', function(e){
+        e.preventDefault();
+        var filterSelected = $(this).data('filter');
+        $('.filter').removeClass('filter--active').filter('[data-filter="'+filterSelected+'"]').addClass('filter--active');
+        if (filterSelected == 'all') {
+            $('.event').show();
+        } else {
+            $('.event').hide().filter('[data-theme="'+filterSelected+'"]').show();
+        }
+    });
+
+})(jQuery);
