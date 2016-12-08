@@ -143,7 +143,41 @@ NDEvent.prototype.load = function (groupsArray) {
     });
 };
 
+NDEvent.prototype.addFilter = function()
+{
+    var $filterList = $('<ul class="filters"></ul>');
+    $('.header').append($filterList);
+    var types = ["all","tech", "design", "ops"];
 
+    types.forEach(function(element) {
+        var filter = '<li class="filter filter--'+element+' " data-filter="'+ element + 
+        '"><span>' + element.split(' ').map(function (s) {
+                        return s.slice(0, 1).toUpperCase() + s.slice(1).toLowerCase();
+                     }).join(' ')+'</span></li>';
+        
+        $filterList.append(filter);
+
+    });
+    
+    $firstItem = $($filterList.children()[0]).addClass('filter--active');
+    this.addFilterListener();
+
+     
+};
+
+NDEvent.prototype.addFilterListener = function()
+{
+     $('[data-filter]').on('click', function(e){
+        e.preventDefault();
+        var filterSelected = $(this).data('filter');
+        $('.filter').removeClass('filter--active').filter('[data-filter="'+filterSelected+'"]').addClass('filter--active');
+        if (filterSelected == 'all') {
+            $('.event').show();
+        } else {
+            $('.event').hide().filter('[data-theme="'+filterSelected+'"]').show();
+        }
+     });
+};
 /**
     Initialisation code
 **/
@@ -171,22 +205,9 @@ NDEvent.prototype.load = function (groupsArray) {
     $(document).ajaxStop(function(){
         eventApi.renderEvents(groupNodes);
     });
+    eventApi.addFilter();
 
-    var $filterList = $('<ul class="filters"></ul>');
-    $('.header').append($filterList);
-    $filterList.append('<li class="filter filter--all filter--active" data-filter="all"><span>All</span></li>');
-    $filterList.append('<li class="filter filter--tech" data-filter="tech"><span>Tech</span></li>');
-    $filterList.append('<li class="filter filter--design" data-filter="design"><span>Design</span></li>');
-    $filterList.append('<li class="filter filter--ops" data-filter="ops"><span>Ops</span></li>');
-    $('[data-filter]').on('click', function(e){
-        e.preventDefault();
-        var filterSelected = $(this).data('filter');
-        $('.filter').removeClass('filter--active').filter('[data-filter="'+filterSelected+'"]').addClass('filter--active');
-        if (filterSelected == 'all') {
-            $('.event').show();
-        } else {
-            $('.event').hide().filter('[data-theme="'+filterSelected+'"]').show();
-        }
-    });
+     
+   
 
 })(jQuery);
