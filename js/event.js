@@ -150,13 +150,15 @@ NDEvent.prototype.addFilter = function()
     var types = ["all","tech", "design", "ops"];
 
     types.forEach(function(element) {
-        var filter = '<li class="filter filter--'+element+' " data-filter="'+ element + '"><span>' + element.split(' ').map(function (s) {
-    return s.slice(0, 1).toUpperCase() + s.slice(1).toLowerCase();
-}).join(' ')+'</span></li>';
+        var filter = '<li class="filter filter--'+element+' " data-filter="'+ element + 
+        '"><span>' + element.split(' ').map(function (s) {
+                        return s.slice(0, 1).toUpperCase() + s.slice(1).toLowerCase();
+                     }).join(' ')+'</span></li>';
+        
         $filterList.append(filter);
 
     });
-    //$filterList[0]
+    
     $firstItem = $($filterList.children()[0]).addClass('filter--active');
     this.addFilterListener();
 
