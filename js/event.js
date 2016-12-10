@@ -182,29 +182,15 @@ NDEvent.prototype.addFilterListener = function () {
 
 NDEvent.prototype.sortByDate = function () {
     var $events = $.makeArray($(".events").find(".event"));
-    var itemsToSort = [];
-    var emptyItems = [];
-    $events.forEach(function (e) {
-
-        if ($(e).data('isodate')) {
-
-            itemsToSort.push(e);
-        }
-        else {
-            emptyItems.push(e);
-        }
-
-    });
+    var itemsToSort = $events.filter(function(e){ return $(e).data('isodate')});
+    var emptyItems = $events.filter(function(e){ return !$(e).data('isodate')});;
+    
     itemsToSort.sort(function (a, b) {
-
         return new Date($(a).data("isodate")) < new Date($(b).data("isodate"));
-
-
     });
-    emptyItems.forEach(function (e) {
-        $(".events").prepend($(e));
-    });
-    itemsToSort.forEach(function (e) {
+    $events = emptyItems.concat(itemsToSort);
+    
+    $events.forEach(function (e) {
 
         $(".events").prepend($(e));
     });
