@@ -186,9 +186,9 @@ NDEvent.prototype.sortByDate = function () {
     var emptyItems = $events.filter(function(e){ return !$(e).data('isodate')});;
     
     itemsToSort.sort(function (a, b) {
-        return new Date($(a).data("isodate")) < new Date($(b).data("isodate"));
+        return new Date($(a).data("isodate")) < new Date($(b).data("isodate"))? -1: new Date($(a).data("isodate")) > new Date($(b).data("isodate"))?1:0;
     });
-    $events = emptyItems.concat(itemsToSort);
+    $events = emptyItems.concat(itemsToSort.reverse());
     
     $events.forEach(function (e) {
 
