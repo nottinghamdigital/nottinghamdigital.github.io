@@ -1,7 +1,4 @@
 
-
-
-
 /**
  * Usage
  *
@@ -13,7 +10,7 @@
  */
 
 
-var NDEvent = function (args){
+var NDEvent = function (args) {
     this.apiUrl = args.api;
     this.events = [];
 
@@ -25,31 +22,37 @@ var NDEvent = function (args){
     }
 };
 
-NDEvent.prototype.renderEvents = function(groupNodes) {
+NDEvent.prototype.renderEvents = function (groupNodes) {
 
-        var self = this;
+    var self = this;
 
-        groupNodes.each(function(index, node){
+    groupNodes.each(function (index, node) {
 
-            var groupName = $.trim($(node).html());
+        var groupName = $.trim($(node).html());
 
-            if(self.getByGroup(groupName) && self.getByGroup(groupName).group) {
+        if (self.getByGroup(groupName) && self.getByGroup(groupName).group) {
 
-                var data = self.getByGroup(groupName);
-                var date = data.date_time;
-                date = date.replace('at ', '');
-                // Wednesday 5th October 2016 7:00pm
-                var niceDate = moment(date, 'dddd Do MMMM YYYY h:mma').format('Do MMMM');
-                $(node).parent().parent().find('.event__date').append(' — Next: <a class="event__next" href="' + data.event_url + '" title="' + data.date_time + '">' + niceDate + '</a>');
+            var data = self.getByGroup(groupName);
+            var date = data.date_time;
+            date = date.replace('at ', '');
+            // Wednesday 5th October 2016 7:00pm
+            var niceDate = moment(date, 'dddd Do MMMM YYYY h:mma').format('Do MMMM');
+            $(node).parent().parent().find('.event__date').append(' — Next: <a class="event__next" href="' + data.event_url + '" title="' + data.date_time + '">' + niceDate + '</a>');
+            if (data.iso_date == '') {
+                data.iso_date = '1970-01-01T00:00:00+00:00';
             }
 
-        });
+            $(node).parent().parent().attr("data-isodate", data.iso_date);
+
+        }
+
+    });
 
 
 };
 
 
-NDEvent.prototype.getByGroup = function(groupName){
+NDEvent.prototype.getByGroup = function (groupName) {
 
     if (!this.isCached(groupName)) {
         this.fetchGroup(groupName);
@@ -59,7 +62,7 @@ NDEvent.prototype.getByGroup = function(groupName){
 
 };
 
-NDEvent.prototype.fetchGroup = function(groupName){
+NDEvent.prototype.fetchGroup = function (groupName) {
     var self = this;
 
     $.ajax(
@@ -68,14 +71,14 @@ NDEvent.prototype.fetchGroup = function(groupName){
             url: this.apiUrl,
             data: {group: groupName}
         }
-    ).done(function(data) {
-        if(data) {
+    ).done(function (data) {
+        if (data) {
             self.addEvent(groupName, data);
         }
     });
 };
 
-NDEvent.prototype.addEvent = function(groupName, data) {
+NDEvent.prototype.addEvent = function (groupName, data) {
     if (this.cache) {
         if (!this.isCached(groupName)) {
             this.cache.setItem(groupName, JSON.stringify(data));
@@ -85,7 +88,7 @@ NDEvent.prototype.addEvent = function(groupName, data) {
     }
 };
 
-NDEvent.prototype.getEvent = function(groupName) {
+NDEvent.prototype.getEvent = function (groupName) {
     if (!this.cache) {
         if (groupName in this.events) {
             return this.events[groupName];
@@ -95,7 +98,7 @@ NDEvent.prototype.getEvent = function(groupName) {
     return this.getFromCache(groupName);
 };
 
-NDEvent.prototype.isCached = function(groupName) {
+NDEvent.prototype.isCached = function (groupName) {
 
     if (!this.cache) {
         if (groupName in this.events) {
@@ -111,103 +114,129 @@ NDEvent.prototype.isCached = function(groupName) {
     return true;
 };
 
-NDEvent.prototype.getFromCache = function(groupName) {
+NDEvent.prototype.getFromCache = function (groupName) {
     if (this.isCached(groupName)) {
         return JSON.parse(this.cache.getItem(groupName));
     }
 }
 
 // tomorrow's calculation taken from SO link: http://stackoverflow.com/questions/9444745/javascript-how-to-get-tomorrows-date-in-format-dd-mm-yy
-NDEvent.prototype.refreshCache = function() {
-  if (!this.cache) {
-      return false;
-  }
+NDEvent.prototype.refreshCache = function () {
+    if (!this.cache) {
+        return false;
+    }
 
-  if (this.cache.getItem('expiry')) {
-      // reset if more than 24 hours
-      if (new Date() > Date.parse(this.cache.getItem('expiry'))) {
-          this.cache.clear();
-          this.cache.setItem('expiry', new Date(new Date().getTime() + 24 * 60 * 60 * 1000));
-      }
-  } else {
-      this.cache.setItem('expiry', new Date(new Date().getTime() + 24 * 60 * 60 * 1000));
-  }
+    if (this.cache.getItem('expiry')) {
+        // reset if more than 24 hours
+        if (new Date() > Date.parse(this.cache.getItem('expiry'))) {
+            this.cache.clear();
+            this.cache.setItem('expiry', new Date(new Date().getTime() + 24 * 60 * 60 * 1000));
+        }
+    } else {
+        this.cache.setItem('expiry', new Date(new Date().getTime() + 24 * 60 * 60 * 1000));
+    }
 };
 
 NDEvent.prototype.load = function (groupsArray) {
 
     var self = this;
 
-    groupsArray.forEach(function(groupName){
+    groupsArray.forEach(function (groupName) {
         self.getByGroup(groupName);
     });
 };
 
-NDEvent.prototype.addFilter = function()
-{
+NDEvent.prototype.addFilter = function () {
     var $filterList = $('<ul class="filters"></ul>');
     $('.header').append($filterList);
-    var types = ["all","tech", "design", "ops"];
+    var types = ["all", "tech", "design", "ops"];
 
-    types.forEach(function(element) {
-        var filter = '<li class="filter filter--'+element+' " data-filter="'+ element + 
-        '"><span>' + element.split(' ').map(function (s) {
-                        return s.slice(0, 1).toUpperCase() + s.slice(1).toLowerCase();
-                     }).join(' ')+'</span></li>';
-        
+    types.forEach(function (element) {
+        var filter = '<li class="filter filter--' + element + ' " data-filter="' + element +
+            '"><span>' + element.split(' ').map(function (s) {
+                return s.slice(0, 1).toUpperCase() + s.slice(1).toLowerCase();
+            }).join(' ') + '</span></li>';
+
         $filterList.append(filter);
 
     });
-    
+
     $firstItem = $($filterList.children()[0]).addClass('filter--active');
     this.addFilterListener();
 
-     
+
 };
 
-NDEvent.prototype.addFilterListener = function()
-{
-     $('[data-filter]').on('click', function(e){
+NDEvent.prototype.addFilterListener = function () {
+    $('[data-filter]').on('click', function (e) {
         e.preventDefault();
         var filterSelected = $(this).data('filter');
-        $('.filter').removeClass('filter--active').filter('[data-filter="'+filterSelected+'"]').addClass('filter--active');
+        $('.filter').removeClass('filter--active').filter('[data-filter="' + filterSelected + '"]').addClass('filter--active');
         if (filterSelected == 'all') {
             $('.event').show();
         } else {
-            $('.event').hide().filter('[data-theme="'+filterSelected+'"]').show();
+            $('.event').hide().filter('[data-theme="' + filterSelected + '"]').show();
         }
-     });
+    });
+};
+
+NDEvent.prototype.sortByDate = function () {
+    var $events = $.makeArray($(".events").find(".event"));
+    var itemsToSort = [];
+    var emptyItems = [];
+    $events.forEach(function (e) {
+
+        if ($(e).data('isodate')) {
+
+            itemsToSort.push(e);
+        }
+        else {
+            emptyItems.push(e);
+        }
+
+    });
+    itemsToSort.sort(function (a, b) {
+
+        return new Date($(a).data("isodate")) < new Date($(b).data("isodate"));
+
+
+    });
+    emptyItems.forEach(function (e) {
+        $(".events").prepend($(e));
+    });
+    itemsToSort.forEach(function (e) {
+
+        $(".events").prepend($(e));
+    });
+
+
 };
 /**
-    Initialisation code
-**/
+ Initialisation code
+ **/
 
 
-(function($){
+(function ($) {
 
     var arguments = {
 
-        "api":"https://notts-digital.pavlakis.info/index.php"
+        "api": "https://notts-digital.pavlakis.info/index.php"
     };
-
-
 
 
     var eventApi = new NDEvent(arguments),
         groupNodes = $('.vcard .url'),
-        groups = groupNodes.map(function(){
+        groups = groupNodes.map(function () {
             return $.trim($(this).text());
         }).get();
 
     eventApi.load(groups);
-
     $.ajax(); // dummy workaround for ajaxStop to always fire
-    $(document).ajaxStop(function(){
+    $(document).ajaxStop(function () {
         eventApi.renderEvents(groupNodes);
+        eventApi.sortByDate();
     });
     eventApi.addFilter();
 
-     
-   
 
 })(jQuery);
