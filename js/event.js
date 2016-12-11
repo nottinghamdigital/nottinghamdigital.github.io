@@ -186,9 +186,18 @@ NDEvent.prototype.sortByDate = function () {
     var emptyItems = $events.filter(function(e){ return !$(e).data('isodate')});;
     
     itemsToSort.sort(function (a, b) {
-        return new Date($(a).data("isodate")) < new Date($(b).data("isodate"))? -1: new Date($(a).data("isodate")) > new Date($(b).data("isodate"))?1:0;
+        var a = new Date($(a).data("isodate"));
+        var b = new Date($(b).data("isodate"));
+        return a < b? -1: a > b ?1:0;
     });
-    $events = emptyItems.concat(itemsToSort.reverse());
+    emptyItems.sort(function(a,b){
+        var a = $(a).find('.org').text().toLowerCase(); 
+        var b = $(b).find('.org').text().toLowerCase(); 
+        console.log(a,b);
+        return a < b? -1: a > b ?1:0;
+       
+    });
+    $events = emptyItems.reverse().concat(itemsToSort.reverse());
     
     $events.forEach(function (e) {
 
