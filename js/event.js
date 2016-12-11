@@ -34,15 +34,15 @@ NDEvent.prototype.renderEvents = function (groupNodes) {
 
             var data = self.getByGroup(groupName);
             var date = data.date_time;
-            date = date.replace('at ', '');
-            // Wednesday 5th October 2016 7:00pm
-            var niceDate = moment(date, 'dddd Do MMMM YYYY h:mma').format('Do MMMM');
-            $(node).parent().parent().find('.event__date').append(' — Next: <a class="event__next" href="' + data.event_url + '" title="' + data.date_time + '">' + niceDate + '</a>');
-            if (data.iso_date == '') {
-                data.iso_date = '1970-01-01T00:00:00+00:00';
+            if(date !='')
+            {
+                date = date.replace('at ', '');
+                // Wednesday 5th October 2016 7:00pm
+                var niceDate = moment(date, 'dddd Do MMMM YYYY h:mma').format('Do MMMM');
+                $(node).parent().parent().find('.event__date').append(' — Next: <a class="event__next" href="' + data.event_url + '" title="' + data.date_time + '">' + niceDate + '</a>');
+                $(node).parent().parent().attr("data-isodate", data.iso_date);
             }
-
-            $(node).parent().parent().attr("data-isodate", data.iso_date);
+            
 
         }
 
