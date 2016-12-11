@@ -146,6 +146,7 @@ NDEvent.prototype.load = function (groupsArray) {
     });
 };
 
+<<<<<<< HEAD
 NDEvent.prototype.addFilter = function () {
     var $filterList = $('<ul class="filters"></ul>');
     $('.header').append($filterList);
@@ -205,6 +206,42 @@ NDEvent.prototype.sortByDate = function () {
     });
 
 
+=======
+NDEvent.prototype.addFilter = function()
+{
+    var $filterList = $('<ul class="filters"></ul>');
+    $('.header').append($filterList);
+    var types = ["all","tech", "design", "ops"];
+
+    types.forEach(function(element) {
+        var filter = '<li class="filter filter--'+element+' " data-filter="'+ element + 
+        '"><span>' + element.split(' ').map(function (s) {
+                        return s.slice(0, 1).toUpperCase() + s.slice(1).toLowerCase();
+                     }).join(' ')+'</span></li>';
+        
+        $filterList.append(filter);
+
+    });
+    
+    $firstItem = $($filterList.children()[0]).addClass('filter--active');
+    this.addFilterListener();
+
+     
+};
+
+NDEvent.prototype.addFilterListener = function()
+{
+     $('[data-filter]').on('click', function(e){
+        e.preventDefault();
+        var filterSelected = $(this).data('filter');
+        $('.filter').removeClass('filter--active').filter('[data-filter="'+filterSelected+'"]').addClass('filter--active');
+        if (filterSelected == 'all') {
+            $('.event').show();
+        } else {
+            $('.event').hide().filter('[data-theme="'+filterSelected+'"]').show();
+        }
+     });
+>>>>>>> 9676b7729613c224a6fcd5a1697bec8066c2f952
 };
 /**
  Initialisation code
@@ -215,8 +252,14 @@ NDEvent.prototype.sortByDate = function () {
 
     var arguments = {
 
+<<<<<<< HEAD
         "api": "https://notts-digital.pavlakis.info/index.php"
+=======
+        "api":"https://notts-digital.pavlakis.info/index.php"
+>>>>>>> 9676b7729613c224a6fcd5a1697bec8066c2f952
     };
+
+
 
 
     var eventApi = new NDEvent(arguments),
@@ -233,5 +276,10 @@ NDEvent.prototype.sortByDate = function () {
     });
     eventApi.addFilter();
 
+<<<<<<< HEAD
+=======
+     
+   
+>>>>>>> 9676b7729613c224a6fcd5a1697bec8066c2f952
 
 })(jQuery);
