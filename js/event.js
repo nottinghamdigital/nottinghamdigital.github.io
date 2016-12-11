@@ -193,7 +193,6 @@ NDEvent.prototype.sortByDate = function () {
     emptyItems.sort(function(a,b){
         var a = $(a).find('.org').text().toLowerCase(); 
         var b = $(b).find('.org').text().toLowerCase(); 
-        
         return a < b? -1: a > b ?1:0;
        
     });
