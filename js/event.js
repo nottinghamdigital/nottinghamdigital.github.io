@@ -202,7 +202,13 @@ NDEvent.prototype.sortByDate = function () {
 
         $(".events").prepend($(e));
     });
+};
 
+NDEvent.prototype.resetOrderText = function(){
+
+    $('.order').text(function () {
+    return $(this).text().replace("alphabetically", "by next up"); 
+    })
 
 };
 /**
@@ -231,6 +237,7 @@ NDEvent.prototype.sortByDate = function () {
     $(document).ajaxStop(function () {
         eventApi.renderEvents(groupNodes);
         eventApi.sortByDate();
+        eventApi.resetOrderText();
     });
     eventApi.addFilter();
 
