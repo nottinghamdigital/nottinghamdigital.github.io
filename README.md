@@ -2,13 +2,15 @@
 
 A place to find digital events and organisations in Nottingham.
 
+## Requesting changes
+
+To request changes to the pages here, please create an issue.
+
 ## Contributing
 
-To contribute changes to the pages here, just create and submit a pull request.
+To contribute changes to the pages here, please create and submit a pull request.
 
 ## Creator
 
-Nottingham Digital was created by and is maintained by **Julian Higman**, co-founder at [Codiology](http://codiology.com/).
-
-* https://twitter.com/jhigman
+Nottingham Digital is maintained by members of the Nottingham digital community. See the contributors page in github for more details.
 
