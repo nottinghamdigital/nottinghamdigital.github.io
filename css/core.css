@@ -457,16 +457,16 @@ PRINT
         content: "  \A ["attr(href) "] ";
         white-space: pre;
     }
-    ul.filters:before{
+    ul.filters:before {
         content: " Color Key : \A";
     }
-    li.filter--all{
+    li.filter--all {
         display: none;
     }
     .event {
         width: 100%;
         page-break-inside: avoid;
-        border: none;
+        border: 1px solid #aaa;
         -webkit-box-shadow: none;
         -moz-box-shadow: none;
         box-shadow: none;
