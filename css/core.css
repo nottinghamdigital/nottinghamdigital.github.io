@@ -443,8 +443,8 @@ PRINT
     * {
         color: #000 !important;
         background-color: #fff !important;
-        box-shadow(none);
-        text-shadow(none);
+        box-shadow:none;
+        text-shadow:none;
     }
     body {
         width: 100%;
@@ -473,6 +473,7 @@ PRINT
     }
     li.event[data-theme ='tech'] {
         border-left: solid 15px #F44E36;
+
     }
     li.event[data-theme ='design'] {
         border-left: solid 15px #3EC4AC;
