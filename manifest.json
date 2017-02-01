@@ -1,0 +1,20 @@
+{
+  "lang": "en",
+  "dir": "ltr",
+  "name": "Nottingham Digital",
+  "description": "The complete list of digital events in and around Nottingham.",
+  "short_name": "Nottingham Digital",
+  "icons": [{
+    "src": "img/Icon-App-60x60@2x.png",
+    "sizes": "60x60",
+    "type": "image/png"
+  },{
+    "src": "img/Icon-App-76x76@1x.png",
+    "sizes": "76x76"
+  }, {
+    "src": "img/Icon-App-76x76@2x.png",
+    "sizes": "152x152"
+  }],
+  "display": "fullscreen",
+  "orientation": "portrait"
+}
