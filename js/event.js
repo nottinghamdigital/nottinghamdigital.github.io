@@ -30,7 +30,7 @@ NDEvent.prototype.renderEvents = function (groupNodes) {
 
         var groupName = $.trim($(node).html());
 
-        if (self.getByGroup(groupName) && self.getByGroup(groupName).group) {
+        if (self.getByGroup(groupName)) {
 
             var data = self.getByGroup(groupName);
             var date = data.date_time;
