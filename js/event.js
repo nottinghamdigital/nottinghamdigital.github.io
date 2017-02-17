@@ -42,7 +42,7 @@ NDEvent.prototype.renderEvents = function (groupNodes) {
                 $(node).parent().parent().find('.event__date').append(' — Next: <a class="event__next" href="' + data.event_url + '" title="' + data.date_time + '">' + niceDate + '</a>');
                 $(node).parent().parent().attr("data-isodate", data.iso_date);
             }
-            
+
 
         }
 
@@ -127,13 +127,13 @@ NDEvent.prototype.refreshCache = function () {
     }
 
     if (this.cache.getItem('expiry')) {
-        // reset if more than 24 hours
+        // reset if more than 1 hour
         if (new Date() > Date.parse(this.cache.getItem('expiry'))) {
             this.cache.clear();
-            this.cache.setItem('expiry', new Date(new Date().getTime() + 24 * 60 * 60 * 1000));
+            this.cache.setItem('expiry', new Date(new Date().getTime() + 60 * 60 * 1000));
         }
     } else {
-        this.cache.setItem('expiry', new Date(new Date().getTime() + 24 * 60 * 60 * 1000));
+        this.cache.setItem('expiry', new Date(new Date().getTime() + 60 * 60 * 1000));
     }
 };
 
@@ -184,20 +184,20 @@ NDEvent.prototype.sortByDate = function () {
     var $events = $.makeArray($(".events").find(".event"));
     var itemsToSort = $events.filter(function(e){ return $(e).data('isodate')});
     var emptyItems = $events.filter(function(e){ return !$(e).data('isodate')});;
-    
+
     itemsToSort.sort(function (a, b) {
         var a = new Date($(a).data("isodate"));
         var b = new Date($(b).data("isodate"));
         return a < b? -1: a > b ?1:0;
     });
     emptyItems.sort(function(a,b){
-        var a = $(a).find('.org').text().toLowerCase(); 
-        var b = $(b).find('.org').text().toLowerCase(); 
+        var a = $(a).find('.org').text().toLowerCase();
+        var b = $(b).find('.org').text().toLowerCase();
         return a < b? -1: a > b ?1:0;
-       
+
     });
     $events = emptyItems.reverse().concat(itemsToSort.reverse());
-    
+
     $events.forEach(function (e) {
 
         $(".events").prepend($(e));
@@ -207,7 +207,7 @@ NDEvent.prototype.sortByDate = function () {
 NDEvent.prototype.resetOrderText = function(){
 
     $('.order').text(function () {
-    return $(this).text().replace("alphabetically", "by next up"); 
+    return $(this).text().replace("alphabetically", "by next up");
     })
 
 };
