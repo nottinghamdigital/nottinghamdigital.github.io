@@ -1,0 +1,28 @@
+{
+  "name": "nottinghamdigital",
+  "version": "1.0.0",
+  "description": "The defacto place to find digital events and meetups in Nottingham",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Warn: no tests specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com:nottinghamdigital/nottinghamdigital.github.io.git"
+  },
+  "keywords": [
+    "events"
+  ],
+  "author": "see contributors",
+  "license": "MIT ",
+  "bugs": {
+    "url": "https://github.com/nottinghamdigital/nottinghamdigital.github.io/issues"
+  },
+  "homepage": "https://github.com/nottinghamdigital/nottinghamdigital.github.io#readme",
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-rename": "^1.2.2",
+    "gulp-uglify": "^2.0.1",
+    "yarn": "^0.20.3"
+  }
+}
