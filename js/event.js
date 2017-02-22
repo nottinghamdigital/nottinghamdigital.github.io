@@ -13,14 +13,27 @@
 var NDEvent = function (args) {
     this.apiUrl = args.api;
     this.events = [];
-
-    if (!window.localStorage) {
-        this.cache = false;
-    } else {
+    this.cache = false;
+    
+    if (this.isLocalStorageAvailable) {
         this.cache = window.localStorage;
         this.refreshCache();
     }
+    
 };
+
+NDEvent.prototype.isLocalStorageAvailable=function(type) {
+    try {
+        var storage = window[type],
+            x = '__storage_test__';
+        storage.setItem(x, x);
+        storage.removeItem(x);
+        return true;
+    }
+    catch(e) {
+        return false;
+    }
+}
 
 NDEvent.prototype.renderEvents = function (groupNodes) {
 
