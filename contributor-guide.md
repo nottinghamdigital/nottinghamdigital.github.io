@@ -4,7 +4,7 @@ To contribute simple fork and provide a pull request.
 
 ## Guidelines to Event descriptions and Titles
 
-1. Link tittle to the relevant site / Meetup page
+1. Link title to the relevant site / Meetup page
 2. Keep sentences and paragraphs short and easy to scan
 2. Double check your spelling
 3. Feel free to include social media links after the title.
