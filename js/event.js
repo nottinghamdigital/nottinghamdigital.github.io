@@ -233,7 +233,7 @@ NDEvent.prototype.resetOrderText = function(){
 
     var arguments = {
 
-        "api": "https://notts-digital.pavlakis.info/index.php"
+        "api": "https://notts-digital.phpminds.uk/index.php"
     };
 
 
