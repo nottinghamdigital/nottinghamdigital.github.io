@@ -9,6 +9,7 @@ To request changes to the pages here, please create an issue.
 ## Contributing
 
 To contribute changes to the pages here, please create and submit a pull request.
+See [contributing guide](https://github.com/nottinghamdigital/nottinghamdigital.github.io/blob/master/contributor-guide.md) 
 
 ## Creator
 
