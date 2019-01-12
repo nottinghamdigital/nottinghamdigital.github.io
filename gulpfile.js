@@ -1,14 +1,24 @@
+var gulp  = require('gulp');
 // including plugins
-var gulp = require('gulp')
-, uglify = require("gulp-uglify")
+var uglify = require("gulp-uglify")
+, pump = require('pump')
+, del = require('del')
 , rename = require("gulp-rename");
- 
-// minify task
-gulp.task('minify-js', function () {
-    gulp.src('./js/*.js') 
-    .pipe(uglify())
-    .pipe(rename({ suffix: '.min' }))
-    .pipe(gulp.dest('js/'));
+
+gulp.task('build', function(cb) {
+  pump([
+          gulp.src('./js/{event,libs}.js'),
+          uglify(),
+          rename({ suffix: '.min' }),
+          gulp.dest('js/')
+      ],
+      cb
+    );
 });
 
-gulp.task('default',['minify-js']);
+gulp.task('clean',function(cb) {
+  del('./js/*.min.js');
+  cb();
+});
+
+exports.default = gulp.series('clean', 'build')

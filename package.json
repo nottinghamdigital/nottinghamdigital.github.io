@@ -20,14 +20,16 @@
   },
   "homepage": "https://github.com/nottinghamdigital/nottinghamdigital.github.io#readme",
   "devDependencies": {
-    "gulp": "^3.9.1",
-    "gulp-rename": "^1.2.2",
-    "gulp-uglify": "^2.0.1",
-    "yarn": "^0.20.3"
+    "del": "^3.0.0",
+    "gulp": "^4.0.0",
+    "gulp-rename": "^1.4.0",
+    "gulp-uglify": "^3.0.1",
+    "gulp-wait": "0.0.2",
+    "pump": "^3.0.0",
+    "yarn": "^1.13.0"
   },
   "dependencies": {
-    "hoek": "^5.0.3",
-    "latest": "^0.2.0",
-    "npm": "^6.0.0"
+    "hoek": "^6.1.2",
+    "npm": "^6.5.0"
   }
 }
