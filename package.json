@@ -20,7 +20,7 @@
   },
   "homepage": "https://github.com/nottinghamdigital/nottinghamdigital.github.io#readme",
   "devDependencies": {
-    "del": "^3.0.0",
+    "del": "^4.1.1",
     "gulp": "^4.0.0",
     "gulp-rename": "^1.4.0",
     "gulp-uglify": "^3.0.1",
