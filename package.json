@@ -21,17 +21,17 @@
   "homepage": "https://github.com/nottinghamdigital/nottinghamdigital.github.io#readme",
   "devDependencies": {
     "del": "^4.1.1",
-    "gulp": "^4.0.0",
+    "gulp": "^4.0.2",
     "gulp-rename": "^1.4.0",
-    "gulp-uglify": "^3.0.1",
+    "gulp-uglify": "^3.0.2",
     "gulp-wait": "0.0.2",
     "pump": "^3.0.0",
-    "yarn": "^1.13.0"
+    "yarn": "^1.16.0"
   },
   "dependencies": {
     "fstream": "^1.0.0",
-    "hoek": "^6.1.2",
-    "npm": "^6.5.0",
+    "hoek": "^6.1.3",
+    "npm": "^6.10.1",
     "sshpk": "^1.7.0",
     "tar": "^2.0.0"
   }
