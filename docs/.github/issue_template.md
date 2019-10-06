@@ -2,27 +2,23 @@
   Please fill out the form below. Before raising your issue, please make sure it has the appropriate labels.
   You can add checks to the checkboxes by adding an "x" between the brackets instead of a space ([x] is checked, [ ] is unchecked).
 -->
+Nottingham Digital is a community driven resource and welcomes contributions from all.
 
-**Is this issue a feature request or a bug report?**
+To contribute simply fork and provide a pull request.
 
-[ ] Feature
-[ ] Bug
+## Guidelines to Event descriptions and Titles
 
+1. Link title to the relevant site / Meetup page
+2. Keep sentences and paragraphs short and easy to scan
+2. Double check your spelling
+3. Feel free to include social media links after the title
+4. Respect other meetups and the community spirit of what we're trying to achieve as a collaborative, supportive group of organisers. Refrain from any content that is not in keeping with this aim - if further advice is needed raise a comment in your PR
+5. If your event uses meetup or tito - include details in the PR and your listings will get pulled from there or make a separate PR on [https://github.com/pavlakis/notts-digital/blob/master/app/configs/groups.php]: the api groups configuration
+6. Ensure your meetup is in Nottingham or the immediate area.
 
-**What is the expected behaviour/what feature are you proposing?**
+## Guidelines to code / markup 
 
-<!--
-  Remove the following questions if you are filing a feature request.
--->
+1. Commits must be accompanied by meaningful commit messages
 
-**What is the actual behaviour?**
+2. PRs that include bug fixing should be accompanied by a step-by-step description of how to reproduce the bug.
 
-<!--
-  Try to include as much information here as possible; screenshots and code examples where applicable would be excellent!
--->
-
-**How can the bug be reproduced?**
-
-<!--
-  Thanks for helping to improve this project!
--->
