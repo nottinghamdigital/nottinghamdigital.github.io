@@ -18,7 +18,7 @@ Nottingham Digital is maintained by members of the Nottingham digital community.
 ## Development 
 
 To minify js - 
-dependancies managed using https://yarnpkg.com/en/
+dependencies managed using https://yarnpkg.com/en/
 to minify
  
 1. yarn 
