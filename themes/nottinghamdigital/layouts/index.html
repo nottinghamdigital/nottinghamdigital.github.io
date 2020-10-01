@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>{{ .Site.Title }}</title>
+        <meta name="description" content="{{ .Site.Params.Description }}">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link href="https://fonts.googleapis.com/css?family=Fira+Mono|Fira+Sans:400,700" rel="stylesheet">
+        <meta name="mobile-web-app-capable" content="yes">
+        <link rel="icon" type="image/png" href="img/Icon-Small@2x.png" />
+        <link rel="manifest" href="manifest.json">
+        <link href="/css/core.css" rel="stylesheet" type="text/css" />
+        <!-- fallback images if manifest fails -->
+        <link rel="apple-touch-icon" href="/img/Icon-App-60x60@2x.png" >
+        <link rel="apple-touch-icon" sizes="180x180" href="/img/Icon-App-60x60@3x.png" />
+        <link rel="apple-touch-icon" sizes="76x76" href="/img/Icon-App-76x76.png" />
+        <link rel="apple-touch-icon" sizes="152x152" href="/img/Icon-App-76x76@2x.png" />
+        <link rel="apple-touch-icon" sizes="58x58" href="/img/Icon-Small@2x.png" />
+    </head>
+    <body>
+        <div class="container">
+            <header class="header">
+                <h1 class="site-title">Nottingham Digital</h1>
+                <p class="site-strap">Local events for the tech community.</p>
+            </header>
+            <section class="directory">
+                <ol class="events">
+                    {{ range .Site.RegularPages }}
+                        {{ .Render "content" }}
+                    {{ end }}
+                </ol>
+            </section>
+            <footer class="footer">
+                <p>Design by <a href="https://twitter.com/whatjoesays">whatjoesays</a> at <a href="https://wearejh.com/">JH</a></p>
+                <p>See <a href="https://github.com/nottinghamdigital/nottinghamdigital.github.io/graphs/contributors">contributors</a> and make <a href="https://github.com/nottinghamdigital/nottinghamdigital.github.io/issues">change requests</a> on <a href="https://github.com/nottinghamdigital/nottinghamdigital.github.io">GitHub</a></p>
+            </footer>
+        </div>
+        <script src="js/libs.min.js"></script>
+        <script src="js/event.min.js"></script>
+        <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+        ga('create', 'UA-68899421-1', 'auto');
+        ga('send', 'pageview');
+        </script>
+    </body>
+</html>
