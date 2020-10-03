@@ -1,0 +1,10 @@
+<li class="event vcard" data-theme="{{ .Params.theme }}" >
+    <div class="event__theme event__theme--{{ .Params.theme }}"><img class="icon" src="/img/{{ .Params.theme }}.svg" alt="{{ .Params.theme }}"></div>
+    <h3 class="event__title"><a class="fn org url" href="{{ .Params.urls.event }}">{{ .Params.title }}</a>
+        {{ with .Params.urls.twitter }}
+        <a class="twitter" href="https://twitter.com/{{ . }}"><img class="icon" src="/img/twitter.svg" alt="Twitter"></a>
+        {{ end }}
+    </h3>
+    <p class="event__summary who">{{ .Params.description }}</p>
+    <p class="event__date when">{{ .Params.when }}</p>
+</li>

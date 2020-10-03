@@ -1,0 +1,8 @@
+baseURL = "https://nottingham.digital"
+languageCode = "en-gb"
+title = 'Nottingham Digital: Design and Development Events for the Tech Community'
+
+theme = "nottinghamdigital"
+
+[params]
+  description = 'A directory of meetups in Nottingham about design, development, technology, and related topics.'
