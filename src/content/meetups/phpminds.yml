@@ -1,0 +1,11 @@
+name: PHPMinds
+url: https://phpminds.org/
+category: tech
+cadence: Second Thursday
+summary: >-
+  A PHP user group attracting a mix of local and national speakers each month,
+  covering all aspects of PHP development and associated technologies (frontend,
+  server and database) followed by opportunity for discussion afterwards.
+links:
+  - label: Twitter
+    url: https://twitter.com/phpminds

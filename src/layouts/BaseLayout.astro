@@ -1,0 +1,56 @@
+---
+import '../styles/global.css';
+
+interface Props {
+	title: string;
+	description: string;
+}
+
+const { title, description } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="en-GB">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>{title}</title>
+		<meta name="description" content={description} />
+		<link rel="canonical" href={canonical} />
+
+		<meta property="og:type" content="website" />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:url" content={canonical} />
+		<meta name="twitter:card" content="summary" />
+
+		<link rel="icon" type="image/png" href="/img/Icon-Small@2x.png" />
+		<link rel="apple-touch-icon" href="/img/Icon-App-60x60@2x.png" />
+		<link
+			rel="apple-touch-icon"
+			sizes="152x152"
+			href="/img/Icon-App-76x76@2x.png"
+		/>
+		<link rel="manifest" href="/manifest.webmanifest" />
+		<meta name="theme-color" content="#f44e36" />
+
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Fira+Mono&family=Fira+Sans:wght@400;700&display=swap"
+			rel="stylesheet"
+		/>
+
+		{/* Reveals the filter bar only when scripting is available. */}
+		<script is:inline>
+			document.documentElement.classList.add('js');
+		</script>
+	</head>
+	<body>
+		<a class="skip-link" href="#meetup-list">Skip to the meetup list</a>
+		<div class="container">
+			<slot />
+		</div>
+	</body>
+</html>

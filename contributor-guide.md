@@ -1,20 +1,55 @@
-Nottingham Digital is a community driven resource and welcomes contributions from all.
+# Contributing
 
-To contribute simply fork and provide a pull request.
+Nottingham Digital is a community driven resource and welcomes contributions
+from all.
 
-## Guidelines to Event descriptions and Titles
+To contribute, fork the repository and open a pull request.
 
-1. Link title to the relevant site / Meetup page
-2. Keep sentences and paragraphs short and easy to scan
-2. Double check your spelling
-3. Feel free to include social media links after the title
-4. Respect other meetups and the community spirit of what we're trying to achieve as a collaborative, supportive group of organisers. Refrain from any content that is not in keeping with this aim - if further advice is needed raise a comment in your PR
-5. If your event uses meetup or tito - include details in the PR and your listings will get pulled from there or make a separate PR on [https://github.com/pavlakis/notts-digital/blob/master/app/configs/groups.php]: the api groups configuration
+## Adding your meetup
+
+Add one YAML file to [`src/content/meetups/`](src/content/meetups), named after
+your group (for example `phpminds.yml`):
+
+```yaml
+name: PHPMinds
+url: https://phpminds.org/
+category: tech # tech | design | ops
+cadence: Second Thursday
+summary: >-
+  A PHP user group attracting a mix of local and national speakers each month.
+links:
+  - label: Mastodon
+    url: https://phpc.social/@phpminds
+```
+
+| Field | Required | Notes |
+| --- | --- | --- |
+| `name` | yes | How the group should be listed |
+| `url` | yes | Meetup page, or your own site |
+| `category` | yes | One of `tech`, `design`, `ops` |
+| `cadence` | yes | Plain English: `First Tuesday`, `Quarterly`, `No regular date` |
+| `summary` | yes | A sentence or two |
+| `links` | no | Any number of `label` / `url` pairs |
+
+You do not need to run the site locally to add a meetup — the file is all that
+is needed. A pull request that adds a malformed file will fail CI with a message
+naming the problem.
+
+## Guidelines for event descriptions and titles
+
+1. Link the title to the relevant site or Meetup page.
+2. Keep sentences and paragraphs short and easy to scan.
+3. Double check your spelling.
+4. Feel free to include social media links via the `links` field.
+5. Respect other meetups and the community spirit of what we're trying to
+   achieve as a collaborative, supportive group of organisers. Refrain from any
+   content that is not in keeping with this aim — if further advice is needed,
+   raise a comment in your PR.
 6. Ensure your meetup is in Nottingham or the immediate area.
 
-## Guidelines to code / markup 
+## Guidelines for code and markup
 
-1. Commits must be accompanied by meaningful commit messages
-
-2. PRs that include bug fixing should be accompanied by a step-by-step description of how to reproduce the bug.
-
+1. Commits must be accompanied by meaningful commit messages.
+2. PRs that include bug fixing should be accompanied by a step-by-step
+   description of how to reproduce the bug.
+3. Run `npm run build` before opening a PR — it validates every meetup file.

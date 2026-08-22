@@ -1,0 +1,60 @@
+/*========================================
+  PRINT
+  Ported from the original core.css: the directory is genuinely useful on
+  paper, so cards keep their category key and links print their href.
+========================================*/
+@page {
+	margin: 2cm;
+}
+
+@media print {
+	*,
+	*::before,
+	*::after {
+		color: #000 !important;
+		background: #fff !important;
+		box-shadow: none !important;
+		text-shadow: none !important;
+	}
+
+	body {
+		width: 100%;
+		margin: 0;
+		font-size: 75%;
+	}
+
+	.filters,
+	.footer,
+	.skip-link {
+		display: none !important;
+	}
+
+	.meetup-card {
+		width: 100%;
+		border: 1px solid #aaa;
+		page-break-inside: avoid;
+		break-inside: avoid;
+	}
+
+	/* The stripe is a background colour on screen; in print it becomes a
+	   printable border so the category is still legible. */
+	.meetup-card__stripe {
+		display: none !important;
+	}
+
+	/* Custom properties are untouched by the colour reset above, so the
+	   category accent survives into print (and greys out sensibly on a
+	   mono printer). */
+	.meetup-card[data-category] {
+		border-inline-start: 15px solid var(--category-color) !important;
+		padding-inline-start: var(--space-sm);
+	}
+
+	/* Print the destination after each meetup link. */
+	.meetup-card__link::after {
+		content: ' [' attr(href) ']';
+		font-size: 85%;
+		font-weight: normal;
+		white-space: pre-wrap;
+	}
+}

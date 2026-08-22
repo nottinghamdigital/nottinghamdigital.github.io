@@ -1,0 +1,72 @@
+---
+import { CATEGORIES } from '../data/categories';
+
+interface Props {
+	/** Total meetup count, for the initial screen-reader status message. */
+	total: number;
+}
+
+const { total } = Astro.props;
+---
+
+<div class="filters" role="group" aria-label="Filter meetups by category">
+	<button
+		type="button"
+		class="filter"
+		data-filter="all"
+		aria-pressed="true"
+		aria-controls="meetup-list"
+	>
+		All
+	</button>
+	{
+		CATEGORIES.map((category) => (
+			<button
+				type="button"
+				class="filter"
+				data-filter={category.id}
+				aria-pressed="false"
+				aria-controls="meetup-list"
+				style={`--filter-color: var(--color-category-${category.id}); --filter-contrast: var(--color-on-accent);`}
+			>
+				{category.label}
+			</button>
+		))
+	}
+</div>
+
+<p class="visually-hidden" role="status" data-filter-status>
+	Showing all {total} meetups.
+</p>
+
+<script>
+	const filters = document.querySelectorAll<HTMLButtonElement>('[data-filter]');
+	const cards = document.querySelectorAll<HTMLLIElement>('[data-category]');
+	const status = document.querySelector<HTMLElement>('[data-filter-status]');
+
+	function apply(selected: string) {
+		let shown = 0;
+
+		for (const card of cards) {
+			const matches = selected === 'all' || card.dataset.category === selected;
+			card.hidden = !matches;
+			if (matches) shown++;
+		}
+
+		for (const filter of filters) {
+			filter.setAttribute(
+				'aria-pressed',
+				String(filter.dataset.filter === selected),
+			);
+		}
+
+		if (status) {
+			const label = selected === 'all' ? '' : ` in ${selected}`;
+			status.textContent = `Showing ${shown} meetup${shown === 1 ? '' : 's'}${label}.`;
+		}
+	}
+
+	for (const filter of filters) {
+		filter.addEventListener('click', () => apply(filter.dataset.filter ?? 'all'));
+	}
+</script>

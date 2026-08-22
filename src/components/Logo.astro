@@ -1,0 +1,17 @@
+---
+/**
+ * The site wordmark.
+ *
+ * This is the single place the site's identity is rendered — swap the contents
+ * for an <svg> or an <Image> when the new logo lands, and nothing else needs
+ * to change. Keep the `.site-title` class so the header layout still applies.
+ */
+interface Props {
+	/** Render as <h1> on the homepage, <p> elsewhere. */
+	as?: 'h1' | 'p';
+}
+
+const { as: Tag = 'h1' } = Astro.props;
+---
+
+<Tag class="site-title">Nottingham Digital</Tag>

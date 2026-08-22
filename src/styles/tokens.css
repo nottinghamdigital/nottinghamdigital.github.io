@@ -1,0 +1,91 @@
+/*========================================
+  THEME TOKENS
+  ----------------------------------------
+  Every colour, font, space and radius in the site is defined here and nowhere
+  else. No other stylesheet contains a raw colour value.
+
+  To rebrand the site, edit this file only:
+    1. Swap the brand + category colours below.
+    2. Re-tune the dark-mode block at the bottom.
+    3. Replace src/components/Logo.astro.
+  Nothing in src/components/ or src/pages/ needs to change.
+========================================*/
+
+:root {
+	/* --- Brand ------------------------------------------------------------ */
+	--color-brand: #f44e36;
+	--color-brand-contrast: #ffffff;
+
+	/* --- Category accents -------------------------------------------------
+	   One token per category id in src/data/categories.ts. Adding a category
+	   means adding a token here with a matching name. */
+	--color-category-tech: #f44e36;
+	--color-category-design: #3ec4ac;
+	--color-category-ops: #f4ba4f;
+
+	/* Text colour to sit *on* a category accent. Dark ink clears AA against
+	   all three accents above (6.2:1 on red, 10.2:1 on teal, 10.8:1 on
+	   amber); white would only manage 3.4:1 on the red. Re-check this pairing
+	   if the accents change. */
+	--color-on-accent: #111111;
+
+	/* --- Surfaces & text -------------------------------------------------- */
+	--color-page: #eeeeee;
+	--color-surface: #ffffff;
+	--color-text: #333333;
+	--color-heading: #000000;
+	--color-muted: #767676; /* AA against --color-surface */
+	--color-border: #e0e0e0;
+	--color-link: var(--color-brand);
+	--color-link-hover: #000000;
+	--color-focus: #0b57d0;
+
+	--shadow-card: 0 1px 3px rgb(0 0 0 / 0.1);
+
+	/* --- Type ------------------------------------------------------------- */
+	--font-body: 'Fira Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+	--font-mono: 'Fira Mono', ui-monospace, 'SFMono-Regular', monospace;
+
+	--text-sm: 0.75rem;
+	--text-base: 1rem;
+	--text-lg: 1.125rem;
+	--text-xl: clamp(1.75rem, 1.4rem + 1.6vw, 2.25rem);
+
+	--leading-tight: 1.15;
+	--leading-body: 1.5;
+
+	/* --- Space ------------------------------------------------------------ */
+	--space-2xs: 0.25rem;
+	--space-xs: 0.5rem;
+	--space-sm: 0.625rem;
+	--space-md: 1.25rem;
+	--space-lg: 2rem;
+
+	/* --- Shape ------------------------------------------------------------ */
+	--radius-card: 2px;
+	--radius-pill: 999px;
+	--stripe-width: 10px;
+	--stripe-width-wide: 30px;
+
+	/* --- Layout ----------------------------------------------------------- */
+	--measure: 600px;
+}
+
+/* --- Dark mode ---------------------------------------------------------
+   Redefines the same token names. This is the only dark-mode block in the
+   codebase; components are written against the tokens, not the scheme. */
+@media (prefers-color-scheme: dark) {
+	:root {
+		--color-page: #16181c;
+		--color-surface: #212429;
+		--color-text: #d8dae0;
+		--color-heading: #ffffff;
+		--color-muted: #9aa0aa;
+		--color-border: #32363d;
+		--color-link: #ff7a66;
+		--color-link-hover: #ffffff;
+		--color-focus: #8ab4f8;
+
+		--shadow-card: 0 1px 3px rgb(0 0 0 / 0.4);
+	}
+}

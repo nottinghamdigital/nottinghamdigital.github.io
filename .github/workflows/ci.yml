@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Validates every meetup YAML file against the content schema, so a
+      # malformed contribution fails the PR rather than the deploy.
+      - run: npm run build
+
+      - name: Check the custom domain survived the build
+        run: |
+          test -f dist/CNAME
+          grep -qx 'nottingham.digital' dist/CNAME

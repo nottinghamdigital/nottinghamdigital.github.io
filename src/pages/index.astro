@@ -1,0 +1,60 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import CategoryFilters from '../components/CategoryFilters.astro';
+import Logo from '../components/Logo.astro';
+import MeetupCard from '../components/MeetupCard.astro';
+
+const meetups = (await getCollection('meetups')).sort((a, b) =>
+	a.data.name.localeCompare(b.data.name, 'en-GB'),
+);
+
+const title =
+	'Nottingham Digital: Design and Development Events for the Tech Community';
+const description =
+	'A directory of meetups in Nottingham about design, development, technology, and related topics.';
+---
+
+<BaseLayout title={title} description={description}>
+	<header class="header">
+		<Logo as="h1" />
+		<p class="site-strap">Local events for the tech community.</p>
+		<CategoryFilters total={meetups.length} />
+	</header>
+
+	<main>
+		<ol class="meetups" id="meetup-list">
+			{
+				meetups.map((meetup) => (
+					<MeetupCard
+						name={meetup.data.name}
+						url={meetup.data.url}
+						summary={meetup.data.summary}
+						cadence={meetup.data.cadence}
+						category={meetup.data.category}
+						links={meetup.data.links}
+					/>
+				))
+			}
+		</ol>
+		<p class="note">Meetups ordered alphabetically.</p>
+	</main>
+
+	<footer class="footer">
+		<p>
+			Design by <a href="https://twitter.com/whatjoesays">whatjoesays</a> at{' '}
+			<a href="https://wearejh.com/">JH</a>
+		</p>
+		<p>
+			See <a
+				href="https://github.com/nottinghamdigital/nottinghamdigital.github.io/graphs/contributors"
+				>contributors</a
+			> and make <a
+				href="https://github.com/nottinghamdigital/nottinghamdigital.github.io/issues"
+				>change requests</a
+			> on <a href="https://github.com/nottinghamdigital/nottinghamdigital.github.io"
+				>GitHub</a
+			>
+		</p>
+	</footer>
+</BaseLayout>
