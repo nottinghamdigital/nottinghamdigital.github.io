@@ -78,3 +78,12 @@ See the contributors page in GitHub for more details.
 
 Original design by [whatjoesays](https://twitter.com/whatjoesays) at
 [JH](https://wearejh.com/).
+
+## Plans
+
+Longer-form implementation notes live in [`.claude/plans/`](.claude/plans):
+
+| Plan | What it covers |
+| --- | --- |
+| [`2026-08-astro-rebuild.md`](.claude/plans/2026-08-astro-rebuild.md) | The move from hand-edited HTML to this Astro build |
+| [`2026-08-content-refresh.md`](.claude/plans/2026-08-content-refresh.md) | Acting on the July 2026 audit of which meetups are still running |
