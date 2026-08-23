@@ -1,10 +1,10 @@
 name: Agile Nottingham
 url: https://www.meetup.com/NottAgile/
 category: ops
-cadence: Second Last Wednesday
+cadence: Quarterly on a Thursday
 summary: >-
   A group for agile Software folks with an interest in Scrum, Kanban, XP, or
   anything similar.
-links:
-  - label: Twitter
-    url: https://twitter.com/NottAgile
+#links:
+#  - label: X
+#    url: https://x.com/NottAgile

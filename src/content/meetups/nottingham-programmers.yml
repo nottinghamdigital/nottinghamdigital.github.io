@@ -1,10 +1,10 @@
 name: Nottingham Programmers
 url: https://www.meetup.com/NottinghamProgrammers/
 category: tech
-cadence: Last Thursday
+cadence: Monthly, usually on a Thursday
 summary: >-
   A chance to meet programmers to socialise and talk about all things techie —
   no structure or agenda.
-links:
-  - label: Twitter
-    url: https://twitter.com/NottProgs
+#links:
+#  - label: X
+#    url: https://x.com/NottProgs
