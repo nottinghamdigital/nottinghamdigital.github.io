@@ -17,9 +17,14 @@ Requires Node.js >= 20.3 (CI runs 22).
 npm run dev      # dev server at http://localhost:4321
 npm run build    # static output into dist/ — also validates every meetup YAML file
 npm run check    # astro check: type-check components and content
-npm test         # Playwright (starts `npm run dev` itself via webServer)
+npm test         # Playwright — webServer builds the site and serves dist/
 npm run test:ui  # Playwright UI mode
 ```
+
+The tests run against the **built** site, not the dev server: Playwright's
+`webServer` runs `npm run build && node scripts/serve-dist.mjs`. Both `astro
+dev` and `astro preview` daemonise and return immediately, which Playwright
+reports as "webServer exited early" — so neither can be used there.
 
 Single test / single file:
 
@@ -86,8 +91,13 @@ accent colours change. Cards carry h-card microformat classes (`h-card`, `p-name
   `CNAME` is a leftover from when Pages served the branch root directly.
 - `astro.config.mjs` pins `build.format: 'directory'` — do not switch to `file`
   format, it breaks the apex-domain URLs.
-- Playwright writes `playwright-report/` and `test-results/`, neither of which is
-  in `.gitignore` — don't commit them.
+- `.github/workflows/ci.yml` also runs the Playwright suite on PRs, installing
+  chromium only, and uploads `playwright-report/` as an artifact when it fails.
+- `playwright-report/` and `test-results/` are tracked in git rather than
+  ignored, so a local test run leaves them dirty and can block `git stash pop`
+  or a rebase. `npm run check` is deliberately not in CI: it currently reports
+  4 pre-existing errors from the deprecated `z.string().url()` in the content
+  schema.
 
 ## Contribution rules that affect edits
 

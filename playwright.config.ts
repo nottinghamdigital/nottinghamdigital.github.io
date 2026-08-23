@@ -18,8 +18,11 @@ export default defineConfig({
 		},
 	],
 	webServer: {
-		command: 'npm run dev',
+		// Not `astro dev`/`astro preview`: both daemonise and return, which
+		// Playwright reports as "webServer exited early". See the script.
+		command: 'npm run build && node scripts/serve-dist.mjs',
 		url: 'http://localhost:4321',
 		reuseExistingServer: !process.env.CI,
+		timeout: 60_000,
 	},
 });
