@@ -30,18 +30,20 @@ test.describe('Homepage', () => {
 
 	test('category filters are present', async ({ page }) => {
 		await page.goto('/');
-		const filters = page.locator('[data-category]');
+		const filters = page.locator('[data-filter]');
 		await expect(filters).not.toHaveCount(0);
 	});
 
 	test('filtering meetups by category works', async ({ page }) => {
 		await page.goto('/');
 		const totalMeetups = await page.locator('#meetup-list > li').count();
-		const firstFilter = page.locator('[data-category]').first();
-		await firstFilter.click();
+		// Click the first non-"all" filter button
+		const firstCategoryFilter = page.locator('[data-filter]:not([data-filter="all"])').first();
+		await firstCategoryFilter.click();
+		await expect(firstCategoryFilter).toHaveAttribute('aria-pressed', 'true');
 		const visibleMeetups = await page
-			.locator('#meetup-list > li:visible')
+			.locator('#meetup-list > li:not([hidden])')
 			.count();
-		expect(visibleMeetups).toBeLessThanOrEqual(totalMeetups);
+		expect(visibleMeetups).toBeLessThan(totalMeetups);
 	});
 });
