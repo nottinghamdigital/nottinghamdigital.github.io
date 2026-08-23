@@ -25,6 +25,9 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
 		<meta property="og:url" content={canonical} />
 		<meta name="twitter:card" content="summary" />
 
+		{/* SVG first for browsers that take it — it is the homepage monogram,
+		    and re-inks itself for dark browser chrome. PNG is the fallback. */}
+		<link rel="icon" type="image/svg+xml" href="/img/nd-monogram.svg" />
 		<link rel="icon" type="image/png" href="/img/Icon-Small@2x.png" />
 		<link rel="apple-touch-icon" href="/img/Icon-App-60x60@2x.png" />
 		<link
