@@ -55,6 +55,12 @@ edits and nothing else:
 Components derive their accent from the id via `var(--color-category-${id})` in an
 inline `style`, so no component or page markup changes.
 
+**The logo** is `src/assets/nd-monogram.svg`, imported as an Astro SVG component
+by `Logo.astro` so it inlines into the page. Its two fills read `--logo-ink` and
+`--logo-accent`, which `.site-mark` maps onto the brand tokens — so it recolours
+per theme instead of shipping a second palette. It is `aria-hidden`; the heading
+beneath already names the site.
+
 **Styling.** `src/styles/tokens.css` holds *every* colour, font, space and radius,
 including the `prefers-color-scheme: dark` block; no other stylesheet contains a
 raw colour value. `global.css` imports tokens + print styles and holds all layout.

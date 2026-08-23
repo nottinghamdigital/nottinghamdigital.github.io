@@ -125,8 +125,20 @@ h3 {
 /*========================================
   HEADER
 ========================================*/
+/* The monogram takes its two colours from the brand tokens, so it follows the
+   theme rather than shipping a second, hard-coded palette. */
+.site-mark {
+	--logo-ink: var(--color-brand);
+	--logo-accent: var(--color-brand-accent);
+
+	display: block;
+	width: auto;
+	height: 84px;
+	margin: var(--space-lg) auto 0;
+}
+
 .site-title {
-	padding-top: var(--space-md);
+	padding-top: var(--space-sm);
 	margin-bottom: var(--space-sm);
 	font-size: var(--text-xl);
 	color: var(--color-brand);

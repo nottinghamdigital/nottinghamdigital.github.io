@@ -52,6 +52,7 @@ npm run check    # type-check components and content
 | `src/data/categories.ts` | The category list (`tech`, `design`, `ops`) |
 | `src/styles/tokens.css` | **All** colours, fonts and spacing |
 | `src/components/Logo.astro` | The site wordmark |
+| `src/assets/nd-monogram.svg` | The "nd" mark, traced from the logo artwork |
 | `.github/workflows/deploy.yml` | Build and publish to GitHub Pages |
 
 ### Retheming
@@ -59,7 +60,9 @@ npm run check    # type-check components and content
 Colour, type and spacing live entirely in `src/styles/tokens.css`, including the
 dark-mode palette. Changing the site's look means editing that one file and
 replacing `src/components/Logo.astro` — no component or page markup needs to
-change.
+change. The monogram is filled from `--logo-ink` / `--logo-accent`, which
+`.site-mark` maps onto the brand tokens, so the mark follows the theme rather
+than carrying its own palette.
 
 To add a category: add an entry to `src/data/categories.ts`, a matching
 `--color-category-<id>` token in `src/styles/tokens.css`, and an icon in
