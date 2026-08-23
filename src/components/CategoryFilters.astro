@@ -39,7 +39,7 @@ const { total } = Astro.props;
 	Showing all {total} meetups.
 </p>
 
-<script>
+<script is:inline>
 	const filters = document.querySelectorAll('[data-filter]');
 	const cards = document.querySelectorAll('[data-category]');
 	const status = document.querySelector('[data-filter-status]');
