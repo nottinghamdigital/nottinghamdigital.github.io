@@ -129,6 +129,12 @@ h3 {
 	padding-top: var(--space-md);
 	margin-bottom: var(--space-sm);
 	font-size: var(--text-xl);
+	color: var(--color-brand);
+}
+
+/* The two-tone wordmark: navy "Nottingham", teal "Digital", as in the mark. */
+.site-title__accent {
+	color: var(--color-brand-accent);
 }
 
 .site-strap {
@@ -220,9 +226,22 @@ h3 {
 	border-end-start-radius: var(--radius-card);
 }
 
+/* Icons are drawn as masks rather than <img> pixels, so the glyph takes its
+   colour from a token. The category stripe flips ink between light and dark
+   mode, which a fixed-colour SVG file could not follow. */
+.icon {
+	display: inline-block;
+	flex: none;
+	background-color: currentColor;
+	-webkit-mask: var(--icon-src) center / contain no-repeat;
+	mask: var(--icon-src) center / contain no-repeat;
+}
+
 .meetup-card__stripe .icon {
 	display: none;
 	width: 20px;
+	height: 20px;
+	color: var(--color-on-accent);
 }
 
 .meetup-card__title {
@@ -263,6 +282,8 @@ h3 {
 
 .meetup-card__cadence .icon {
 	width: 1em;
+	height: 1em;
+	color: var(--color-muted);
 }
 
 .meetup-card__links {

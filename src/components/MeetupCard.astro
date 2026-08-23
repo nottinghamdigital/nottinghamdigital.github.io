@@ -20,7 +20,8 @@ const { label: categoryLabel, icon } = categoryById(category);
 	style={`--category-color: var(--color-category-${category});`}
 >
 	<div class="meetup-card__stripe">
-		<img class="icon" src={icon} alt="" width="20" height="20" />
+		<span class="icon" style={`--icon-src: url(${icon});`} aria-hidden="true"
+		></span>
 	</div>
 
 	<h2 class="meetup-card__title">
@@ -31,7 +32,8 @@ const { label: categoryLabel, icon } = categoryById(category);
 
 	<p class="meetup-card__meta">
 		<span class="meetup-card__cadence">
-			<img class="icon" src="/img/event.svg" alt="" width="16" height="16" />
+			<span class="icon" style="--icon-src: url(/img/event.svg);" aria-hidden="true"
+			></span>
 			<span class="visually-hidden">Meets:</span>
 			{cadence}
 		</span>

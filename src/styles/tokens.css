@@ -9,35 +9,48 @@
     2. Re-tune the dark-mode block at the bottom.
     3. Replace src/components/Logo.astro.
   Nothing in src/components/ or src/pages/ needs to change.
+
+  Palette: drawn from the Nottingham Digital wordmark — Council House navy
+  (#122a40) and circuit teal (#019aa8).
 ========================================*/
 
 :root {
-	/* --- Brand ------------------------------------------------------------ */
-	--color-brand: #f44e36;
+	/* --- Brand ------------------------------------------------------------
+	   The two logo colours. Navy carries headings and the wordmark; teal is
+	   the accent that the "digital" half of the mark is set in. */
+	--color-brand: #122a40; /* Council House navy */
+	--color-brand-accent: #019aa8; /* circuit teal */
 	--color-brand-contrast: #ffffff;
 
 	/* --- Category accents -------------------------------------------------
 	   One token per category id in src/data/categories.ts. Adding a category
-	   means adding a token here with a matching name. */
-	--color-category-tech: #f44e36;
-	--color-category-design: #3ec4ac;
-	--color-category-ops: #f4ba4f;
+	   means adding a token here with a matching name.
 
-	/* Text colour to sit *on* a category accent. Dark ink clears AA against
-	   all three accents above (6.2:1 on red, 10.2:1 on teal, 10.8:1 on
-	   amber); white would only manage 3.4:1 on the red. Re-check this pairing
-	   if the accents change. */
-	--color-on-accent: #111111;
+	   These are backgrounds: the filter pill's label and the card stripe's
+	   icon both sit on top of them, inked with --color-on-accent. So each
+	   accent must clear 4.5:1 against that ink *and* 3:1 against
+	   --color-surface, or the stripe disappears into the card. The teal is
+	   the logo's, darkened from #019aa8 (3.4:1 on white — too light to hold
+	   white text); navy leads the blue. */
+	--color-category-tech: #017c88;
+	--color-category-design: #1f5f8b;
+	--color-category-ops: #a15c2b;
+
+	/* Text and icon colour sitting *on* a category accent. White clears AA
+	   against all three above (5.0:1 on teal, 6.8:1 on blue, 5.2:1 on
+	   bronze). Re-check this pairing if the accents change — the dark-mode
+	   block flips both sides of it. */
+	--color-on-accent: #ffffff;
 
 	/* --- Surfaces & text -------------------------------------------------- */
-	--color-page: #eeeeee;
+	--color-page: #eef1f4; /* navy-tinted rather than neutral grey */
 	--color-surface: #ffffff;
 	--color-text: #333333;
-	--color-heading: #000000;
-	--color-muted: #767676; /* AA against --color-surface */
-	--color-border: #e0e0e0;
-	--color-link: var(--color-brand);
-	--color-link-hover: #000000;
+	--color-heading: var(--color-brand);
+	--color-muted: #5f6a75; /* 5.5:1 against --color-surface */
+	--color-border: #dfe4ea;
+	--color-link: #016b76; /* teal, darkened to 6.2:1 on --color-surface */
+	--color-link-hover: var(--color-brand);
 	--color-focus: #0b57d0;
 
 	--shadow-card: 0 1px 3px rgb(0 0 0 / 0.1);
@@ -73,18 +86,35 @@
 
 /* --- Dark mode ---------------------------------------------------------
    Redefines the same token names. This is the only dark-mode block in the
-   codebase; components are written against the tokens, not the scheme. */
+   codebase; components are written against the tokens, not the scheme.
+
+   The category accents are re-tuned here rather than reused: the light-mode
+   set is dark enough to vanish against a dark card (navy scores 1.1:1 on
+   #212429). Lightening them flips the ink, so --color-on-accent goes dark
+   to match — which is why the stripe icon is drawn as a mask in global.css
+   rather than a fixed-colour file. */
 @media (prefers-color-scheme: dark) {
 	:root {
 		--color-page: #16181c;
 		--color-surface: #212429;
 		--color-text: #d8dae0;
 		--color-heading: #ffffff;
-		--color-muted: #9aa0aa;
+		--color-muted: #9aa6b2;
 		--color-border: #32363d;
-		--color-link: #ff7a66;
+		--color-link: #4fd3e0;
 		--color-link-hover: #ffffff;
 		--color-focus: #8ab4f8;
+
+		/* Navy cannot carry the wordmark on a dark page, so the mark's
+		   light/accent split is kept by inking "Nottingham" near-white. */
+		--color-brand: #eef1f4;
+		--color-brand-accent: #4fd3e0;
+
+		/* Lifted so each stripe clears 7:1 against the dark card. */
+		--color-category-tech: #3ec9d8;
+		--color-category-design: #7ab6e8;
+		--color-category-ops: #e2a653;
+		--color-on-accent: #11161c;
 
 		--shadow-card: 0 1px 3px rgb(0 0 0 / 0.4);
 	}
