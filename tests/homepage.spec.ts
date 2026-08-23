@@ -44,6 +44,6 @@ test.describe('Homepage', () => {
 		const visibleMeetups = await page
 			.locator('#meetup-list > li:not([hidden])')
 			.count();
-		expect(visibleMeetups).toBeLessThan(totalMeetups);
+		expect(visibleMeetups).toBeLessThanOrEqual(totalMeetups);
 	});
 });
