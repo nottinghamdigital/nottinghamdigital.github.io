@@ -39,18 +39,18 @@ const { label: categoryLabel, icon } = categoryById(category);
 		</span>
 
 		<span class="visually-hidden">Category: {categoryLabel}</span>
-
-		{
-			links.length > 0 && (
-				<span class="meetup-card__links">
-					{links.map((link) => (
-						<a href={link.url} rel="me noopener">
-							{link.label}
-							<span class="visually-hidden"> for {name}</span>
-						</a>
-					))}
-				</span>
-			)
-		}
 	</p>
+
+	{
+		links.length > 0 && (
+			<p class="meetup-card__links">
+				{links.map((link) => (
+					<a href={link.url} rel="me noopener">
+						{link.label}
+						<span class="visually-hidden"> for {name}</span>
+					</a>
+				))}
+			</p>
+		)
+	}
 </li>

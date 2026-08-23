@@ -283,7 +283,7 @@ h3 {
 	gap: var(--space-xs);
 	color: var(--color-muted);
 	font-family: var(--font-mono);
-	font-size: var(--text-sm);
+	font-size: var(--text-base);
 }
 
 .meetup-card__cadence {
@@ -301,6 +301,8 @@ h3 {
 .meetup-card__links {
 	display: flex;
 	gap: var(--space-xs);
+	font-family: var(--font-mono);
+	font-size: var(--text-sm);
 }
 
 .meetup-card__links a {
