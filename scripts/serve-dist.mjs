@@ -25,14 +25,12 @@ const TYPES = {
 
 async function resolve(pathname) {
 	// `build.format: 'directory'` means /foo is served from /foo/index.html.
-	const rel = normalize(decodeURIComponent(pathname)).replace(/^(\.\.[/\\])+/, '');
-	const candidates = rel.endsWith('/')
+	const rel = normalize(decodeURIComponent(pathname))
+		.replace(/^(\.\.[/\\])+/, '')
+		.replace(/^[/\\]+/, '');
+	const candidates = rel === '' || rel.endsWith('/')
 		? [join(rel, 'index.html')]
 		: [rel, join(rel, 'index.html')];
-
-	for (const c of candidates) {
-		const file = join(ROOT, c);
-		if (!file.startsWith(ROOT)) continue; // refuse to escape dist/
 		try {
 			if ((await stat(file)).isFile()) return file;
 		} catch {}
