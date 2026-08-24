@@ -5,7 +5,7 @@ interface Props {
 	/** Total meetup count, for the initial screen-reader status message. */
 	total: number;
 	/** Categories that have at least one meetup in the current dataset. */
-	categories: ReadonlyArray<{ id: CategoryId; label: string }>;
+	categories: ReadonlyArray<{ id: CategoryId; label: string; icon: string }>;
 }
 
 const { total, categories } = Astro.props;
@@ -31,6 +31,11 @@ const { total, categories } = Astro.props;
 				aria-controls="meetup-list"
 				style={`--filter-color: var(--color-category-${category.id}); --filter-contrast: var(--color-on-accent);`}
 			>
+				<span
+					class="icon filter__icon"
+					style={`--icon-src: url(${category.icon});`}
+					aria-hidden="true"
+				></span>
 				{category.label}
 			</button>
 		))

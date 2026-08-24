@@ -4,6 +4,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import CategoryFilters from '../components/CategoryFilters.astro';
 import Logo from '../components/Logo.astro';
 import MeetupCard from '../components/MeetupCard.astro';
+import ThemeToggle from '../components/ThemeToggle.astro';
 import { CATEGORIES } from '../data/categories';
 
 const meetups = (await getCollection('meetups')).sort((a, b) =>
@@ -60,5 +61,6 @@ const description =
 				>GitHub</a
 			>
 		</p>
+		<ThemeToggle />
 	</footer>
 </BaseLayout>

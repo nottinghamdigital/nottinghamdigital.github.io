@@ -6,8 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 `nottingham.digital` — a static directory of Nottingham tech meetups, built with
 Astro and deployed to GitHub Pages. No server, no client-side framework: the
-meetup list is rendered to plain HTML at build time. The only client JS is the
-inline `<script>` in `CategoryFilters.astro`.
+meetup list is rendered to plain HTML at build time. Client JS is limited to
+small inline `<script>`s: category filtering in `CategoryFilters.astro`, the
+light/dark/auto control in `ThemeToggle.astro`, and the pre-paint setup
+(`js` class, stored theme) in `BaseLayout.astro`.
 
 Requires Node.js >= 20.3 (CI runs 22).
 
@@ -66,15 +68,28 @@ by `Logo.astro` so it inlines into the page. Its two fills read `--logo-ink` and
 per theme instead of shipping a second palette. It is `aria-hidden`; the heading
 beneath already names the site.
 
-**Styling.** `src/styles/tokens.css` holds *every* colour, font, space and radius,
-including the `prefers-color-scheme: dark` block; no other stylesheet contains a
-raw colour value. `global.css` imports tokens + print styles and holds all layout.
-Keep new colour values in tokens.css rather than inlining them.
+**Styling.** `src/styles/tokens.css` holds *every* colour, font, space and radius;
+no other stylesheet contains a raw colour value. `global.css` imports tokens +
+print styles and holds all layout. Keep new colour values in tokens.css rather
+than inlining them.
 
-**Filtering** is progressive-enhancement: `BaseLayout` adds a `js` class to
-`<html>` inline, `.filters` is hidden without it, and the script toggles the
-`hidden` attribute on `[data-category]` cards while updating `aria-pressed` and a
-`role="status"` live region. Cards are always in the DOM.
+**Dark mode** values live once, in `--dark-*` variables on `:root` in
+tokens.css. Two rules point the real tokens at them — `@media
+(prefers-color-scheme: dark)` for visitors who haven't chosen, and
+`[data-theme="dark"]` for an explicit choice made via the footer toggle
+(`ThemeToggle.astro`) — because a media feature can't be OR'd with an
+attribute selector in one CSS rule. The media-query block is guarded with
+`:not([data-theme="light"])` so it can't override an explicit "light" choice
+made while the OS is dark. Change the palette in the `--dark-*` block only;
+the two consuming rules don't need touching.
+
+**Filtering and the theme toggle** are both progressive-enhancement:
+`BaseLayout` adds a `js` class to `<html>` inline, `.filters` and
+`.theme-toggle` are hidden without it, and each script toggles state while
+updating `aria-pressed` and a `role="status"` live region. Meetup cards are
+always in the DOM; the theme toggle additionally has `BaseLayout` apply any
+stored `nd-theme` localStorage value to `<html data-theme>` before first
+paint, so there's no flash of the wrong theme.
 
 **Accessibility is load-bearing in the tokens file.** `--color-on-accent` is dark
 ink because white fails AA against the red accent — re-check contrast if the

@@ -177,6 +177,9 @@ h3 {
 	--filter-color: var(--color-heading);
 	--filter-contrast: var(--color-surface);
 
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2xs);
 	padding: 6px 12px;
 	border: 2px solid var(--filter-color);
 	border-radius: var(--radius-pill);
@@ -195,6 +198,11 @@ h3 {
 .filter[aria-pressed='true'] {
 	background: var(--filter-color);
 	color: var(--filter-contrast);
+}
+
+.filter__icon {
+	width: 1em;
+	height: 1em;
 }
 
 /*========================================
@@ -348,4 +356,49 @@ h3 {
 
 .footer p + p {
 	margin-top: var(--space-2xs);
+}
+
+.theme-toggle {
+	display: none;
+	justify-content: center;
+	margin-top: var(--space-sm);
+}
+
+.js .theme-toggle {
+	display: flex;
+}
+
+.theme-toggle__group {
+	display: flex;
+	border: 2px solid var(--color-heading);
+	border-radius: var(--radius-pill);
+	overflow: hidden;
+}
+
+.theme-toggle__option {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.25rem;
+	height: 2.25rem;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: var(--color-heading);
+	cursor: pointer;
+	-webkit-font-smoothing: antialiased;
+}
+
+.theme-toggle__option + .theme-toggle__option {
+	border-inline-start: 2px solid var(--color-heading);
+}
+
+.theme-toggle__option[aria-pressed='true'] {
+	background: var(--color-heading);
+	color: var(--color-surface);
+}
+
+.theme-toggle__icon {
+	width: 1.2em;
+	height: 1.2em;
 }

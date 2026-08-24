@@ -1,0 +1,106 @@
+---
+/**
+ * Light / dark / auto control, rendered as a single pill split into three
+ * icon segments (same visual language as the category filter pills, but
+ * joined into one control since the three options are mutually exclusive).
+ *
+ * Progressive enhancement: without JS the site already follows the OS via
+ * `prefers-color-scheme` (see tokens.css), so there's nothing to toggle —
+ * this control stays hidden until the `js` class lands on <html>, same
+ * pattern as CategoryFilters.
+ *
+ * The chosen preference is stored in localStorage under `nd-theme` and
+ * applied by setting `data-theme` on <html>, which tokens.css uses to
+ * override the `prefers-color-scheme` media query. "Auto" is the default
+ * and is represented by the *absence* of both the stored value and the
+ * attribute, so it always tracks the OS live. BaseLayout applies any stored
+ * light/dark choice before first paint to avoid a flash of the wrong theme.
+ */
+const OPTIONS = [
+	{ value: 'light', label: 'Light', icon: '/img/light.svg' },
+	{ value: 'dark', label: 'Dark', icon: '/img/dark.svg' },
+	{ value: 'auto', label: 'Auto', icon: '/img/auto.svg' },
+] as const;
+---
+
+<div class="theme-toggle">
+	<div class="theme-toggle__group" role="group" aria-label="Colour theme">
+		{
+			OPTIONS.map((option) => (
+				<button
+					type="button"
+					class="theme-toggle__option"
+					data-theme-option={option.value}
+					aria-pressed={option.value === 'auto' ? 'true' : 'false'}
+					title={option.label}
+				>
+					<span
+						class="icon theme-toggle__icon"
+						style={`--icon-src: url(${option.icon});`}
+						aria-hidden="true"
+					/>
+					<span class="visually-hidden">{option.label}</span>
+				</button>
+			))
+		}
+	</div>
+</div>
+
+<p class="visually-hidden" role="status" data-theme-status></p>
+
+<script is:inline>
+	document.addEventListener('DOMContentLoaded', () => {
+		const STORAGE_KEY = 'nd-theme';
+		const options = document.querySelectorAll('[data-theme-option]');
+		const status = document.querySelector('[data-theme-status]');
+
+		function storedTheme() {
+			try {
+				const stored = localStorage.getItem(STORAGE_KEY);
+				if (stored === 'light' || stored === 'dark') return stored;
+			} catch (e) {}
+			return 'auto';
+		}
+
+		function syncButtons(value) {
+			for (const option of options) {
+				if (!(option instanceof HTMLButtonElement)) continue;
+				option.setAttribute(
+					'aria-pressed',
+					String(option.dataset.themeOption === value),
+				);
+			}
+		}
+
+		function applyTheme(value) {
+			if (value === 'light' || value === 'dark') {
+				document.documentElement.dataset.theme = value;
+			} else {
+				delete document.documentElement.dataset.theme;
+			}
+
+			try {
+				if (value === 'auto') {
+					localStorage.removeItem(STORAGE_KEY);
+				} else {
+					localStorage.setItem(STORAGE_KEY, value);
+				}
+			} catch (e) {}
+		}
+
+		syncButtons(storedTheme());
+
+		for (const option of options) {
+			if (!(option instanceof HTMLButtonElement)) continue;
+			option.addEventListener('click', () => {
+				const value = option.dataset.themeOption ?? 'auto';
+				applyTheme(value);
+				syncButtons(value);
+				if (status instanceof HTMLElement) {
+					const label = option.querySelector('.visually-hidden')?.textContent;
+					status.textContent = `Theme set to ${label ?? value}.`;
+				}
+			});
+		}
+	});
+</script>
