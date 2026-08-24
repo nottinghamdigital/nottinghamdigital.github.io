@@ -57,7 +57,9 @@ test.describe('Homepage', () => {
 		await expect(meetupCards).toHaveCount(meetups.length);
 
 		for (const meetup of meetups) {
-			await expect(page.getByRole('link', { name: meetup.name })).toBeVisible();
+			await expect(
+				page.locator('#meetup-list > li .meetup-card__link').filter({ hasText: meetup.name }),
+			).toHaveCount(1);
 		}
 	});
 

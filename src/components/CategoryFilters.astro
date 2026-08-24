@@ -42,36 +42,45 @@ const { total, categories } = Astro.props;
 </p>
 
 <script is:inline>
-	const filters = document.querySelectorAll('[data-filter]');
-	const cards = document.querySelectorAll('[data-category]');
-	const status = document.querySelector('[data-filter-status]');
+	function initFilters() {
+		const filters = Array.from(document.querySelectorAll('[data-filter]')).filter(
+			(filter) => filter instanceof HTMLButtonElement,
+		);
+		const cards = Array.from(document.querySelectorAll('[data-category]')).filter(
+			(card) => card instanceof HTMLElement,
+		);
+		const status = document.querySelector('[data-filter-status]');
 
-	function apply(selected = 'all') {
-		let shown = 0;
+		function apply(selected = 'all') {
+			let shown = 0;
 
-		for (const card of cards) {
-			if (!(card instanceof HTMLElement)) continue;
-			const matches = selected === 'all' || card.dataset.category === selected;
-			card.hidden = !matches;
-			if (matches) shown++;
+			for (const card of cards) {
+				const matches = selected === 'all' || card.dataset.category === selected;
+				card.hidden = !matches;
+				if (matches) shown++;
+			}
+
+			for (const filter of filters) {
+				filter.setAttribute(
+					'aria-pressed',
+					String(filter.dataset.filter === selected),
+				);
+			}
+
+			if (status instanceof HTMLElement) {
+				const label = selected === 'all' ? '' : ` in ${selected}`;
+				status.textContent = `Showing ${shown} meetup${shown === 1 ? '' : 's'}${label}.`;
+			}
 		}
 
 		for (const filter of filters) {
-			if (!(filter instanceof HTMLButtonElement)) continue;
-			filter.setAttribute(
-				'aria-pressed',
-				String(filter.dataset.filter === selected),
-			);
-		}
-
-		if (status instanceof HTMLElement) {
-			const label = selected === 'all' ? '' : ` in ${selected}`;
-			status.textContent = `Showing ${shown} meetup${shown === 1 ? '' : 's'}${label}.`;
+			filter.addEventListener('click', () => apply(filter.dataset.filter ?? 'all'));
 		}
 	}
 
-	for (const filter of filters) {
-		if (!(filter instanceof HTMLButtonElement)) continue;
-		filter.addEventListener('click', () => apply(filter.dataset.filter ?? 'all'));
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', initFilters, { once: true });
+	} else {
+		initFilters();
 	}
 </script>
