@@ -4,11 +4,11 @@
   Every colour, font, space and radius in the site is defined here and nowhere
   else. No other stylesheet contains a raw colour value.
 
-  To rebrand the site, edit this file only:
-    1. Swap the brand + category colours below.
-    2. Re-tune the dark-mode block at the bottom.
-    3. Replace src/components/Logo.astro.
-  Nothing in src/components/ or src/pages/ needs to change.
+  To rebrand the site, update the tokens below and the dark-mode block,
+    replace src/components/Logo.astro,
+    and update the PWA/browser chrome colours in:
+      - src/layouts/BaseLayout.astro
+      - public/manifest.webmanifest
 
   Palette: drawn from the Nottingham Digital wordmark — Council House navy
   (#122a40) and circuit teal (#019aa8).
