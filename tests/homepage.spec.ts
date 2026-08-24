@@ -89,6 +89,8 @@ test.describe('Homepage', () => {
 
 	test('filtering meetups by category works', async ({ page }) => {
 		test.skip(!filterableCategory, 'Current meetup content only has one category.');
+		if (!filterableCategory) return;
+
 		await page.goto('/');
 		const expectedVisible = categoryCounts.get(filterableCategory) ?? 0;
 		const filter = page.locator(`[data-filter="${filterableCategory}"]`);
