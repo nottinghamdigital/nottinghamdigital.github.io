@@ -31,6 +31,7 @@ async function resolve(pathname) {
 	const candidates = rel === '' || rel.endsWith('/')
 		? [join(rel, 'index.html')]
 		: [rel, join(rel, 'index.html')];
+	for (const file of candidates.map(c => join(ROOT, c))) {
 		try {
 			if ((await stat(file)).isFile()) return file;
 		} catch {}
