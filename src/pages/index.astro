@@ -4,10 +4,14 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import CategoryFilters from '../components/CategoryFilters.astro';
 import Logo from '../components/Logo.astro';
 import MeetupCard from '../components/MeetupCard.astro';
+import { CATEGORIES } from '../data/categories';
 
 const meetups = (await getCollection('meetups')).sort((a, b) =>
 	a.data.name.localeCompare(b.data.name, 'en-GB'),
 );
+
+const usedCategoryIds = new Set(meetups.map((m) => m.data.category));
+const activeCategories = CATEGORIES.filter((c) => usedCategoryIds.has(c.id));
 
 const title =
 	'Nottingham Digital: Design and Development Events for the Tech Community';
@@ -19,7 +23,7 @@ const description =
 	<header class="header">
 		<Logo as="h1" />
 		<p class="site-strap">Local events for the tech community.</p>
-		<CategoryFilters total={meetups.length} />
+		<CategoryFilters total={meetups.length} categories={activeCategories} />
 	</header>
 
 	<main>

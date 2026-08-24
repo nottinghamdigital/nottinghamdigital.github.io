@@ -1,12 +1,14 @@
 ---
-import { CATEGORIES } from '../data/categories';
+import type { CategoryId } from '../data/categories';
 
 interface Props {
 	/** Total meetup count, for the initial screen-reader status message. */
 	total: number;
+	/** Categories that have at least one meetup in the current dataset. */
+	categories: ReadonlyArray<{ id: CategoryId; label: string }>;
 }
 
-const { total } = Astro.props;
+const { total, categories } = Astro.props;
 ---
 
 <div class="filters" role="group" aria-label="Filter meetups by category">
@@ -20,7 +22,7 @@ const { total } = Astro.props;
 		All
 	</button>
 	{
-		CATEGORIES.map((category) => (
+		categories.map((category) => (
 			<button
 				type="button"
 				class="filter"
