@@ -85,37 +85,104 @@
 }
 
 /* --- Dark mode ---------------------------------------------------------
-   Redefines the same token names. This is the only dark-mode block in the
-   codebase; components are written against the tokens, not the scheme.
+   Components are written against the token names above (--color-page etc.),
+   not the scheme, so this is the only place that names dark colours.
+
+   The values live once, in --dark-* variables on :root below — always
+   defined, inert until something points a real token at them. Two rules
+   then do the pointing, because a CSS custom property has no "reuse that
+   other rule's declarations" mechanism and a media feature can't be OR'd
+   with an attribute selector in one ruleset:
+
+     - the @media block applies them automatically when the visitor hasn't
+       chosen a preference and the OS prefers dark;
+     - the [data-theme="dark"] rule forces them regardless of the OS, when
+       the visitor has chosen (see ThemeToggle.astro, which sets that
+       attribute on <html> and persists the choice in localStorage;
+       BaseLayout re-applies it before first paint to avoid a flash of the
+       wrong theme).
+
+   The `:not([data-theme="light"])` guard on the media-query block stops it
+   overriding an explicit "light" choice made while the OS is in dark mode.
+   If the palette changes, only the --dark-* values below need editing —
+   the two rules that consume them don't.
 
    The category accents are re-tuned here rather than reused: the light-mode
    set is dark enough to vanish against a dark card (navy scores 1.1:1 on
    #212429). Lightening them flips the ink, so --color-on-accent goes dark
    to match — which is why the stripe icon is drawn as a mask in global.css
    rather than a fixed-colour file. */
+:root {
+	--dark-page: #16181c;
+	--dark-surface: #212429;
+	--dark-text: #d8dae0;
+	--dark-heading: #ffffff;
+	--dark-muted: #9aa6b2;
+	--dark-border: #32363d;
+	--dark-link: #4fd3e0;
+	--dark-link-hover: #ffffff;
+	--dark-focus: #8ab4f8;
+
+	/* Navy cannot carry the wordmark on a dark page, so the mark's
+	   light/accent split is kept by inking "Nottingham" near-white. */
+	--dark-brand: #eef1f4;
+	--dark-brand-accent: #4fd3e0;
+
+	/* Lifted so each stripe clears 7:1 against the dark card. */
+	--dark-category-tech: #3ec9d8;
+	--dark-category-design: #7ab6e8;
+	--dark-category-ops: #e2a653;
+	--dark-on-accent: #11161c;
+
+	--dark-shadow-card: 0 1px 3px rgb(0 0 0 / 0.4);
+}
+
 @media (prefers-color-scheme: dark) {
-	:root {
-		--color-page: #16181c;
-		--color-surface: #212429;
-		--color-text: #d8dae0;
-		--color-heading: #ffffff;
-		--color-muted: #9aa6b2;
-		--color-border: #32363d;
-		--color-link: #4fd3e0;
-		--color-link-hover: #ffffff;
-		--color-focus: #8ab4f8;
-
-		/* Navy cannot carry the wordmark on a dark page, so the mark's
-		   light/accent split is kept by inking "Nottingham" near-white. */
-		--color-brand: #eef1f4;
-		--color-brand-accent: #4fd3e0;
-
-		/* Lifted so each stripe clears 7:1 against the dark card. */
-		--color-category-tech: #3ec9d8;
-		--color-category-design: #7ab6e8;
-		--color-category-ops: #e2a653;
-		--color-on-accent: #11161c;
-
-		--shadow-card: 0 1px 3px rgb(0 0 0 / 0.4);
+	:root:not([data-theme='light']) {
+		--color-page: var(--dark-page);
+		--color-surface: var(--dark-surface);
+		--color-text: var(--dark-text);
+		--color-heading: var(--dark-heading);
+		--color-muted: var(--dark-muted);
+		--color-border: var(--dark-border);
+		--color-link: var(--dark-link);
+		--color-link-hover: var(--dark-link-hover);
+		--color-focus: var(--dark-focus);
+		--color-brand: var(--dark-brand);
+		--color-brand-accent: var(--dark-brand-accent);
+		--color-category-tech: var(--dark-category-tech);
+		--color-category-design: var(--dark-category-design);
+		--color-category-ops: var(--dark-category-ops);
+		--color-on-accent: var(--dark-on-accent);
+		--shadow-card: var(--dark-shadow-card);
 	}
+}
+
+:root[data-theme='dark'] {
+	--color-page: var(--dark-page);
+	--color-surface: var(--dark-surface);
+	--color-text: var(--dark-text);
+	--color-heading: var(--dark-heading);
+	--color-muted: var(--dark-muted);
+	--color-border: var(--dark-border);
+	--color-link: var(--dark-link);
+	--color-link-hover: var(--dark-link-hover);
+	--color-focus: var(--dark-focus);
+	--color-brand: var(--dark-brand);
+	--color-brand-accent: var(--dark-brand-accent);
+	--color-category-tech: var(--dark-category-tech);
+	--color-category-design: var(--dark-category-design);
+	--color-category-ops: var(--dark-category-ops);
+	--color-on-accent: var(--dark-on-accent);
+	--shadow-card: var(--dark-shadow-card);
+
+	color-scheme: dark;
+}
+
+/* Forces light even if the OS prefers dark — `color-scheme: light dark` in
+   global.css would otherwise still hand native chrome (scrollbars, form
+   controls) to the OS. All other tokens are already correct: this selector's
+   specificity beats the plain `:root` inside the dark media query above. */
+:root[data-theme='light'] {
+	color-scheme: light;
 }

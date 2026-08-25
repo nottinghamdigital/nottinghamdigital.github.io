@@ -45,9 +45,14 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
 			rel="stylesheet"
 		/>
 
-		{/* Reveals the filter bar only when scripting is available. */}
 		<script is:inline>
 			document.documentElement.classList.add('js');
+			try {
+				const theme = localStorage.getItem('nd-theme');
+				if (theme === 'light' || theme === 'dark') {
+					document.documentElement.dataset.theme = theme;
+				}
+			} catch (e) {}
 		</script>
 	</head>
 	<body>

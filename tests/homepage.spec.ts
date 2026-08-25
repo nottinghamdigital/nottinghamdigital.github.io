@@ -46,4 +46,187 @@ test.describe('Homepage', () => {
 			.count();
 		expect(visibleMeetups).toBeLessThan(totalMeetups);
 	});
+
+	test('every category filter button has an icon, "All" does not', async ({ page }) => {
+		await page.goto('/');
+		const categoryFilters = page.locator('[data-filter]:not([data-filter="all"])');
+		const count = await categoryFilters.count();
+		expect(count).toBeGreaterThan(0);
+		for (let i = 0; i < count; i++) {
+			await expect(categoryFilters.nth(i).locator('.filter__icon')).toHaveCount(1);
+		}
+		await expect(page.locator('[data-filter="all"] .filter__icon')).toHaveCount(0);
+	});
+
+	test('a filter button exists for every category present in the meetup list, and no others', async ({
+		page,
+	}) => {
+		await page.goto('/');
+		const cardCategories = await page
+			.locator('#meetup-list > li')
+			.evaluateAll((cards) =>
+				[...new Set(cards.map((c) => c.getAttribute('data-category')))].sort(),
+			);
+		const filterCategories = await page
+			.locator('[data-filter]:not([data-filter="all"])')
+			.evaluateAll((buttons) =>
+				buttons.map((b) => b.getAttribute('data-filter')).sort(),
+			);
+		expect(filterCategories).toEqual(cardCategories);
+	});
+
+	test('switching between two category filters only keeps the latest pressed', async ({
+		page,
+	}) => {
+		await page.goto('/');
+		const categoryFilters = page.locator('[data-filter]:not([data-filter="all"])');
+		test.skip(
+			(await categoryFilters.count()) < 2,
+			'needs at least two categories in the current content set',
+		);
+
+		const first = categoryFilters.nth(0);
+		const second = categoryFilters.nth(1);
+
+		await first.click();
+		await expect(first).toHaveAttribute('aria-pressed', 'true');
+
+		await second.click();
+		await expect(second).toHaveAttribute('aria-pressed', 'true');
+		await expect(first).toHaveAttribute('aria-pressed', 'false');
+
+		await page.locator('[data-filter="all"]').click();
+		await expect(page.locator('[data-filter="all"]')).toHaveAttribute(
+			'aria-pressed',
+			'true',
+		);
+		await expect(page.locator('#meetup-list > li[hidden]')).toHaveCount(0);
+	});
+
+	test('the status region announces the filtered count and category', async ({ page }) => {
+		await page.goto('/');
+		const firstCategoryFilter = page.locator('[data-filter]:not([data-filter="all"])').first();
+		const categoryId = await firstCategoryFilter.getAttribute('data-filter');
+		await firstCategoryFilter.click();
+
+		const visibleCount = await page.locator('#meetup-list > li:not([hidden])').count();
+		const word = visibleCount === 1 ? 'meetup' : 'meetups';
+		await expect(page.locator('[data-filter-status]')).toHaveText(
+			`Showing ${visibleCount} ${word} in ${categoryId}.`,
+		);
+	});
+});
+
+test.describe('Theme toggle', () => {
+	test('defaults to auto with no stored preference', async ({ page }) => {
+		await page.goto('/');
+		await expect(page.locator('[data-theme-option="auto"]')).toHaveAttribute(
+			'aria-pressed',
+			'true',
+		);
+		await expect(page.locator('[data-theme-option="light"]')).toHaveAttribute(
+			'aria-pressed',
+			'false',
+		);
+		await expect(page.locator('[data-theme-option="dark"]')).toHaveAttribute(
+			'aria-pressed',
+			'false',
+		);
+		const theme = await page.evaluate(() => document.documentElement.dataset.theme);
+		expect(theme).toBeUndefined();
+	});
+
+	test('choosing dark sets the attribute, persists it, and updates the pressed state', async ({
+		page,
+	}) => {
+		await page.goto('/');
+		await page.locator('[data-theme-option="dark"]').click();
+
+		await expect(page.locator('[data-theme-option="dark"]')).toHaveAttribute(
+			'aria-pressed',
+			'true',
+		);
+		await expect(page.locator('[data-theme-option="auto"]')).toHaveAttribute(
+			'aria-pressed',
+			'false',
+		);
+
+		const theme = await page.evaluate(() => document.documentElement.dataset.theme);
+		expect(theme).toBe('dark');
+
+		const stored = await page.evaluate(() => localStorage.getItem('nd-theme'));
+		expect(stored).toBe('dark');
+
+		const colorScheme = await page
+			.locator('html')
+			.evaluate((el) => getComputedStyle(el).colorScheme);
+		expect(colorScheme).toBe('dark');
+	});
+
+	test('choosing auto after an explicit choice clears the stored preference', async ({
+		page,
+	}) => {
+		await page.goto('/');
+		await page.locator('[data-theme-option="light"]').click();
+		expect(await page.evaluate(() => localStorage.getItem('nd-theme'))).toBe('light');
+
+		await page.locator('[data-theme-option="auto"]').click();
+		await expect(page.locator('[data-theme-option="auto"]')).toHaveAttribute(
+			'aria-pressed',
+			'true',
+		);
+		expect(await page.evaluate(() => localStorage.getItem('nd-theme'))).toBeNull();
+		expect(
+			await page.evaluate(() => document.documentElement.dataset.theme),
+		).toBeUndefined();
+	});
+
+	test('announces the change via the status region', async ({ page }) => {
+		await page.goto('/');
+		await page.locator('[data-theme-option="dark"]').click();
+		await expect(page.locator('[data-theme-status]')).toHaveText('Theme set to Dark.');
+	});
+
+	test('applies a previously stored theme on load, without needing a toggle click', async ({
+		page,
+	}) => {
+		await page.addInitScript(() => {
+			localStorage.setItem('nd-theme', 'dark');
+		});
+		await page.goto('/');
+
+		expect(await page.evaluate(() => document.documentElement.dataset.theme)).toBe(
+			'dark',
+		);
+		await expect(page.locator('[data-theme-option="dark"]')).toHaveAttribute(
+			'aria-pressed',
+			'true',
+		);
+	});
+});
+
+test.describe('Progressive enhancement (no JS)', () => {
+	test.use({ javaScriptEnabled: false });
+
+	test('filters and theme toggle stay hidden, and all meetups render', async ({ page }) => {
+		await page.goto('/');
+		await expect(page.locator('.filters')).toBeHidden();
+		await expect(page.locator('.theme-toggle')).toBeHidden();
+
+		const cards = page.locator('#meetup-list > li');
+		await expect(cards).not.toHaveCount(0);
+		await expect(page.locator('#meetup-list > li[hidden]')).toHaveCount(0);
+	});
+
+	test.describe('and the OS prefers dark', () => {
+		test.use({ colorScheme: 'dark' });
+
+		test('dark tokens still apply via prefers-color-scheme alone', async ({ page }) => {
+			await page.goto('/');
+			const background = await page
+				.locator('body')
+				.evaluate((el) => getComputedStyle(el).backgroundColor);
+			expect(background).toBe('rgb(22, 24, 28)');
+		});
+	});
 });
