@@ -1,0 +1,25 @@
+---
+import NdMonogram from '../assets/nd-monogram.svg';
+
+/**
+ * The site wordmark: the "nd" monogram above the name.
+ *
+ * This is the single place the site's identity is rendered — swap the mark in
+ * src/assets/ for a new one and nothing else needs to change. Keep the
+ * `.site-title` class so the header layout still applies.
+ *
+ * The monogram is decorative: the heading text beneath already names the site,
+ * so announcing it twice would only add noise for a screen reader.
+ */
+interface Props {
+	/** Render as <h1> on the homepage, <p> elsewhere. */
+	as?: 'h1' | 'p';
+}
+
+const { as: Tag = 'h1' } = Astro.props;
+---
+
+<NdMonogram class="site-mark" aria-hidden="true" />
+<Tag class="site-title"
+	>Nottingham <span class="site-title__accent">Digital</span></Tag
+>

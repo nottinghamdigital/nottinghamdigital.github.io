@@ -1,0 +1,14 @@
+name: DevOps Notts
+url: https://www.meetup.com/DevOps-Notts/
+category: ops
+cadence: Last Tuesday of the month
+summary: >-
+  DevOps Notts is a free meetup for people working in software engineering, from
+  developer to SRE. It's for those interested or working in DevOps and cloud
+  native technology, culture, practices and tooling. Our goal is to help make
+  Nottingham the DevOps capital in the UK!
+links:
+  - label: LinkedIn
+    url: https://www.linkedin.com/company/devops-notts/
+#  - label: X
+#    url: https://x.com/devopsnotts

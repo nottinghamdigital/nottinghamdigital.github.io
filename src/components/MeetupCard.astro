@@ -1,0 +1,56 @@
+---
+import { categoryById, type CategoryId } from '../data/categories';
+
+interface Props {
+	name: string;
+	url: string;
+	summary: string;
+	cadence: string;
+	category: CategoryId;
+	links: { label: string; url: string }[];
+}
+
+const { name, url, summary, cadence, category, links } = Astro.props;
+const { label: categoryLabel, icon } = categoryById(category);
+---
+
+<li
+	class="meetup-card h-card"
+	data-category={category}
+	style={`--category-color: var(--color-category-${category});`}
+>
+	<div class="meetup-card__stripe">
+		<span class="icon" style={`--icon-src: url(${icon});`} aria-hidden="true"
+		></span>
+	</div>
+
+	<h2 class="meetup-card__title">
+		<a class="meetup-card__link p-name u-url" href={url}>{name}</a>
+	</h2>
+
+	<p class="meetup-card__summary p-summary">{summary}</p>
+
+	<p class="meetup-card__meta">
+		<span class="meetup-card__cadence">
+			<span class="icon" style="--icon-src: url(/img/event.svg);" aria-hidden="true"
+			></span>
+			<span class="visually-hidden">Meets:</span>
+			{cadence}
+		</span>
+
+		<span class="visually-hidden">Category: {categoryLabel}</span>
+	</p>
+
+	{
+		links.length > 0 && (
+			<p class="meetup-card__links">
+				{links.map((link) => (
+					<a href={link.url} rel="me noopener">
+						{link.label}
+						<span class="visually-hidden"> for {name}</span>
+					</a>
+				))}
+			</p>
+		)
+	}
+</li>
