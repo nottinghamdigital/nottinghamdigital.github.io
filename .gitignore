@@ -20,3 +20,6 @@ yarn-error.log*
 # playwright
 test-results/
 playwright-report/
+
+# generated at build time by scripts/fetch-next-events.mjs
+src/data/next-events.generated.json

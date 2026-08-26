@@ -6,9 +6,11 @@ interface Props {
 	total: number;
 	/** Categories that have at least one meetup in the current dataset. */
 	categories: ReadonlyArray<{ id: CategoryId; label: string; icon: string }>;
+	/** Whether any meetup in the current dataset has a scheduled next event — controls whether the "Upcoming" toggle renders at all. */
+	hasNextEvents: boolean;
 }
 
-const { total, categories } = Astro.props;
+const { total, categories, hasNextEvents } = Astro.props;
 ---
 
 <div class="filters" role="group" aria-label="Filter meetups by category">
@@ -40,6 +42,27 @@ const { total, categories } = Astro.props;
 			</button>
 		))
 	}
+	{
+		hasNextEvents && (
+			<>
+				<span class="filters__divider" aria-hidden="true" />
+				<button
+					type="button"
+					class="filter"
+					data-toggle="upcoming"
+					aria-pressed="false"
+					aria-controls="meetup-list"
+				>
+					<span
+						class="icon filter__icon"
+						style="--icon-src: url(/img/event.svg);"
+						aria-hidden="true"
+					/>
+					Upcoming
+				</button>
+			</>
+		)
+	}
 </div>
 
 <p class="visually-hidden" role="status" data-filter-status>
@@ -49,36 +72,81 @@ const { total, categories } = Astro.props;
 <script is:inline>
 	document.addEventListener('DOMContentLoaded', () => {
 		const filters = document.querySelectorAll('[data-filter]');
-		const cards = document.querySelectorAll('[data-category]');
+		const upcomingToggle = document.querySelector('[data-toggle="upcoming"]');
+		const list = document.getElementById('meetup-list');
+		const cards = Array.from(document.querySelectorAll('[data-category]'));
+		const originalOrder = cards.slice();
 		const status = document.querySelector('[data-filter-status]');
+		const orderNote = document.querySelector('[data-order-note]');
 
-		function apply(selected = 'all') {
+		let selectedCategory = 'all';
+		let upcomingOnly = false;
+
+		function apply() {
 			let shown = 0;
+			const visible = [];
 
 			for (const card of cards) {
 				if (!(card instanceof HTMLElement)) continue;
-				const matches = selected === 'all' || card.dataset.category === selected;
+				const inCategory =
+					selectedCategory === 'all' || card.dataset.category === selectedCategory;
+				const hasNextEvent = Boolean(card.dataset.nextEventDate);
+				const matches = inCategory && (!upcomingOnly || hasNextEvent);
 				card.hidden = !matches;
-				if (matches) shown++;
+				if (matches) {
+					shown++;
+					visible.push(card);
+				}
+			}
+
+			if (list instanceof HTMLElement) {
+				const order = upcomingOnly
+					? visible.sort(
+							(a, b) =>
+								new Date(a.dataset.nextEventDate).getTime() -
+								new Date(b.dataset.nextEventDate).getTime(),
+						)
+					: originalOrder;
+				for (const card of order) list.appendChild(card);
 			}
 
 			for (const filter of filters) {
 				if (!(filter instanceof HTMLButtonElement)) continue;
 				filter.setAttribute(
 					'aria-pressed',
-					String(filter.dataset.filter === selected),
+					String(filter.dataset.filter === selectedCategory),
 				);
+			}
+			if (upcomingToggle instanceof HTMLButtonElement) {
+				upcomingToggle.setAttribute('aria-pressed', String(upcomingOnly));
 			}
 
 			if (status instanceof HTMLElement) {
-				const label = selected === 'all' ? '' : ` in ${selected}`;
-				status.textContent = `Showing ${shown} meetup${shown === 1 ? '' : 's'}${label}.`;
+				const categoryLabel = selectedCategory === 'all' ? '' : ` in ${selectedCategory}`;
+				const upcomingLabel = upcomingOnly ? ', soonest first' : '';
+				status.textContent = `Showing ${shown} meetup${shown === 1 ? '' : 's'}${categoryLabel}${upcomingLabel}.`;
+			}
+
+			if (orderNote instanceof HTMLElement) {
+				orderNote.textContent = upcomingOnly
+					? 'Meetups ordered by next event, soonest first.'
+					: 'Meetups ordered alphabetically.';
 			}
 		}
 
 		for (const filter of filters) {
 			if (!(filter instanceof HTMLButtonElement)) continue;
-			filter.addEventListener('click', () => apply(filter.dataset.filter ?? 'all'));
+			filter.addEventListener('click', () => {
+				selectedCategory = filter.dataset.filter ?? 'all';
+				apply();
+			});
+		}
+
+		if (upcomingToggle instanceof HTMLButtonElement) {
+			upcomingToggle.addEventListener('click', () => {
+				upcomingOnly = !upcomingOnly;
+				apply();
+			});
 		}
 	});
 </script>

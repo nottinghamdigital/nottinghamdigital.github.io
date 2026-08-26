@@ -1,6 +1,12 @@
 ---
 import { categoryById, type CategoryId } from '../data/categories';
 
+interface NextEvent {
+	title: string;
+	url: string;
+	date: string;
+}
+
 interface Props {
 	name: string;
 	url: string;
@@ -8,15 +14,26 @@ interface Props {
 	cadence: string;
 	category: CategoryId;
 	links: { label: string; url: string }[];
+	/** The group's next scheduled event, fetched from meetup.com's RSS feed at build time. Absent if there's none scheduled, or the feed couldn't be fetched. */
+	nextEvent?: NextEvent;
 }
 
-const { name, url, summary, cadence, category, links } = Astro.props;
+const { name, url, summary, cadence, category, links, nextEvent } =
+	Astro.props;
 const { label: categoryLabel, icon } = categoryById(category);
+const nextEventDate = nextEvent
+	? new Date(nextEvent.date).toLocaleDateString('en-GB', {
+			weekday: 'short',
+			day: 'numeric',
+			month: 'short',
+		})
+	: null;
 ---
 
 <li
 	class="meetup-card h-card"
 	data-category={category}
+	data-next-event-date={nextEvent?.date}
 	style={`--category-color: var(--color-category-${category});`}
 >
 	<div class="meetup-card__stripe">
@@ -40,6 +57,18 @@ const { label: categoryLabel, icon } = categoryById(category);
 
 		<span class="visually-hidden">Category: {categoryLabel}</span>
 	</p>
+
+	{
+		nextEvent && (
+			<p class="meetup-card__next-event">
+				Next:{' '}
+				<a href={nextEvent.url} rel="noopener">
+					{nextEventDate}
+					<span class="visually-hidden"> — {nextEvent.title}</span>
+				</a>
+			</p>
+		)
+	}
 
 	{
 		links.length > 0 && (

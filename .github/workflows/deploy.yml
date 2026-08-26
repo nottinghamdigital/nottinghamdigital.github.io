@@ -4,6 +4,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    # Rebuilds and republishes daily even with no new commits, so the next-event
+    # data in scripts/fetch-next-events.mjs (run via the `prebuild` script)
+    # doesn't go stale. Times are UTC.
+    - cron: '0 6 * * *'
 
 # Least privilege needed for the Pages deployment to authenticate.
 permissions:
