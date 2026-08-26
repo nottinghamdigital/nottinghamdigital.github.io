@@ -205,6 +205,14 @@ h3 {
 	height: 1em;
 }
 
+.filters__divider {
+	align-self: stretch;
+	width: 1px;
+	margin: 2px var(--space-2xs);
+	background: var(--color-muted);
+	opacity: 0.4;
+}
+
 /*========================================
   MEETUPS
 ========================================*/
@@ -304,6 +312,17 @@ h3 {
 	width: 1em;
 	height: 1em;
 	color: var(--color-muted);
+}
+
+.meetup-card__next-event {
+	color: var(--color-muted);
+	font-family: var(--font-mono);
+	font-size: var(--text-sm);
+}
+
+.meetup-card__next-event a {
+	color: var(--category-color);
+	font-weight: 600;
 }
 
 .meetup-card__links {

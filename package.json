@@ -6,6 +6,7 @@
   "description": "The defacto place to find digital events and meetups in Nottingham",
   "scripts": {
     "dev": "astro dev",
+    "prebuild": "node scripts/fetch-next-events.mjs",
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
@@ -31,7 +32,8 @@
     "node": ">=20.3.0"
   },
   "dependencies": {
-    "astro": "^7.2.4"
+    "astro": "^7.2.4",
+    "fast-xml-parser": "^5.11.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",

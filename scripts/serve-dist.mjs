@@ -10,8 +10,11 @@
 import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { join, extname, normalize } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const ROOT = new URL('../dist/', import.meta.url).pathname;
+// `.pathname` mishandles Windows drive letters (and leaves %20 undecoded);
+// fileURLToPath() is the correct way to turn a file: URL back into a path.
+const ROOT = fileURLToPath(new URL('../dist/', import.meta.url));
 const PORT = Number(process.env.PORT ?? 4321);
 
 const TYPES = {
