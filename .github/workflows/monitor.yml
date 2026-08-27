@@ -1,0 +1,28 @@
+name: Monitor the live site
+
+on:
+  # 90 minutes after the daily deploy in deploy.yml (06:00 UTC), so a failed or
+  # stalled deploy shows up here the same morning. Times are UTC.
+  schedule:
+    - cron: '30 7 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Fetches https://nottingham.digital and asserts it is served, recently
+      # built, showing every meetup file, and still resolving next events.
+      # A red run is the alert: GitHub emails the workflow file's last
+      # committer when a scheduled run fails, so there is no external
+      # monitoring account or secret to keep alive.
+      - run: node scripts/check-live-site.mjs

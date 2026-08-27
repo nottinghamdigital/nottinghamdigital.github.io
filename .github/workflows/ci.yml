@@ -55,3 +55,34 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build
+
+      # lighthouserc.json serves dist/ with the same script Playwright uses, so
+      # the audit runs against the artefact GitHub Pages publishes. The action
+      # brings its own Lighthouse CI rather than the repo carrying it as a
+      # devDependency — @lhci/cli pulls in a puppeteer tree this site has no
+      # other use for. `npm run lighthouse` runs the same config locally.
+      - name: Lighthouse budgets
+        uses: treosh/lighthouse-ci-action@v12
+        with:
+          configPath: ./lighthouserc.json
+
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report
+          path: .lighthouseci/reports/
+          retention-days: 7

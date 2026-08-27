@@ -5,7 +5,13 @@
 // non-fatal: a group with no reachable feed simply gets no entry, and
 // MeetupCard falls back to showing only the static cadence text.
 import { XMLParser } from 'fast-xml-parser';
-import { readdir, readFile, writeFile, mkdir } from 'node:fs/promises';
+import {
+	appendFile,
+	readdir,
+	readFile,
+	writeFile,
+	mkdir,
+} from 'node:fs/promises';
 import path from 'node:path';
 import { parse } from 'yaml';
 
@@ -333,9 +339,50 @@ async function main() {
 
 	await mkdir(new URL('.', OUTPUT_FILE), { recursive: true });
 	await writeFile(OUTPUT_FILE, JSON.stringify(result, null, '\t') + '\n');
+
+	const resolved = Object.keys(result);
+	const missing = meetups
+		.map((m) => m.slug)
+		.filter((slug) => !(slug in result))
+		.sort();
+
 	console.log(
-		`[next-events] wrote ${Object.keys(result).length}/${meetups.length} events to src/data/next-events.generated.json`,
+		`[next-events] wrote ${resolved.length}/${meetups.length} events to src/data/next-events.generated.json`,
 	);
+	if (missing.length > 0) {
+		console.log(`[next-events] no upcoming event for: ${missing.join(', ')}`);
+	}
+
+	await writeStepSummary(meetups.length, resolved.length, missing);
+}
+
+/**
+ * Records the run in the GitHub Actions job summary, so a deploy that quietly
+ * resolved fewer events than usual is visible on the run page rather than only
+ * in the logs. A failure here is never worth failing the build over, and
+ * outside Actions there is no summary file, so this is a no-op locally.
+ */
+async function writeStepSummary(total, resolved, missing) {
+	const summaryFile = process.env.GITHUB_STEP_SUMMARY;
+	if (!summaryFile) return;
+
+	const lines = [
+		'### Next events',
+		'',
+		`Resolved **${resolved} of ${total}** groups.`,
+		'',
+	];
+	if (missing.length > 0) {
+		lines.push('No upcoming event found for:', '');
+		lines.push(...missing.map((slug) => `- \`${slug}\``));
+		lines.push('');
+	}
+
+	try {
+		await appendFile(summaryFile, lines.join('\n') + '\n');
+	} catch (err) {
+		console.warn(`[next-events] could not write job summary: ${err.message}`);
+	}
 }
 
 await main();

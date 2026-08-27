@@ -21,6 +21,7 @@ npm run build    # static output into dist/ — also validates every meetup YAML
 npm run check    # astro check: type-check components and content
 npm test         # Playwright — webServer builds the site and serves dist/
 npm run test:ui  # Playwright UI mode
+npm run lighthouse  # Lighthouse budgets against the built site (needs Chrome)
 ```
 
 The tests run against the **built** site, not the dev server: Playwright's
@@ -91,6 +92,25 @@ always in the DOM; the theme toggle additionally has `BaseLayout` apply any
 stored `nd-theme` localStorage value to `<html data-theme>` before first
 paint, so there's no flash of the wrong theme.
 
+**Analytics and monitoring are deliberately thin.** `src/data/analytics.ts`
+holds the GoatCounter endpoint and nothing else; `BaseLayout` renders the beacon
+only when that string is non-empty (so a fork opts out by emptying it) and
+renders it last in `<body>`, async, so it cannot affect first paint. GoatCounter
+is cookieless and stores nothing on the device — the footer says so, and
+`tests/homepage.spec.ts` asserts no cookies are set, which is what keeps that
+claim honest if the analytics ever change. `count.js` refuses to send from
+localhost, so `astro dev` and the Playwright suite never reach the live stats.
+
+`BaseLayout` also stamps `<meta name="build-time">` into every page. That is a
+contract with `scripts/check-live-site.mjs`, which fetches the *published* site
+daily from `.github/workflows/monitor.yml` and fails when the site is
+unreachable, the stamp is over 48h old, fewer cards are published than there
+are meetup files, or almost no group resolved an upcoming event. That last check
+exists because `scripts/fetch-next-events.mjs` treats feed failures as
+non-fatal by design, so the next-event feature can degrade to nothing while
+every deploy stays green. Keep the meta tag and the `data-category` /
+`data-next-event-date` attributes on `MeetupCard` — the monitor greps for them.
+
 **Accessibility is load-bearing in the tokens file.** `--color-on-accent` is dark
 ink because white fails AA against the red accent — re-check contrast if the
 accent colours change. Cards carry h-card microformat classes (`h-card`, `p-name`,
@@ -108,6 +128,21 @@ accent colours change. Cards carry h-card microformat classes (`h-card`, `p-name
   format, it breaks the apex-domain URLs.
 - `.github/workflows/ci.yml` also runs the Playwright suite on PRs, installing
   chromium only, and uploads `playwright-report/` as an artifact when it fails.
+- `.github/workflows/ci.yml` has a third job running Lighthouse via
+  `treosh/lighthouse-ci-action` against the built site, configured by
+  `lighthouserc.json`. Accessibility and SEO must score 1 and best-practices
+  0.95 (errors); performance is a warning, because it depends on the Google
+  Fonts stylesheet and the analytics beacon — set a real threshold from
+  observed medians before making it an error. Lighthouse CI is deliberately
+  *not* a devDependency: `@lhci/cli` drags in a puppeteer tree and ~10 audit
+  advisories for a five-dependency repo, so the action supplies it in CI and
+  `npm run lighthouse` shells out to `npx` locally.
+- `.github/workflows/monitor.yml` runs `scripts/check-live-site.mjs` daily at
+  07:30 UTC, 90 minutes after the deploy cron. A red run is the alert channel:
+  GitHub emails the workflow file's last committer when a scheduled run fails,
+  so there is no external monitoring account or secret. Caveat: this workflow's
+  own cron is subject to the same 60-day inactivity auto-disable as the deploy
+  cron.
 - `playwright-report/` and `test-results/` are tracked in git rather than
   ignored, so a local test run leaves them dirty and can block `git stash pop`
   or a rebase. `npm run check` is deliberately not in CI: it currently reports

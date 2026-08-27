@@ -230,3 +230,37 @@ test.describe('Progressive enhancement (no JS)', () => {
 		});
 	});
 });
+
+test.describe('Analytics', () => {
+	test('loads the GoatCounter beacon asynchronously', async ({ page }) => {
+		await page.goto('/');
+		const beacon = page.locator('script[data-goatcounter]');
+		await expect(beacon).toHaveCount(1);
+		await expect(beacon).toHaveAttribute(
+			'data-goatcounter',
+			'https://nottinghamdigital.goatcounter.com/count',
+		);
+		await expect(beacon).toHaveAttribute('async', '');
+	});
+
+	// The footer promises "no cookies, no personal data". This is the test that
+	// keeps that promise true if the analytics setup is ever changed.
+	test('sets no cookies', async ({ page, context }) => {
+		await page.goto('/');
+		expect(await context.cookies()).toEqual([]);
+	});
+});
+
+test.describe('Monitoring metadata', () => {
+	// scripts/check-live-site.mjs reads this stamp off the published page to
+	// tell whether the daily deploy is still running. Losing it would break
+	// the monitor silently, so the contract is asserted here instead.
+	test('stamps a parseable build time into the page', async ({ page }) => {
+		await page.goto('/');
+		const buildTime = await page
+			.locator('meta[name="build-time"]')
+			.getAttribute('content');
+		expect(buildTime).toBeTruthy();
+		expect(Number.isNaN(Date.parse(buildTime ?? ''))).toBe(false);
+	});
+});
