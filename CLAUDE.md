@@ -130,10 +130,12 @@ accent colours change. Cards carry h-card microformat classes (`h-card`, `p-name
   chromium only, and uploads `playwright-report/` as an artifact when it fails.
 - `.github/workflows/ci.yml` has a third job running Lighthouse via
   `treosh/lighthouse-ci-action` against the built site, configured by
-  `lighthouserc.json`. Accessibility and SEO must score 1 and best-practices
-  0.95 (errors); performance is a warning, because it depends on the Google
-  Fonts stylesheet and the analytics beacon — set a real threshold from
-  observed medians before making it an error. Lighthouse CI is deliberately
+  `lighthouserc.json`. The job carries `continue-on-error: true` because the
+  thresholds there (accessibility and SEO 1, best-practices 0.95, performance
+  a warning) have never been measured against this site — read the real
+  scores off the `lighthouse-report` artifact, set the thresholds from them,
+  and drop `continue-on-error` to make the budgets binding. Lighthouse CI is
+  deliberately
   *not* a devDependency: `@lhci/cli` drags in a puppeteer tree and ~10 audit
   advisories for a five-dependency repo, so the action supplies it in CI and
   `npm run lighthouse` shells out to `npx` locally.

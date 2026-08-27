@@ -143,6 +143,14 @@ Assertion split, chosen for signal rather than noise:
   should be set from the first three observed medians rather than guessed;
   flip to **error** once a real number is in hand.
 
+None of these numbers has been measured against the site yet — Lighthouse
+cannot run in the authoring sandbox (Chrome's DevTools port never opens) and
+the CI workflow could not be dispatched from there either. So the job lands
+with `continue-on-error: true` and always uploads its report: the first PR
+prints the real scores, and the follow-up is to set the thresholds from them
+and delete that line. Budgets that fire on a pre-existing condition get
+switched off rather than fixed, which is worse than a one-run delay.
+
 **`.github/workflows/ci.yml`** — a third job `lighthouse` alongside `build` and
 `test`: checkout, setup-node 22 + npm cache, `npm ci`, `npm run build`, then
 `treosh/lighthouse-ci-action@v12` with `configPath: ./lighthouserc.json`, and

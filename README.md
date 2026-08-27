@@ -99,9 +99,10 @@ node scripts/check-live-site.mjs            # against the live site
 node scripts/check-live-site.mjs http://localhost:4321/   # against a local build
 ```
 
-Pull requests also run Lighthouse against the built site
-(`lighthouserc.json`); accessibility, SEO and best-practices are hard budgets,
-performance is a warning. `npm run lighthouse` runs the same audit locally.
+Pull requests also run Lighthouse against the built site (`lighthouserc.json`)
+and attach the report as an artifact. The job is non-blocking until its
+thresholds have been calibrated against a real run — see `CLAUDE.md`.
+`npm run lighthouse` runs the same audit locally.
 
 ## Creator
 

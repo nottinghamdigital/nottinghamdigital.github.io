@@ -75,12 +75,21 @@ jobs:
       # brings its own Lighthouse CI rather than the repo carrying it as a
       # devDependency — @lhci/cli pulls in a puppeteer tree this site has no
       # other use for. `npm run lighthouse` runs the same config locally.
+      #
+      # continue-on-error is temporary: the thresholds in lighthouserc.json
+      # have never been measured against this site, so a wrong guess would
+      # fail PRs for a pre-existing condition rather than a regression. The
+      # first run prints the real category scores — set the thresholds from
+      # them and delete this line to make the budgets binding.
       - name: Lighthouse budgets
+        continue-on-error: true
         uses: treosh/lighthouse-ci-action@v12
         with:
           configPath: ./lighthouserc.json
 
-      - if: failure()
+      # Always, not just on failure: the report is what the thresholds get
+      # calibrated from.
+      - if: always()
         uses: actions/upload-artifact@v4
         with:
           name: lighthouse-report
