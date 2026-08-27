@@ -30,6 +30,15 @@ const enriched = events.map((e) => {
 
 const [first, ...rest] = enriched;
 const moreCount = rest.length;
+
+/** Date-only label for the "+N more" toggle — the hero's own date is often
+ * well in the future, so "more today" would misleadingly suggest it's
+ * happening right now. */
+const heroDayLabel = new Date(first.date).toLocaleDateString('en-GB', {
+	weekday: 'short',
+	day: 'numeric',
+	month: 'short',
+});
 ---
 
 <div class="next-up">
@@ -62,7 +71,7 @@ const moreCount = rest.length;
 					aria-controls="next-up-more-list"
 					data-next-up-toggle
 				>
-					+{moreCount} more today
+					+{moreCount} more on {heroDayLabel}
 				</button>
 			)
 		}
