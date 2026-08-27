@@ -30,15 +30,6 @@ const enriched = events.map((e) => {
 
 const [first, ...rest] = enriched;
 const moreCount = rest.length;
-
-/** Date-only label for the "+N more" toggle — the hero's own date is often
- * well in the future, so "more today" would misleadingly suggest it's
- * happening right now. */
-const heroDayLabel = new Date(first.date).toLocaleDateString('en-GB', {
-	weekday: 'short',
-	day: 'numeric',
-	month: 'short',
-});
 ---
 
 <div class="next-up">
@@ -69,9 +60,10 @@ const heroDayLabel = new Date(first.date).toLocaleDateString('en-GB', {
 					class="next-up__more"
 					aria-expanded="false"
 					aria-controls="next-up-more-list"
+					aria-label={`Show ${moreCount} more event${moreCount === 1 ? '' : 's'} on this date`}
 					data-next-up-toggle
 				>
-					+{moreCount} more on {heroDayLabel}
+					+{moreCount} more
 				</button>
 			)
 		}
@@ -119,12 +111,17 @@ const heroDayLabel = new Date(first.date).toLocaleDateString('en-GB', {
 				}
 
 				const collapsedLabel = toggle.textContent.trim();
+				const collapsedAriaLabel = toggle.getAttribute('aria-label') ?? collapsedLabel;
 
 				toggle.addEventListener('click', () => {
 					const expanded = toggle.getAttribute('aria-expanded') === 'true';
 					toggle.setAttribute('aria-expanded', String(!expanded));
 					list.hidden = expanded;
 					toggle.textContent = expanded ? collapsedLabel : 'Hide other events';
+					toggle.setAttribute(
+						'aria-label',
+						expanded ? collapsedAriaLabel : 'Hide other events on this date',
+					);
 				});
 			});
 		</script>
