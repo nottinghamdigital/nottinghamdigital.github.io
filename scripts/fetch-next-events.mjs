@@ -19,14 +19,14 @@ const MEETUP_COM_URL = /^https:\/\/www\.meetup\.com\/([^/]+)\/?/;
 const LUMA_URL = /^https:\/\/(?:www\.)?(?:lu\.ma|luma\.com)\/([^/?#]+)\/?/;
 const BUILT_IN_NOTTS_URL = /^https:\/\/(?:www\.)?builtinnotts\.com\/events\/?/;
 
-/** @returns {Promise<{ slug: string, url: string }[]>} */
+/** @returns {Promise<{ slug: string, events?: string }[]>} */
 async function loadMeetups() {
 	const files = (await readdir(MEETUPS_DIR)).filter((f) => f.endsWith('.yml'));
 	const meetups = [];
 	for (const file of files) {
 		const raw = await readFile(new URL(file, MEETUPS_DIR), 'utf-8');
 		const data = parse(raw);
-		meetups.push({ slug: path.basename(file, '.yml'), url: data.url });
+		meetups.push({ slug: path.basename(file, '.yml'), events: data.events });
 	}
 	return meetups;
 }
@@ -306,28 +306,34 @@ async function main() {
 	const result = {};
 
 	await Promise.all(
-		meetups.map(async ({ slug, url }) => {
-			const meetupMatch = MEETUP_COM_URL.exec(url ?? '');
+		meetups.map(async ({ slug, events }) => {
+			const meetupMatch = MEETUP_COM_URL.exec(events ?? '');
 			if (meetupMatch) {
 				const event = await fetchMeetupComNextEvent(meetupMatch[1]);
 				if (event) result[slug] = event;
 				return;
 			}
 
-			const lumaMatch = LUMA_URL.exec(url ?? '');
+			const lumaMatch = LUMA_URL.exec(events ?? '');
 			if (lumaMatch) {
 				const event = await fetchLumaNextEvent(lumaMatch[1]);
 				if (event) result[slug] = event;
 				return;
 			}
 
-			if (BUILT_IN_NOTTS_URL.test(url ?? '')) {
-				const event = await fetchBuiltInNottsNextEvent(url);
+			if (BUILT_IN_NOTTS_URL.test(events ?? '')) {
+				const event = await fetchBuiltInNottsNextEvent(events);
 				if (event) result[slug] = event;
 				return;
 			}
 
-			// No known source for this group's URL — skip.
+			if (!events) {
+				console.warn(`[next-events] ${slug} has no events field — skipping`);
+			} else {
+				console.warn(
+					`[next-events] ${slug} events value "${events}" matches no known source — skipping`,
+				);
+			}
 		}),
 	);
 
