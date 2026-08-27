@@ -1,0 +1,85 @@
+---
+/**
+ * Reveals the pencil "suggest an edit" link on every meetup card. Off by
+ * default so most visitors never see it — this is aimed at organisers, not
+ * general readers.
+ *
+ * Progressive enhancement, same pattern as ThemeToggle: hidden until the `js`
+ * class lands on <html>, since without JS there's no way to flip the state.
+ * The choice is stored in localStorage under `nd-edit-mode` and applied by
+ * setting `data-edit-mode="true"` on <html>, which global.css uses to show
+ * the per-card links. BaseLayout applies any stored choice before first
+ * paint to avoid the links flashing in after load.
+ */
+---
+
+<button
+	type="button"
+	class="edit-mode-toggle"
+	data-edit-mode-toggle
+	aria-pressed="false"
+>
+	<span class="icon" style="--icon-src: url(/img/edit.svg);" aria-hidden="true"
+	></span>
+	Show edit links
+</button>
+
+<p class="visually-hidden" role="status" data-edit-mode-status></p>
+
+<script is:inline>
+	document.addEventListener('DOMContentLoaded', () => {
+		const STORAGE_KEY = 'nd-edit-mode';
+		const toggle = document.querySelector('[data-edit-mode-toggle]');
+		const status = document.querySelector('[data-edit-mode-status]');
+
+		function storedEnabled() {
+			try {
+				return localStorage.getItem(STORAGE_KEY) === 'true';
+			} catch (e) {
+				return false;
+			}
+		}
+
+		function apply(enabled) {
+			if (enabled) {
+				document.documentElement.dataset.editMode = 'true';
+			} else {
+				delete document.documentElement.dataset.editMode;
+				// Collapse any panels left open, so the pencil's aria-expanded
+				// state doesn't say "open" for a panel that's now hidden, and
+				// switching edit mode back on later starts fresh.
+				for (const panel of document.querySelectorAll('[data-edit-panel]')) {
+					if (panel instanceof HTMLElement) panel.hidden = true;
+				}
+				for (const editToggle of document.querySelectorAll(
+					'[data-edit-toggle]',
+				)) {
+					editToggle.setAttribute('aria-expanded', 'false');
+				}
+			}
+			try {
+				if (enabled) {
+					localStorage.setItem(STORAGE_KEY, 'true');
+				} else {
+					localStorage.removeItem(STORAGE_KEY);
+				}
+			} catch (e) {}
+		}
+
+		if (!(toggle instanceof HTMLButtonElement)) return;
+
+		let enabled = storedEnabled();
+		toggle.setAttribute('aria-pressed', String(enabled));
+
+		toggle.addEventListener('click', () => {
+			enabled = !enabled;
+			apply(enabled);
+			toggle.setAttribute('aria-pressed', String(enabled));
+			if (status instanceof HTMLElement) {
+				status.textContent = enabled
+					? 'Edit links shown on every card.'
+					: 'Edit links hidden.';
+			}
+		});
+	});
+</script>

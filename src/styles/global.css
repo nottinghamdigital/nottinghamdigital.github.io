@@ -340,6 +340,124 @@ h3 {
 	color: var(--color-link);
 }
 
+/* Hidden until "Show edit links" is switched on in the footer — see
+   EditModeToggle.astro. Off by default since it's aimed at organisers, not
+   general readers. */
+.meetup-card__edit {
+	display: none;
+	position: absolute;
+	top: var(--space-xs);
+	right: var(--space-xs);
+	align-items: center;
+	justify-content: center;
+	width: 1.75rem;
+	height: 1.75rem;
+	border: none;
+	border-radius: var(--radius-pill);
+	background: none;
+	color: var(--color-muted);
+	cursor: pointer;
+}
+
+.meetup-card__edit:hover {
+	color: var(--color-link);
+	background: var(--color-border);
+}
+
+[data-edit-mode='true'] .meetup-card__edit {
+	display: flex;
+}
+
+/* Reserves room for the pencil icon so it doesn't sit over the title text. */
+[data-edit-mode='true'] .meetup-card {
+	padding-inline-end: calc(var(--space-md) + 1.75rem);
+}
+
+.meetup-card__edit-panel {
+	margin-top: var(--space-sm);
+	padding-top: var(--space-sm);
+	border-top: 1px dashed var(--color-border);
+	text-align: left;
+}
+
+.edit-field {
+	margin-bottom: var(--space-xs);
+}
+
+.edit-field label {
+	display: block;
+	margin-bottom: var(--space-2xs);
+	font-size: var(--text-sm);
+	font-weight: 600;
+	color: var(--color-heading);
+}
+
+.edit-field input,
+.edit-field textarea,
+.edit-field select {
+	width: 100%;
+	padding: var(--space-2xs) var(--space-xs);
+	border: 1px solid var(--color-border);
+	border-radius: 6px;
+	background: var(--color-page);
+	color: var(--color-text);
+	font: inherit;
+}
+
+.edit-field input:focus,
+.edit-field textarea:focus,
+.edit-field select:focus {
+	outline: 2px solid var(--color-focus);
+	outline-offset: 1px;
+}
+
+.edit-panel__advanced {
+	margin-bottom: var(--space-sm);
+}
+
+.edit-panel__advanced summary {
+	margin-bottom: var(--space-xs);
+	color: var(--color-heading);
+	font-size: var(--text-sm);
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.edit-panel__advanced[open] summary {
+	margin-bottom: var(--space-sm);
+}
+
+.edit-field__hint {
+	margin: 0 0 var(--space-2xs);
+	color: var(--color-muted);
+	font-size: var(--text-sm);
+}
+
+.edit-panel__hint {
+	margin: 0 0 var(--space-xs);
+	color: var(--color-muted);
+	font-size: var(--text-sm);
+}
+
+.edit-panel__continue {
+	display: inline-block;
+	padding: var(--space-2xs) var(--space-sm);
+	border-radius: var(--radius-pill);
+	background: var(--color-heading);
+	color: var(--color-surface);
+	font-weight: 600;
+	font-size: var(--text-sm);
+}
+
+.edit-panel__continue:hover {
+	background: var(--color-link);
+}
+
+.meetup-card__edit .icon {
+	width: 1em;
+	height: 1em;
+}
+
 @media (min-width: 600px) {
 	.meetup-card {
 		padding-inline-start: calc(var(--stripe-width-wide) + var(--space-md));
@@ -385,6 +503,34 @@ h3 {
 
 .js .theme-toggle {
 	display: flex;
+}
+
+.edit-mode-toggle {
+	display: none;
+	align-items: center;
+	gap: var(--space-2xs);
+	margin-top: var(--space-xs);
+	padding: var(--space-2xs) var(--space-sm);
+	border: 2px solid var(--color-heading);
+	border-radius: var(--radius-pill);
+	background: var(--color-surface);
+	color: var(--color-heading);
+	font-size: var(--text-sm);
+	font-weight: 600;
+}
+
+.js .edit-mode-toggle {
+	display: inline-flex;
+}
+
+.edit-mode-toggle[aria-pressed='true'] {
+	background: var(--color-heading);
+	color: var(--color-surface);
+}
+
+.edit-mode-toggle .icon {
+	width: 1em;
+	height: 1em;
 }
 
 .theme-toggle__group {

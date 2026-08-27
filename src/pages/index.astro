@@ -7,6 +7,8 @@ import CategoryFilters from '../components/CategoryFilters.astro';
 import Logo from '../components/Logo.astro';
 import MeetupCard from '../components/MeetupCard.astro';
 import ThemeToggle from '../components/ThemeToggle.astro';
+import EditModeToggle from '../components/EditModeToggle.astro';
+import EditPanelScript from '../components/EditPanelScript.astro';
 import { CATEGORIES } from '../data/categories';
 
 /**
@@ -55,6 +57,7 @@ const description =
 			{
 				meetups.map((meetup) => (
 					<MeetupCard
+						id={meetup.id}
 						name={meetup.data.name}
 						url={meetup.data.url}
 						summary={meetup.data.summary}
@@ -85,6 +88,8 @@ const description =
 				>GitHub</a
 			>
 		</p>
+		<EditModeToggle />
 		<ThemeToggle />
 	</footer>
+	<EditPanelScript />
 </BaseLayout>

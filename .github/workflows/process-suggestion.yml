@@ -1,0 +1,75 @@
+name: Process suggested edit
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  apply-suggestion:
+    if: contains(github.event.issue.labels.*.name, 'event-suggestion')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Apply the suggestion to the matching meetup file
+        id: apply
+        run: node scripts/apply-suggestion.mjs <<< "$ISSUE_BODY"
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+
+      # Re-validates every meetup file against the real content schema, same
+      # check a normal contributor PR gets from ci.yml.
+      - name: Validate the patched file against the content schema
+        run: npm run build
+
+      - name: Open a pull request with the change
+        id: pr
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: suggestion/${{ github.event.issue.number }}
+          commit-message: >-
+            Apply suggested edit from #${{ github.event.issue.number }}
+          title: >-
+            Suggested edit: ${{ steps.apply.outputs.group-name }}
+          body: >-
+            Suggested via #${{ github.event.issue.number }}.
+
+            This PR was opened automatically from a "suggest an edit" issue
+            form submission — please review the diff before merging.
+          add-paths: src/content/meetups/*.yml
+
+      - name: Link the PR from the issue
+        if: steps.pr.outputs.pull-request-number
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `Opened #${{ steps.pr.outputs.pull-request-number }} with this suggestion — thank you! A maintainer will take a look.`,
+            });
+
+      - name: Comment on the issue if the suggestion couldn't be applied
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: "Thanks for the suggestion! It couldn't be applied automatically (usually because the group name doesn't match exactly, or one of the new values isn't valid) — a maintainer will pick this up by hand.",
+            });

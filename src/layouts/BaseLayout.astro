@@ -52,6 +52,9 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
 				if (theme === 'light' || theme === 'dark') {
 					document.documentElement.dataset.theme = theme;
 				}
+				if (localStorage.getItem('nd-edit-mode') === 'true') {
+					document.documentElement.dataset.editMode = 'true';
+				}
 			} catch (e) {}
 		</script>
 	</head>

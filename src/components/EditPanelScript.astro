@@ -1,0 +1,78 @@
+---
+/**
+ * Drives every meetup card's edit panel (see MeetupCard.astro). Rendered
+ * once on the page — not per-card — and uses event delegation so it works
+ * for every card regardless of how many there are.
+ *
+ * Clicking a card's pencil toggles that card's panel open. The panel's
+ * name/url/cadence/summary/category/links fields are pre-filled with the
+ * group's current values (via defaultValue for inputs/textareas, and a
+ * data-default-value attribute for the category <select>, since Astro
+ * renders them server-side); clicking "Continue to GitHub" compares each
+ * field's current value against that original and only carries the ones
+ * that actually changed through to the GitHub issue form's query-string
+ * prefill — untouched fields are left out, so the GitHub form treats them
+ * as "no change" the same way it would for a manually-opened issue.
+ */
+const REPO_ISSUES_URL =
+	'https://github.com/nottinghamdigital/nottinghamdigital.github.io/issues/new';
+---
+
+<script is:inline define:vars={{ REPO_ISSUES_URL }}>
+	document.addEventListener('DOMContentLoaded', () => {
+		document.addEventListener('click', (event) => {
+			const toggle = event.target.closest('[data-edit-toggle]');
+			if (toggle) {
+				const panel = toggle
+					.closest('.meetup-card')
+					?.querySelector('[data-edit-panel]');
+				if (!(panel instanceof HTMLElement)) return;
+				const expanded = toggle.getAttribute('aria-expanded') === 'true';
+				toggle.setAttribute('aria-expanded', String(!expanded));
+				panel.hidden = expanded;
+				return;
+			}
+
+			const continueLink = event.target.closest('[data-edit-continue]');
+			if (continueLink) {
+				event.preventDefault();
+				const panel = continueLink.closest('[data-edit-panel]');
+				if (!(panel instanceof HTMLElement)) return;
+
+				const params = new URLSearchParams({
+					template: 'suggest-edit.yml',
+					'group-name': panel.dataset.groupName ?? '',
+				});
+
+				const fieldToParam = {
+					name: 'new-name',
+					url: 'new-url',
+					cadence: 'new-cadence',
+					summary: 'new-summary',
+					category: 'new-category',
+					links: 'new-links',
+				};
+				for (const [field, param] of Object.entries(fieldToParam)) {
+					const input = panel.querySelector(`[data-field="${field}"]`);
+					if (input instanceof HTMLSelectElement) {
+						if (input.value !== input.dataset.defaultValue) {
+							params.set(param, input.value);
+						}
+						continue;
+					}
+					if (
+						!(input instanceof HTMLInputElement) &&
+						!(input instanceof HTMLTextAreaElement)
+					) {
+						continue;
+					}
+					if (input.value.trim() !== input.defaultValue.trim()) {
+						params.set(param, input.value.trim());
+					}
+				}
+
+				window.open(`${REPO_ISSUES_URL}?${params}`, '_blank', 'noopener');
+			}
+		});
+	});
+</script>

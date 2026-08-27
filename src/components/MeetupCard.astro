@@ -1,5 +1,5 @@
 ---
-import { categoryById, type CategoryId } from '../data/categories';
+import { CATEGORIES, categoryById, type CategoryId } from '../data/categories';
 
 interface NextEvent {
 	title: string;
@@ -8,6 +8,8 @@ interface NextEvent {
 }
 
 interface Props {
+	/** Content collection entry id (the meetup's YAML filename stem) — used only to build unique DOM ids for the edit panel's form fields. */
+	id: string;
 	name: string;
 	url: string;
 	summary: string;
@@ -18,7 +20,7 @@ interface Props {
 	nextEvent?: NextEvent;
 }
 
-const { name, url, summary, cadence, category, links, nextEvent } =
+const { id, name, url, summary, cadence, category, links, nextEvent } =
 	Astro.props;
 const { label: categoryLabel, icon } = categoryById(category);
 const nextEventDate = nextEvent
@@ -28,6 +30,8 @@ const nextEventDate = nextEvent
 			month: 'short',
 		})
 	: null;
+
+const linksAsText = links.map((l) => `${l.label}: ${l.url}`).join('\n');
 ---
 
 <li
@@ -40,6 +44,18 @@ const nextEventDate = nextEvent
 		<span class="icon" style={`--icon-src: url(${icon});`} aria-hidden="true"
 		></span>
 	</div>
+
+	<button
+		type="button"
+		class="meetup-card__edit"
+		data-edit-toggle
+		aria-expanded="false"
+		aria-controls={`edit-panel-${id}`}
+		aria-label={`Suggest an edit to ${name}`}
+	>
+		<span class="icon" style="--icon-src: url(/img/edit.svg);" aria-hidden="true"
+		></span>
+	</button>
 
 	<h2 class="meetup-card__title">
 		<a class="meetup-card__link p-name u-url" href={url}>{name}</a>
@@ -82,4 +98,79 @@ const nextEventDate = nextEvent
 			</p>
 		)
 	}
+
+	<div
+		class="meetup-card__edit-panel"
+		id={`edit-panel-${id}`}
+		data-edit-panel
+		data-group-name={name}
+		hidden
+	>
+		<div class="edit-field">
+			<label for={`cadence-${id}`}>Cadence</label>
+			<input
+				type="text"
+				id={`cadence-${id}`}
+				data-field="cadence"
+				value={cadence}
+			/>
+		</div>
+
+		<div class="edit-field">
+			<label for={`summary-${id}`}>Summary</label>
+			<textarea id={`summary-${id}`} data-field="summary" rows="3"
+				>{summary}</textarea
+			>
+		</div>
+
+		<details class="edit-panel__advanced">
+			<summary>Advanced — name, URL, category, links</summary>
+
+			<div class="edit-field">
+				<label for={`name-${id}`}>Name</label>
+				<input type="text" id={`name-${id}`} data-field="name" value={name} />
+			</div>
+
+			<div class="edit-field">
+				<label for={`url-${id}`}>URL</label>
+				<input type="text" id={`url-${id}`} data-field="url" value={url} />
+			</div>
+
+			<div class="edit-field">
+				<label for={`category-${id}`}>Category</label>
+				<select
+					id={`category-${id}`}
+					data-field="category"
+					data-default-value={categoryLabel}
+				>
+					{
+						CATEGORIES.map((c) => (
+							<option value={c.label} selected={c.id === category}>
+								{c.label}
+							</option>
+						))
+					}
+				</select>
+			</div>
+
+			<div class="edit-field">
+				<label for={`links-${id}`}>Links</label>
+				<p class="edit-field__hint">One per line, as Label: https://url</p>
+				<textarea
+					id={`links-${id}`}
+					data-field="links"
+					rows={Math.max(2, links.length)}>{linksAsText}</textarea
+				>
+			</div>
+		</details>
+
+		<p class="edit-panel__hint">
+			Edit whatever's changed, then continue to GitHub to submit — only
+			the fields you've actually changed are carried over.
+		</p>
+
+		<a href="#" data-edit-continue class="edit-panel__continue">
+			Continue to GitHub
+		</a>
+	</div>
 </li>
