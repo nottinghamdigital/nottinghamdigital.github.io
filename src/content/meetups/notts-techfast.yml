@@ -1,5 +1,6 @@
 name: Notts Techfast
 url: https://www.meetup.com/Notts-Techfast/
+events: https://www.meetup.com/Notts-Techfast/
 category: tech
 cadence: 3rd Wednesday of the month, in the morning
 summary: >-
@@ -8,6 +9,5 @@ summary: >-
 links:
   - label: LinkedIn
     url: https://www.linkedin.com/company/notts-techfast
-  #- label: X
-  #  url: https://x.com/nottstechfast
-
+  - label: Bluesky
+    url: https://bsky.app/profile/notts.techfa.st

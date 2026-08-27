@@ -1,13 +1,12 @@
 name: Batch Bunch
-url: https://luma.com/batchbunch
+url: https://www.batchbunch.dev/
+events: https://luma.com/batchbunch
 category: tech
 cadence: Second Monday of the month
 summary: >-
   Nottingham's in-person tech meetup for working on personal projects
   together, with community support and motivation.
 links:
-  - label: Website
-    url: https://www.batchbunch.dev/
   - label: Bluesky
     url: https://bsky.app/profile/batchbunch.dev
   - label: X

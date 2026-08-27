@@ -55,3 +55,47 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build
+
+      # lighthouserc.json serves dist/ with the same script Playwright uses, so
+      # the audit runs against the artefact GitHub Pages publishes. The action
+      # brings its own Lighthouse CI rather than the repo carrying it as a
+      # devDependency — @lhci/cli pulls in a puppeteer tree this site has no
+      # other use for. `npm run lighthouse` runs the same config locally.
+      #
+      # continue-on-error is temporary: the thresholds in lighthouserc.json
+      # have never been measured against this site, so a wrong guess would
+      # fail PRs for a pre-existing condition rather than a regression. The
+      # first run prints the real category scores — set the thresholds from
+      # them and delete this line to make the budgets binding.
+      #
+      # Pinned to a commit rather than the v12 tag: this is the only
+      # third-party action in the repo, tags are mutable, and it runs
+      # arbitrary code in the runner.
+      - name: Lighthouse budgets
+        continue-on-error: true
+        uses: treosh/lighthouse-ci-action@3e7e23fb74242897f95c0ba9cabad3d0227b9b18 # v12
+        with:
+          configPath: ./lighthouserc.json
+
+      # Always, not just on failure: the report is what the thresholds get
+      # calibrated from.
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report
+          path: .lighthouseci/reports/
+          retention-days: 7
