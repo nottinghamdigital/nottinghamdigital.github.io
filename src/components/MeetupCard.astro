@@ -14,26 +14,30 @@ interface Props {
 	cadence: string;
 	category: CategoryId;
 	links: { label: string; url: string }[];
-	/** The group's next scheduled event, fetched from meetup.com's RSS feed at build time. Absent if there's none scheduled, or the feed couldn't be fetched. */
-	nextEvent?: NextEvent;
+	/**
+	 * The group's upcoming events, soonest first — one per event source
+	 * (usually one, but an Eventbrite organizer running multiple series can
+	 * contribute several), fetched at build time. Absent if none are
+	 * scheduled, or none of the sources could be fetched.
+	 */
+	nextEvents?: NextEvent[];
 }
 
-const { name, url, summary, cadence, category, links, nextEvent } =
+const { name, url, summary, cadence, category, links, nextEvents } =
 	Astro.props;
 const { label: categoryLabel, icon } = categoryById(category);
-const nextEventDate = nextEvent
-	? new Date(nextEvent.date).toLocaleDateString('en-GB', {
-			weekday: 'short',
-			day: 'numeric',
-			month: 'short',
-		})
-	: null;
+const formatDate = (date: string) =>
+	new Date(date).toLocaleDateString('en-GB', {
+		weekday: 'short',
+		day: 'numeric',
+		month: 'short',
+	});
 ---
 
 <li
 	class="meetup-card h-card"
 	data-category={category}
-	data-next-event-date={nextEvent?.date}
+	data-next-event-date={nextEvents?.[0]?.date}
 	style={`--category-color: var(--color-category-${category});`}
 >
 	<div class="meetup-card__stripe">
@@ -59,14 +63,25 @@ const nextEventDate = nextEvent
 	</p>
 
 	{
-		nextEvent && (
-			<p class="meetup-card__next-event">
-				Next:{' '}
-				<a href={nextEvent.url} rel="noopener">
-					{nextEventDate}
-					<span class="visually-hidden"> — {nextEvent.title}</span>
-				</a>
-			</p>
+		nextEvents && nextEvents.length > 0 && (
+			<div
+				class="meetup-card__next-events"
+				data-multiple={nextEvents.length > 1}
+			>
+				<span class="meetup-card__next-events-label">Next:</span>
+				<ul>
+					{nextEvents.map((event) => (
+						<li>
+							<a href={event.url} rel="noopener">
+								<span class="meetup-card__next-events-date">
+									{formatDate(event.date)}
+								</span>
+								<span class="meetup-card__next-events-title"> — {event.title}</span>
+							</a>
+						</li>
+					))}
+				</ul>
+			</div>
 		)
 	}
 

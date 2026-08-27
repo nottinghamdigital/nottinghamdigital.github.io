@@ -15,7 +15,7 @@ import { CATEGORIES } from '../data/categories';
  * since the file is gitignored and may not exist yet (e.g. `astro dev`
  * without a prior build) — an empty object then, so every card just falls
  * back to its static cadence text.
- * @type {Record<string, { title: string, url: string, date: string }>}
+ * @type {Record<string, { title: string, url: string, date: string }[]>}
  */
 const nextEventsPath = path.join(
 	process.cwd(),
@@ -31,7 +31,7 @@ const meetups = (await getCollection('meetups')).sort((a, b) =>
 
 const usedCategoryIds = new Set(meetups.map((m) => m.data.category));
 const activeCategories = CATEGORIES.filter((c) => usedCategoryIds.has(c.id));
-const hasNextEvents = meetups.some((m) => nextEvents[m.id]);
+const hasNextEvents = meetups.some((m) => nextEvents[m.id]?.length);
 
 const title =
 	'Nottingham Digital: Design and Development Events for the Tech Community';
@@ -61,7 +61,7 @@ const description =
 						cadence={meetup.data.cadence}
 						category={meetup.data.category}
 						links={meetup.data.links}
-						nextEvent={nextEvents[meetup.id]}
+						nextEvents={nextEvents[meetup.id]}
 					/>
 				))
 			}

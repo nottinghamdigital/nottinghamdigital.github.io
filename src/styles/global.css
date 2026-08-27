@@ -314,20 +314,70 @@ h3 {
 	color: var(--color-muted);
 }
 
-.meetup-card__next-event {
+.meetup-card__next-events {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-xs);
+	margin-top: var(--space-xs);
 	color: var(--color-muted);
 	font-family: var(--font-mono);
 	font-size: var(--text-sm);
 }
 
-.meetup-card__next-event a {
+.meetup-card__next-events ul {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-xs);
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.meetup-card__next-events li:not(:last-child)::after {
+	content: ',';
+}
+
+.meetup-card__next-events a {
 	color: var(--category-color);
 	font-weight: 600;
+	text-decoration: none;
+}
+
+.meetup-card__next-events-date {
+	text-decoration: underline;
+}
+
+/* With more than one upcoming event, each needs its own line and title to
+   tell it apart from the others — the single-event case stays a compact,
+   comma-joined inline row with the title left for screen readers only. */
+.meetup-card__next-events[data-multiple='true'] {
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--space-2xs);
+}
+
+.meetup-card__next-events[data-multiple='true'] ul {
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--space-2xs);
+}
+
+.meetup-card__next-events[data-multiple='true'] li::after {
+	content: none;
+}
+
+.meetup-card__next-events-title {
+	color: var(--color-muted);
+	font-weight: 400;
 }
 
 .meetup-card__links {
 	display: flex;
+	flex-wrap: wrap;
 	gap: var(--space-xs);
+	margin-top: var(--space-xs);
+	padding-top: var(--space-xs);
+	border-top: 1px solid var(--color-border);
 	font-family: var(--font-mono);
 	font-size: var(--text-sm);
 }
