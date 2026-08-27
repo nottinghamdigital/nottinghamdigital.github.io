@@ -13,6 +13,7 @@ your group (for example `phpminds.yml`):
 ```yaml
 name: PHPMinds
 url: https://phpminds.org/
+events: https://phpminds.org/
 category: tech # tech | design | ops
 cadence: Second Thursday
 summary: >-
@@ -26,6 +27,7 @@ links:
 | --- | --- | --- |
 | `name` | yes | How the group should be listed |
 | `url` | yes | Meetup page, or your own site |
+| `events` | no | Where your events actually get posted — often the same as `url`, but use a different link if your events feed lives elsewhere (Luma, Meetup, an `/events` page); without it, no next-event date is fetched |
 | `category` | yes | One of `tech`, `design`, `ops` |
 | `cadence` | yes | Plain English: `First Tuesday`, `Quarterly`, `No regular date` |
 | `summary` | yes | A sentence or two |

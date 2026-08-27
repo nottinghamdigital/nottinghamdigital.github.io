@@ -16,6 +16,13 @@ const meetups = defineCollection({
 		name: z.string().min(1),
 		/** Where to find the group: Meetup, its own site, wherever it lives. */
 		url: z.string().url(),
+		/**
+		 * Where the group's upcoming events actually live — read by
+		 * scripts/fetch-next-events.mjs. Often the same as `url`; only differs
+		 * when the group's site and its events feed are different pages (e.g.
+		 * a Luma calendar, a Meetup group, an `/events` subpage).
+		 */
+		events: z.string().url().optional(),
 		/** A sentence or two, written by the organisers. */
 		summary: z.string().min(1),
 		/** How often it runs, in plain English: "Second Thursday". */
