@@ -1,5 +1,6 @@
 ---
 import { categoryById, type CategoryId } from '../data/categories';
+import { linkIcon } from '../data/link-icons';
 
 interface NextEvent {
 	title: string;
@@ -41,9 +42,27 @@ const nextEventDate = nextEvent
 		></span>
 	</div>
 
-	<h2 class="meetup-card__title">
-		<a class="meetup-card__link p-name u-url" href={url}>{name}</a>
-	</h2>
+	<div class="meetup-card__header">
+		<h2 class="meetup-card__title">
+			<a class="meetup-card__link p-name u-url" href={url}>{name}</a>
+		</h2>
+
+		{
+			links.length > 0 && (
+				<p class="meetup-card__links">
+					{links.map((link) => (
+						<a href={link.url} rel="me noopener" aria-label={`${link.label} for ${name}`}>
+							<span
+								class="icon"
+								style={`--icon-src: url(${linkIcon(link.label)});`}
+								aria-hidden="true"
+							/>
+						</a>
+					))}
+				</p>
+			)
+		}
+	</div>
 
 	<p class="meetup-card__summary p-summary">{summary}</p>
 
@@ -66,19 +85,6 @@ const nextEventDate = nextEvent
 					{nextEventDate}
 					<span class="visually-hidden"> — {nextEvent.title}</span>
 				</a>
-			</p>
-		)
-	}
-
-	{
-		links.length > 0 && (
-			<p class="meetup-card__links">
-				{links.map((link) => (
-					<a href={link.url} rel="me noopener">
-						{link.label}
-						<span class="visually-hidden"> for {name}</span>
-					</a>
-				))}
 			</p>
 		)
 	}
