@@ -53,7 +53,10 @@ npm run check    # type-check components and content
 | `src/styles/tokens.css` | **All** colours, fonts and spacing |
 | `src/components/Logo.astro` | The site wordmark |
 | `src/assets/nd-monogram.svg` | The "nd" mark, traced from the logo artwork |
+| `src/data/analytics.ts` | The GoatCounter endpoint — the only analytics config |
+| `scripts/check-live-site.mjs` | Daily health check run against the published site |
 | `.github/workflows/deploy.yml` | Build and publish to GitHub Pages |
+| `.github/workflows/monitor.yml` | Daily check that the live site is up and fresh |
 
 ### Retheming
 
@@ -74,6 +77,33 @@ Pushes to `main` trigger `.github/workflows/deploy.yml`, which builds the site
 and publishes it to GitHub Pages. This requires the repository's
 **Settings → Pages → Source** to be set to **GitHub Actions**.
 
+## Analytics and monitoring
+
+Visitor stats come from [GoatCounter](https://nottinghamdigital.goatcounter.com),
+which is cookieless and stores nothing on the device — no consent banner, and
+the dashboard is public. The endpoint lives in `src/data/analytics.ts` and
+nowhere else; emptying that string removes the beacon, which is what a fork
+should do.
+
+`.github/workflows/monitor.yml` runs `scripts/check-live-site.mjs` every morning
+against <https://nottingham.digital> and fails the run — which emails the
+workflow's last committer — when the site is unreachable, when the build stamp
+in `<meta name="build-time">` is more than 48 hours old (the daily deploy has
+stopped), when fewer meetup cards are published than there are files in
+`src/content/meetups/`, or when almost no group resolves an upcoming event
+(the feeds in `scripts/fetch-next-events.mjs` have changed). Run it by hand
+with:
+
+```sh
+node scripts/check-live-site.mjs            # against the live site
+node scripts/check-live-site.mjs http://localhost:4321/   # against a local build
+```
+
+Pull requests also run Lighthouse against the built site (`lighthouserc.json`)
+and attach the report as an artifact. The job is non-blocking until its
+thresholds have been calibrated against a real run — see `CLAUDE.md`.
+`npm run lighthouse` runs the same audit locally.
+
 ## Creator
 
 Nottingham Digital is maintained by members of the Nottingham digital community.
@@ -90,3 +120,4 @@ Longer-form implementation notes live in [`.claude/plans/`](.claude/plans):
 | --- | --- |
 | [`2026-08-astro-rebuild.md`](.claude/plans/2026-08-astro-rebuild.md) | The move from hand-edited HTML to this Astro build |
 | [`2026-08-content-refresh.md`](.claude/plans/2026-08-content-refresh.md) | Acting on the July 2026 audit of which meetups are still running |
+| [`2026-08-monitoring.md`](.claude/plans/2026-08-monitoring.md) | Adding visitor analytics, live-site monitoring and Lighthouse budgets |
