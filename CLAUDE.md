@@ -100,6 +100,11 @@ is cookieless and stores nothing on the device — the footer says so, and
 `tests/homepage.spec.ts` asserts no cookies are set, which is what keeps that
 claim honest if the analytics ever change. `count.js` refuses to send from
 localhost, so `astro dev` and the Playwright suite never reach the live stats.
+The one open item is that `count.js` is loaded from `gc.zgo.at`, so that origin
+can execute script on the site; SRI can't pin a vendor-updated file, but
+GoatCounter supports serving your own copy (drop it in `public/`, keep the
+`data-goatcounter` attribute — the `/count` endpoint is guaranteed compatible),
+which would leave only a POST that cannot execute anything.
 
 `BaseLayout` also stamps `<meta name="build-time">` into every page. That is a
 contract with `scripts/check-live-site.mjs`, which fetches the *published* site

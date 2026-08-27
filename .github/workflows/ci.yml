@@ -81,9 +81,13 @@ jobs:
       # fail PRs for a pre-existing condition rather than a regression. The
       # first run prints the real category scores — set the thresholds from
       # them and delete this line to make the budgets binding.
+      #
+      # Pinned to a commit rather than the v12 tag: this is the only
+      # third-party action in the repo, tags are mutable, and it runs
+      # arbitrary code in the runner.
       - name: Lighthouse budgets
         continue-on-error: true
-        uses: treosh/lighthouse-ci-action@v12
+        uses: treosh/lighthouse-ci-action@3e7e23fb74242897f95c0ba9cabad3d0227b9b18 # v12
         with:
           configPath: ./lighthouserc.json
 

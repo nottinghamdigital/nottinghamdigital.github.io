@@ -30,11 +30,17 @@ const MIN_NEXT_EVENTS = Number(process.env.MIN_NEXT_EVENTS ?? 3);
 const MAX_BUILD_AGE_HOURS = Number(process.env.MAX_BUILD_AGE_HOURS ?? 48);
 const MEETUPS_DIR = new URL('../src/content/meetups/', import.meta.url);
 const USER_AGENT = 'nottingham.digital site monitor';
+const REQUEST_TIMEOUT_MS = 15_000;
 
 /**
  * Two retries with a short backoff. A monitor that pages on one dropped
  * connection trains everyone to ignore it; a site that is down stays down
  * across all three attempts.
+ *
+ * Each attempt is bounded: `fetch` has no default timeout, and a server that
+ * accepts the connection and then never answers — an ordinary way for a site
+ * to be broken — would otherwise hang the job until Actions kills it hours
+ * later, reported as a cancelled run rather than a failed check.
  */
 async function fetchSite() {
 	let lastError;
@@ -43,6 +49,7 @@ async function fetchSite() {
 			const res = await fetch(SITE_URL, {
 				headers: { 'User-Agent': USER_AGENT },
 				redirect: 'follow',
+				signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
 			});
 			if (res.status >= 500) {
 				lastError = new Error(`HTTP ${res.status}`);
@@ -57,7 +64,14 @@ async function fetchSite() {
 	throw lastError;
 }
 
-/** @returns {Promise<number>} how many meetup files the site should be showing. */
+/**
+ * How many meetup files the site should be showing. Read from the checkout, so
+ * a manual run from a branch that adds or removes a meetup compares against
+ * that branch rather than what is deployed; the scheduled run always uses the
+ * default branch, where the two agree.
+ *
+ * @returns {Promise<number>}
+ */
 async function expectedMeetupCount() {
 	const files = await readdir(MEETUPS_DIR);
 	return files.filter((f) => f.endsWith('.yml')).length;
@@ -76,7 +90,11 @@ async function main() {
 	try {
 		res = await fetchSite();
 	} catch (err) {
-		fail('Reachable', `${SITE_URL} → ${err.message}`);
+		const reason =
+			err.name === 'TimeoutError'
+				? `no response within ${REQUEST_TIMEOUT_MS / 1000}s`
+				: err.message;
+		fail('Reachable', `${SITE_URL} → ${reason}`);
 		return report(checks);
 	}
 
@@ -136,6 +154,17 @@ async function main() {
 	return report(checks);
 }
 
+/**
+ * Details carry text from the response — a content-type header, the contents of
+ * a meta tag — so they are neither trusted nor known to be table-safe. Pipes
+ * and newlines would break the markdown table they land in, and the length cap
+ * keeps a garbage response from flooding the summary.
+ */
+function cell(text) {
+	const flat = String(text).replace(/[\r\n|]+/g, ' ').trim();
+	return flat.length > 200 ? `${flat.slice(0, 197)}…` : flat;
+}
+
 async function report(checks) {
 	const failed = checks.filter((c) => !c.ok);
 
@@ -151,7 +180,7 @@ async function report(checks) {
 			'| | Check | Detail |',
 			'| --- | --- | --- |',
 			...checks.map(
-				(c) => `| ${c.ok ? '✅' : '❌'} | ${c.name} | ${c.detail} |`,
+				(c) => `| ${c.ok ? '✅' : '❌'} | ${c.name} | ${cell(c.detail)} |`,
 			),
 			'',
 		];

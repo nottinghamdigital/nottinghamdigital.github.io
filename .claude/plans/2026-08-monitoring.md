@@ -75,6 +75,17 @@ the beacon tag is present with the expected `data-goatcounter` endpoint and is
 `async`; and `context.cookies()` is empty after load. The second is the test
 that actually defends the promise in the footer.
 
+### Open item: the third-party script origin
+
+`count.js` is fetched from `gc.zgo.at`, which means that origin can run script
+on nottingham.digital. Subresource Integrity can't help — the vendor updates
+the file — but GoatCounter documents serving your own copy: save
+<https://gc.zgo.at/count.js> to `public/count.js`, point `src` at it, keep the
+`data-goatcounter` attribute, and the `/count` endpoint is guaranteed to stay
+compatible. What remains is a cross-origin POST, which cannot execute code.
+Not done here because the authoring sandbox's egress policy blocks gc.zgo.at,
+and vendoring a script sight-unseen is worse than linking it.
+
 ### Maintainer setup (cannot be automated from here)
 
 The `nottinghamdigital.goatcounter.com` site already exists, so the only

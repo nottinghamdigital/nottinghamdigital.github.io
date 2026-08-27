@@ -10,7 +10,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
-    "lighthouse": "npx --yes @lhci/cli@0.15.x autorun",
+    "lighthouse": "npx --yes @lhci/cli@0.15.1 autorun",
     "test": "playwright test",
     "test:ui": "playwright test --ui"
   },

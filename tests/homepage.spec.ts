@@ -243,11 +243,23 @@ test.describe('Analytics', () => {
 		await expect(beacon).toHaveAttribute('async', '');
 	});
 
-	// The footer promises "no cookies, no personal data". This is the test that
-	// keeps that promise true if the analytics setup is ever changed.
+	// The footer promises "no cookies, no personal data". These are the tests
+	// that keep that promise true if the analytics setup is ever changed —
+	// GoatCounter writes nothing to the device today, and swapping in anything
+	// that does should fail here rather than quietly make the footer a lie.
 	test('sets no cookies', async ({ page, context }) => {
 		await page.goto('/');
 		expect(await context.cookies()).toEqual([]);
+	});
+
+	test('writes nothing to browser storage', async ({ page }) => {
+		await page.goto('/');
+		const stored = await page.evaluate(() => ({
+			local: Object.keys(localStorage),
+			session: Object.keys(sessionStorage),
+		}));
+		// `nd-theme` is written by the theme toggle, and only on a click.
+		expect(stored).toEqual({ local: [], session: [] });
 	});
 });
 
