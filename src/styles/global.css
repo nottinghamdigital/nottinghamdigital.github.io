@@ -327,9 +327,9 @@ h3 {
 
 .meetup-card__links {
 	display: flex;
-	gap: var(--space-xs);
-	font-family: var(--font-mono);
-	font-size: var(--text-sm);
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-sm);
 }
 
 .meetup-card__links a {
@@ -338,6 +338,12 @@ h3 {
 
 .meetup-card__links a:hover {
 	color: var(--color-link);
+}
+
+.meetup-card__links .icon {
+	width: 1em;
+	height: 1em;
+	font-size: var(--text-base);
 }
 
 @media (min-width: 600px) {

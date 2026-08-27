@@ -1,5 +1,6 @@
 ---
 import { categoryById, type CategoryId } from '../data/categories';
+import { linkIcon } from '../data/link-icons';
 
 interface NextEvent {
 	title: string;
@@ -74,9 +75,12 @@ const nextEventDate = nextEvent
 		links.length > 0 && (
 			<p class="meetup-card__links">
 				{links.map((link) => (
-					<a href={link.url} rel="me noopener">
-						{link.label}
-						<span class="visually-hidden"> for {name}</span>
+					<a href={link.url} rel="me noopener" aria-label={`${link.label} for ${name}`}>
+						<span
+							class="icon"
+							style={`--icon-src: url(${linkIcon(link.label)});`}
+							aria-hidden="true"
+						/>
 					</a>
 				))}
 			</p>
