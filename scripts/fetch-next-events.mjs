@@ -327,7 +327,13 @@ async function main() {
 				return;
 			}
 
-			// No `events` value, or no known source for it — skip.
+			if (!events) {
+				console.warn(`[next-events] ${slug} has no events field — skipping`);
+			} else {
+				console.warn(
+					`[next-events] ${slug} events value "${events}" matches no known source — skipping`,
+				);
+			}
 		}),
 	);
 
