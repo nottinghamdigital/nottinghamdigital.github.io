@@ -74,13 +74,38 @@ const { total, categories, hasNextEvents } = Astro.props;
 		const filters = document.querySelectorAll('[data-filter]');
 		const upcomingToggle = document.querySelector('[data-toggle="upcoming"]');
 		const list = document.getElementById('meetup-list');
-		const cards = Array.from(document.querySelectorAll('[data-category]'));
+		const cards = Array.from(document.querySelectorAll('.meetup-card[data-category]'));
 		const originalOrder = cards.slice();
 		const status = document.querySelector('[data-filter-status]');
 		const orderNote = document.querySelector('[data-order-note]');
 
 		let selectedCategory = 'all';
 		let upcomingOnly = false;
+
+		function hidePassedEvents() {
+			const now = Date.now();
+			for (const card of cards) {
+				if (!(card instanceof HTMLElement)) continue;
+				const block = card.querySelector('[data-next-events]');
+				if (!(block instanceof HTMLElement)) continue;
+
+				let soonest = null;
+				for (const item of block.querySelectorAll('li[data-event-date]')) {
+					if (!(item instanceof HTMLElement)) continue;
+					const eventDate = new Date(item.dataset.eventDate).getTime();
+					const passed = !Number.isNaN(eventDate) && eventDate <= now;
+					item.hidden = passed;
+					if (!passed && (soonest === null || eventDate < soonest)) soonest = eventDate;
+				}
+
+				if (soonest === null) {
+					block.hidden = true;
+					delete card.dataset.nextEventDate;
+				} else {
+					card.dataset.nextEventDate = new Date(soonest).toISOString();
+				}
+			}
+		}
 
 		function apply() {
 			let shown = 0;
@@ -148,5 +173,18 @@ const { total, categories, hasNextEvents } = Astro.props;
 				apply();
 			});
 		}
+
+		hidePassedEvents();
+		apply();
+
+		setInterval(() => {
+			hidePassedEvents();
+			apply();
+		}, 60000);
+		document.addEventListener('visibilitychange', () => {
+			if (document.visibilityState !== 'visible') return;
+			hidePassedEvents();
+			apply();
+		});
 	});
 </script>

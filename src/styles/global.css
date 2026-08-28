@@ -481,6 +481,13 @@ h3 {
 	color: var(--color-muted);
 }
 
+/* Passed events are hidden client-side (see CategoryFilters.astro); `[hidden]`
+   needs an explicit override here since `display: flex` below would
+   otherwise win over the UA's `[hidden] { display: none }`. */
+.meetup-card__next-events[hidden] {
+	display: none;
+}
+
 .meetup-card__next-events {
 	display: flex;
 	flex-wrap: wrap;
