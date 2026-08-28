@@ -2,7 +2,7 @@ name: Process suggested edit
 
 on:
   issues:
-    types: [opened]
+    types: [opened, reopened]
 
 permissions:
   contents: write
@@ -11,10 +11,44 @@ permissions:
 
 jobs:
   apply-suggestion:
-    if: contains(github.event.issue.labels.*.name, 'event-suggestion')
+    # Matching on the label alone is fragile: GitHub issue forms don't
+    # auto-create a label that doesn't already exist in the repo, so if
+    # `event-suggestion` is ever missing, the label silently never gets
+    # applied and this job would never run. The title prefix comes from the
+    # form's own `title:` field, so it's always present regardless of label
+    # state.
+    if: startsWith(github.event.issue.title, '[Edit suggestion]:')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      # Labels the issue for visibility/triage — best-effort, not required
+      # for the automation above to work, so a failure here (e.g. missing
+      # permissions) shouldn't block the actual suggestion from being applied.
+      - name: Label the issue
+        continue-on-error: true
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const label = 'event-suggestion';
+            const { owner, repo } = context.repo;
+            try {
+              await github.rest.issues.getLabel({ owner, repo, name: label });
+            } catch {
+              await github.rest.issues.createLabel({
+                owner,
+                repo,
+                name: label,
+                color: 'c2e0c6',
+                description: 'Opened via the "suggest an edit" issue form',
+              });
+            }
+            await github.rest.issues.addLabels({
+              owner,
+              repo,
+              issue_number: context.issue.number,
+              labels: [label],
+            });
 
       - uses: actions/setup-node@v4
         with:

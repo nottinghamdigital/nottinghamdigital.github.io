@@ -39,9 +39,11 @@ const REPO_ISSUES_URL =
 				const panel = continueLink.closest('[data-edit-panel]');
 				if (!(panel instanceof HTMLElement)) return;
 
+				const groupName = panel.dataset.groupName ?? '';
 				const params = new URLSearchParams({
 					template: 'suggest-edit.yml',
-					'group-name': panel.dataset.groupName ?? '',
+					title: `[Edit suggestion]: ${groupName}`,
+					'group-name': groupName,
 				});
 
 				const fieldToParam = {
