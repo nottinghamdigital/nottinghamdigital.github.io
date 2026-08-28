@@ -41,14 +41,6 @@ body:
       description: Leave blank to keep the current summary. A sentence or two.
 
   - type: textarea
-    id: new-notes
-    attributes:
-      label: New notes
-      description: >-
-        Leave blank to keep as-is. A short callout that stands out from the
-        summary, e.g. a venue change or booking requirement.
-
-  - type: textarea
     id: new-links
     attributes:
       label: Links to add
@@ -64,8 +56,8 @@ body:
     attributes:
       value: |
         ### Advanced — only if something else needs fixing
-        Renaming the group, changing its URL or events feed, or changing
-        its category. Most suggestions won't need any of this.
+        Renaming the group, changing its URL, events feed or category, or
+        adding a notes callout. Most suggestions won't need any of this.
 
   - type: input
     id: new-name
@@ -103,6 +95,14 @@ body:
         - Design
         - Ops
       default: 0
+
+  - type: textarea
+    id: new-notes
+    attributes:
+      label: New notes
+      description: >-
+        Leave blank to keep as-is. A short callout that stands out from the
+        summary, e.g. a venue change or booking requirement.
 
   - type: markdown
     attributes:
