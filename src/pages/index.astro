@@ -17,7 +17,7 @@ import { GOATCOUNTER_DASHBOARD } from '../data/analytics';
  * since the file is gitignored and may not exist yet (e.g. `astro dev`
  * without a prior build) — an empty object then, so every card just falls
  * back to its static cadence text.
- * @type {Record<string, { title: string, url: string, date: string }>}
+ * @type {Record<string, { title: string, url: string, date: string }[]>}
  */
 const nextEventsPath = path.join(
 	process.cwd(),
@@ -33,21 +33,22 @@ const meetups = (await getCollection('meetups')).sort((a, b) =>
 
 const usedCategoryIds = new Set(meetups.map((m) => m.data.category));
 const activeCategories = CATEGORIES.filter((c) => usedCategoryIds.has(c.id));
-const hasNextEvents = meetups.some((m) => nextEvents[m.id]);
+const hasNextEvents = meetups.some((m) => nextEvents[m.id]?.length);
 
 /**
  * All known upcoming events across every group, derived from the same
- * generated data as each card's own "Next:" line — no new fetch, and
+ * generated data as each card's own "Next:" list — no new fetch, and
  * coverage is necessarily partial (only groups whose feed the prebuild
- * script understands appear here).
+ * script understands appear here). A group can contribute more than one
+ * event here (e.g. an Eventbrite organizer running several series).
  */
-const allNextEvents = meetups
-	.filter((m) => nextEvents[m.id])
-	.map((m) => ({
+const allNextEvents = meetups.flatMap((m) =>
+	(nextEvents[m.id] ?? []).map((event) => ({
 		meetupName: m.data.name,
 		category: m.data.category,
-		...nextEvents[m.id],
-	}));
+		...event,
+	})),
+);
 
 const sortedNextEvents = allNextEvents.sort(
 	(a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
@@ -107,7 +108,7 @@ const description =
 						cadence={meetup.data.cadence}
 						category={meetup.data.category}
 						links={meetup.data.links}
-						nextEvent={nextEvents[meetup.id]}
+						nextEvents={nextEvents[meetup.id]}
 					/>
 				))
 			}
