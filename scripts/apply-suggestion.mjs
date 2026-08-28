@@ -89,6 +89,7 @@ async function main() {
 
 	if (fields['New group name']) doc.set('name', fields['New group name']);
 	if (fields['New URL']) doc.set('url', fields['New URL']);
+	if (fields['New events URL']) doc.set('events', fields['New events URL']);
 	if (fields['New cadence']) doc.set('cadence', fields['New cadence']);
 	if (fields['New summary']) doc.set('summary', fields['New summary']);
 

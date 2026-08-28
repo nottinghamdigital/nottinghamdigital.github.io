@@ -5,7 +5,7 @@
  * for every card regardless of how many there are.
  *
  * Clicking a card's pencil toggles that card's panel open. The panel's
- * name/url/cadence/summary/category/links fields are pre-filled with the
+ * name/url/events/cadence/summary/category/links fields are pre-filled with the
  * group's current values (via defaultValue for inputs/textareas, and a
  * data-default-value attribute for the category <select>, since Astro
  * renders them server-side); clicking "Continue to GitHub" compares each
@@ -47,6 +47,7 @@ const REPO_ISSUES_URL =
 				const fieldToParam = {
 					name: 'new-name',
 					url: 'new-url',
+					events: 'new-events',
 					cadence: 'new-cadence',
 					summary: 'new-summary',
 					category: 'new-category',

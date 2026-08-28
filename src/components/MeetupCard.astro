@@ -13,6 +13,8 @@ interface Props {
 	id: string;
 	name: string;
 	url: string;
+	/** Where the group's events actually live, if different from `url` (e.g. a separate Luma calendar or `/events` page). */
+	events?: string;
 	summary: string;
 	cadence: string;
 	category: CategoryId;
@@ -26,7 +28,7 @@ interface Props {
 	nextEvents?: NextEvent[];
 }
 
-const { id, name, url, summary, cadence, category, links, nextEvents } =
+const { id, name, url, events, summary, cadence, category, links, nextEvents } =
 	Astro.props;
 const { label: categoryLabel, icon } = categoryById(category);
 const formatDate = (date: string) =>
@@ -152,7 +154,7 @@ const linksAsText = links.map((l) => `${l.label}: ${l.url}`).join('\n');
 		</div>
 
 		<details class="edit-panel__advanced">
-			<summary>Advanced — name, URL, category, links</summary>
+			<summary>Advanced — name, URL, events, category, links</summary>
 
 			<div class="edit-field">
 				<label for={`name-${id}`}>Name</label>
@@ -162,6 +164,20 @@ const linksAsText = links.map((l) => `${l.label}: ${l.url}`).join('\n');
 			<div class="edit-field">
 				<label for={`url-${id}`}>URL</label>
 				<input type="text" id={`url-${id}`} data-field="url" value={url} />
+			</div>
+
+			<div class="edit-field">
+				<label for={`events-${id}`}>Events URL</label>
+				<p class="edit-field__hint">
+					Only if events live somewhere different from the URL above —
+					a separate calendar or /events page.
+				</p>
+				<input
+					type="text"
+					id={`events-${id}`}
+					data-field="events"
+					value={events ?? ''}
+				/>
 			</div>
 
 			<div class="edit-field">
