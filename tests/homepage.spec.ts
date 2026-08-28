@@ -263,6 +263,122 @@ test.describe('Analytics', () => {
 	});
 });
 
+test.describe('Past events', () => {
+	// Event data comes from live feeds fetched at build time (see
+	// scripts/fetch-next-events.mjs), so these tests discover real dates from
+	// the built page rather than hardcoding fixture dates, and skip when the
+	// current data doesn't happen to contain the shape they need.
+
+	test('hides a next event once its start time has passed, and drops it from the Upcoming filter', async ({
+		page,
+	}) => {
+		await page.goto('/');
+		const dates = await page
+			.locator('[data-next-events] li[data-event-date]')
+			.evaluateAll((els) => els.map((el) => el.getAttribute('data-event-date')));
+		test.skip(dates.length === 0, 'no upcoming events in the generated data');
+		const afterEverything =
+			Math.max(...dates.map((d) => new Date(d ?? '').getTime())) + 24 * 60 * 60 * 1000;
+
+		await page.clock.install({ time: afterEverything });
+		await page.goto('/');
+
+		await expect(page.locator('[data-next-events]:visible')).toHaveCount(0);
+		await expect(page.locator('[data-category][data-next-event-date]')).toHaveCount(0);
+
+		const upcomingToggle = page.locator('[data-toggle="upcoming"]');
+		await upcomingToggle.click();
+		await expect(page.locator('#meetup-list > li:visible')).toHaveCount(0);
+	});
+
+	test('on a meetup with multiple upcoming events, hides only the one that has passed', async ({
+		page,
+	}) => {
+		await page.goto('/');
+		const groups = await page.evaluate(() =>
+			Array.from(document.querySelectorAll('[data-next-events]'))
+				.map((block) =>
+					Array.from(block.querySelectorAll('li[data-event-date]'))
+						.map((li) => li.getAttribute('data-event-date') ?? '')
+						.sort(),
+				)
+				.filter((dates) => dates.length >= 2),
+		);
+		test.skip(groups.length === 0, 'no meetup currently has 2+ upcoming events');
+		const [first, second] = groups[0];
+		const between = (new Date(first).getTime() + new Date(second).getTime()) / 2;
+
+		await page.clock.install({ time: between });
+		await page.goto('/');
+
+		const state = await page.evaluate(
+			([first, second]) => {
+				const li = document.querySelector(`li[data-event-date="${first}"]`);
+				const nextLi = document.querySelector(`li[data-event-date="${second}"]`);
+				const card = li?.closest('.meetup-card');
+				return {
+					firstHidden: li instanceof HTMLElement ? li.hidden : null,
+					secondHidden: nextLi instanceof HTMLElement ? nextLi.hidden : null,
+					cardNextEventDate: card?.getAttribute('data-next-event-date'),
+				};
+			},
+			[first, second],
+		);
+		expect(state.firstHidden).toBe(true);
+		expect(state.secondHidden).toBe(false);
+		expect(state.cardNextEventDate).toBe(second);
+	});
+
+	test('promotes the next same-day event in the hero once the current one has passed', async ({
+		page,
+	}) => {
+		await page.goto('/');
+		const heroDates = await page.evaluate(() => {
+			const root = document.querySelector('.next-up');
+			return root
+				? Array.from(root.querySelectorAll('[data-event-date]')).map((el) =>
+						el.getAttribute('data-event-date'),
+					)
+				: [];
+		});
+		const sorted = [...new Set(heroDates.map((d) => new Date(d ?? '').getTime()))].sort(
+			(a, b) => a - b,
+		);
+		test.skip(sorted.length < 2, 'no day currently has 2+ distinct hero event times');
+		const between = (sorted[0] + sorted[1]) / 2;
+
+		await page.clock.install({ time: between });
+		await page.goto('/');
+
+		const hero = page.locator('.next-up');
+		await expect(hero).toBeVisible();
+		const primaryDate = await page
+			.locator('.next-up__card[data-primary]')
+			.getAttribute('data-event-date');
+		expect(new Date(primaryDate ?? '').getTime()).toBeGreaterThanOrEqual(sorted[1]);
+	});
+
+	test('hides the hero entirely once every event on its day has passed', async ({ page }) => {
+		await page.goto('/');
+		const heroDates = await page.evaluate(() => {
+			const root = document.querySelector('.next-up');
+			return root
+				? Array.from(root.querySelectorAll('[data-event-date]')).map((el) =>
+						el.getAttribute('data-event-date'),
+					)
+				: [];
+		});
+		test.skip(heroDates.length === 0, 'no hero rendered in the current generated data');
+		const afterEverything =
+			Math.max(...heroDates.map((d) => new Date(d ?? '').getTime())) + 60 * 60 * 1000;
+
+		await page.clock.install({ time: afterEverything });
+		await page.goto('/');
+
+		await expect(page.locator('.next-up')).toBeHidden();
+	});
+});
+
 test.describe('Monitoring metadata', () => {
 	// scripts/check-live-site.mjs reads this stamp off the published page to
 	// tell whether the daily deploy is still running. Losing it would break

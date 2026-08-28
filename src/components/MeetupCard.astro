@@ -90,11 +90,12 @@ const isThisWeek = (date: string) =>
 			<div
 				class="meetup-card__next-events"
 				data-multiple={nextEvents.length > 1}
+				data-next-events
 			>
 				<span class="meetup-card__next-events-label">Next:</span>
 				<ul>
 					{nextEvents.map((event) => (
-						<li>
+						<li data-event-date={event.date}>
 							<a href={event.url} rel="noopener">
 								<span class="meetup-card__next-events-date">
 									{formatDate(event.date)}

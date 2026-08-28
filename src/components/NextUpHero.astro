@@ -37,6 +37,8 @@ const moreCount = rest.length;
 	<span class="next-up__label">Next up</span>
 	<div
 		class="next-up__card"
+		data-event-date={first.date}
+		data-primary
 		style={`--category-color: var(--color-category-${first.category});`}
 	>
 		<a class="next-up__link" href={first.url} rel="noopener">
@@ -76,6 +78,14 @@ const moreCount = rest.length;
 					<li class="next-up__more-item">
 						<div
 							class="next-up__card"
+							data-event-date={e.date}
+							data-category={e.category}
+							data-icon={e.icon}
+							data-formatted-date={e.formattedDate}
+							data-title={e.title}
+							data-meetup-name={e.meetupName}
+							data-category-label={e.categoryLabel}
+							data-url={e.url}
 							style={`--category-color: var(--color-category-${e.category});`}
 						>
 							<a class="next-up__link" href={e.url} rel="noopener">
@@ -101,30 +111,109 @@ const moreCount = rest.length;
 	}
 </div>
 
-{
-	moreCount > 0 && (
-		<script is:inline>
-			document.addEventListener('DOMContentLoaded', () => {
-				const toggle = document.querySelector('[data-next-up-toggle]');
-				const list = document.getElementById('next-up-more-list');
-				if (!(toggle instanceof HTMLButtonElement) || !(list instanceof HTMLElement)) {
+<script is:inline>
+	document.addEventListener('DOMContentLoaded', () => {
+		const root = document.querySelector('.next-up');
+		const primary = document.querySelector('.next-up__card[data-primary]');
+		const toggle = document.querySelector('[data-next-up-toggle]');
+		const list = document.getElementById('next-up-more-list');
+
+		function hasPassed(card) {
+			const eventDate = new Date(card.dataset.eventDate).getTime();
+			return !Number.isNaN(eventDate) && eventDate <= Date.now();
+		}
+
+		function promote(primaryCard, sourceCard) {
+			primaryCard.dataset.eventDate = sourceCard.dataset.eventDate;
+			primaryCard.style.setProperty(
+				'--category-color',
+				`var(--color-category-${sourceCard.dataset.category})`,
+			);
+			const link = primaryCard.querySelector('.next-up__link');
+			if (!(link instanceof HTMLElement)) return;
+			link.setAttribute('href', sourceCard.dataset.url ?? '');
+			const icon = link.querySelector('.next-up__icon');
+			if (icon instanceof HTMLElement) {
+				icon.style.setProperty('--icon-src', `url(${sourceCard.dataset.icon})`);
+			}
+			const dateEl = link.querySelector('.next-up__date');
+			if (dateEl) dateEl.textContent = sourceCard.dataset.formattedDate ?? '';
+			const titleEl = link.querySelector('.next-up__title');
+			if (titleEl) titleEl.textContent = sourceCard.dataset.title ?? '';
+			const meetupEl = link.querySelector('.next-up__meetup');
+			if (meetupEl) meetupEl.textContent = sourceCard.dataset.meetupName ?? '';
+			const categoryEl = link.querySelector('.visually-hidden');
+			if (categoryEl) categoryEl.textContent = `Category: ${sourceCard.dataset.categoryLabel ?? ''}`;
+		}
+
+		function refresh() {
+			if (!(root instanceof HTMLElement) || !(primary instanceof HTMLElement)) return;
+
+			if (hasPassed(primary)) {
+				const candidates =
+					list instanceof HTMLElement
+						? Array.from(list.querySelectorAll('.next-up__card'))
+						: [];
+				const next = candidates.find(
+					(card) => card instanceof HTMLElement && !hasPassed(card),
+				);
+				if (next instanceof HTMLElement) {
+					promote(primary, next);
+					next.closest('.next-up__more-item')?.remove();
+				} else {
+					root.hidden = true;
 					return;
 				}
+			}
+			root.hidden = false;
 
-				const collapsedLabel = toggle.textContent.trim();
-				const collapsedAriaLabel = toggle.getAttribute('aria-label') ?? collapsedLabel;
+			if (list instanceof HTMLElement) {
+				for (const card of list.querySelectorAll('.next-up__card')) {
+					if (card instanceof HTMLElement && hasPassed(card)) {
+						card.closest('.next-up__more-item')?.remove();
+					}
+				}
+			}
 
-				toggle.addEventListener('click', () => {
+			const remaining = list instanceof HTMLElement ? list.childElementCount : 0;
+			if (toggle instanceof HTMLButtonElement) {
+				if (remaining === 0) {
+					toggle.hidden = true;
+				} else {
 					const expanded = toggle.getAttribute('aria-expanded') === 'true';
-					toggle.setAttribute('aria-expanded', String(!expanded));
-					list.hidden = expanded;
-					toggle.textContent = expanded ? collapsedLabel : 'Hide other events';
+					toggle.textContent = expanded
+						? 'Hide other events'
+						: `+${remaining} more`;
 					toggle.setAttribute(
 						'aria-label',
-						expanded ? collapsedAriaLabel : 'Hide other events on this date',
+						expanded
+							? 'Hide other events on this date'
+							: `Show ${remaining} more event${remaining === 1 ? '' : 's'} on this date`,
 					);
-				});
+				}
+			}
+		}
+
+		if (toggle instanceof HTMLButtonElement && list instanceof HTMLElement) {
+			toggle.addEventListener('click', () => {
+				const expanded = toggle.getAttribute('aria-expanded') === 'true';
+				toggle.setAttribute('aria-expanded', String(!expanded));
+				list.hidden = expanded;
+				const remaining = list.childElementCount;
+				toggle.textContent = expanded ? `+${remaining} more` : 'Hide other events';
+				toggle.setAttribute(
+					'aria-label',
+					expanded
+						? `Show ${remaining} more event${remaining === 1 ? '' : 's'} on this date`
+						: 'Hide other events on this date',
+				);
 			});
-		</script>
-	)
-}
+		}
+
+		refresh();
+		setInterval(refresh, 60000);
+		document.addEventListener('visibilitychange', () => {
+			if (document.visibilityState === 'visible') refresh();
+		});
+	});
+</script>
