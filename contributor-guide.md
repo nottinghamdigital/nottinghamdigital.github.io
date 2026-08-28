@@ -18,6 +18,8 @@ category: tech # tech | design | ops
 cadence: Second Thursday
 summary: >-
   A PHP user group attracting a mix of local and national speakers each month.
+notes: >-
+  Meets at a new venue this month — check the events page for details.
 links:
   - label: Mastodon
     url: https://phpc.social/@phpminds
@@ -31,6 +33,7 @@ links:
 | `category` | yes | One of `tech`, `design`, `ops` |
 | `cadence` | yes | Plain English: `First Tuesday`, `Quarterly`, `No regular date` |
 | `summary` | yes | A sentence or two |
+| `notes` | no | A short callout for something that needs to stand out — a venue change, booking requirement, etc. Rendered distinctly from `summary` |
 | `links` | no | Any number of `label` / `url` pairs |
 
 You do not need to run the site locally to add a meetup — the file is all that

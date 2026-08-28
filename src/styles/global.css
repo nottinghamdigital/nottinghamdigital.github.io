@@ -193,10 +193,13 @@ h3 {
 }
 
 .next-up__icon {
-	display: none;
 	width: 20px;
 	height: 20px;
 	color: var(--color-on-accent);
+}
+
+.next-up__stripe .icon {
+	display: none;
 }
 
 .next-up__link {
@@ -287,7 +290,7 @@ h3 {
 		width: var(--stripe-width-wide);
 	}
 
-	.next-up__icon {
+	.next-up__stripe .icon {
 		display: block;
 	}
 
@@ -447,6 +450,15 @@ h3 {
 	margin-bottom: var(--space-xs);
 }
 
+.meetup-card__notes {
+	margin-bottom: var(--space-xs);
+	padding: var(--space-2xs) var(--space-xs);
+	border-inline-start: 3px solid var(--category-color);
+	background: color-mix(in srgb, var(--category-color) 12%, transparent);
+	font-size: var(--text-sm);
+	font-weight: 600;
+}
+
 .meetup-card__meta {
 	display: flex;
 	flex-wrap: wrap;
@@ -481,11 +493,18 @@ h3 {
 
 .meetup-card__next-events ul {
 	display: flex;
+	flex: 1;
 	flex-wrap: wrap;
 	gap: var(--space-xs);
 	list-style: none;
 	margin: 0;
 	padding: 0;
+}
+
+.meetup-card__next-events li {
+	display: flex;
+	flex: 1 1 auto;
+	align-items: center;
 }
 
 .meetup-card__next-events li:not(:last-child)::after {
@@ -507,13 +526,13 @@ h3 {
    comma-joined inline row with the title left for screen readers only. */
 .meetup-card__next-events[data-multiple='true'] {
 	flex-direction: column;
-	align-items: flex-start;
+	align-items: stretch;
 	gap: var(--space-2xs);
 }
 
 .meetup-card__next-events[data-multiple='true'] ul {
 	flex-direction: column;
-	align-items: flex-start;
+	align-items: stretch;
 	gap: var(--space-2xs);
 }
 
@@ -527,13 +546,15 @@ h3 {
 }
 
 .meetup-card__badge {
-	display: inline-block;
-	margin-inline-start: var(--space-2xs);
-	padding: 2px 8px;
+	display: inline-flex;
+	align-items: center;
+	margin-inline-start: auto;
+	padding: 1px 6px;
 	background: var(--category-color);
 	border-radius: var(--radius-pill);
 	color: var(--color-on-accent);
-	font-size: var(--text-sm);
+	font-size: 0.7rem;
+	line-height: 1;
 	font-weight: 700;
 	letter-spacing: 0.05em;
 	text-transform: uppercase;

@@ -12,6 +12,7 @@ interface Props {
 	name: string;
 	url: string;
 	summary: string;
+	notes?: string;
 	cadence: string;
 	category: CategoryId;
 	links: { label: string; url: string }[];
@@ -24,7 +25,7 @@ interface Props {
 	nextEvents?: NextEvent[];
 }
 
-const { name, url, summary, cadence, category, links, nextEvents } =
+const { name, url, summary, notes, cadence, category, links, nextEvents } =
 	Astro.props;
 const { label: categoryLabel, icon } = categoryById(category);
 const formatDate = (date: string) =>
@@ -73,6 +74,8 @@ const isThisWeek = (date: string) =>
 	</div>
 
 	<p class="meetup-card__summary p-summary">{summary}</p>
+
+	{notes && <p class="meetup-card__notes">{notes}</p>}
 
 	<p class="meetup-card__meta">
 		<span class="meetup-card__cadence">
