@@ -166,6 +166,17 @@ const linksAsText = links.map((l) => `${l.label}: ${l.url}`).join('\n');
 			>
 		</div>
 
+		<div class="edit-field">
+			<label for={`notes-${id}`}>Notes</label>
+			<p class="edit-field__hint">
+				A short callout that stands out from the summary, e.g. a venue
+				change or booking requirement. Leave blank to keep as-is.
+			</p>
+			<textarea id={`notes-${id}`} data-field="notes" rows="2"
+				>{notes ?? ''}</textarea
+			>
+		</div>
+
 		<details class="edit-panel__advanced">
 			<summary>Advanced — name, URL, events, category, links</summary>
 

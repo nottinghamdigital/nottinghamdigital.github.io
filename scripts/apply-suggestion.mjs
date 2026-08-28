@@ -92,6 +92,7 @@ async function main() {
 	if (fields['New events URL']) doc.set('events', fields['New events URL']);
 	if (fields['New cadence']) doc.set('cadence', fields['New cadence']);
 	if (fields['New summary']) doc.set('summary', fields['New summary']);
+	if (fields['New notes']) doc.set('notes', fields['New notes']);
 
 	const categoryLabel = fields['New category'];
 	if (categoryLabel && categoryLabel !== '— leave unchanged —') {

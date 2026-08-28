@@ -41,6 +41,14 @@ body:
       description: Leave blank to keep the current summary. A sentence or two.
 
   - type: textarea
+    id: new-notes
+    attributes:
+      label: New notes
+      description: >-
+        Leave blank to keep as-is. A short callout that stands out from the
+        summary, e.g. a venue change or booking requirement.
+
+  - type: textarea
     id: new-links
     attributes:
       label: Links to add
