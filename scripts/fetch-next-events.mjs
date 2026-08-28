@@ -1,9 +1,15 @@
-// Fetches the next upcoming event per meetup group from meetup.com's per-group
-// RSS feed, and writes the results to src/data/next-events.generated.json.
+// Fetches each meetup group's upcoming events from its `events` field
+// (meetup.com, Luma, or Eventbrite) and writes them to
+// src/data/next-events.generated.json, soonest first. For Eventbrite, a group
+// whose organizer runs more than one recurring series (e.g. a weekly meetup
+// and separate monthly socials) gets one entry per series — those siblings
+// are discovered from the organizer's public profile page rather than
+// needing to be listed by hand.
 //
 // Runs before `astro build` (see package.json). Network failures are
-// non-fatal: a group with no reachable feed simply gets no entry, and
-// MeetupCard falls back to showing only the static cadence text.
+// non-fatal: a source that can't be fetched simply contributes no entry, and
+// MeetupCard falls back to showing only the static cadence text if none
+// resolve.
 import { XMLParser } from 'fast-xml-parser';
 import {
 	appendFile,
@@ -23,7 +29,7 @@ const OUTPUT_FILE = new URL(
 
 const MEETUP_COM_URL = /^https:\/\/www\.meetup\.com\/([^/]+)\/?/;
 const LUMA_URL = /^https:\/\/(?:www\.)?(?:lu\.ma|luma\.com)\/([^/?#]+)\/?/;
-const BUILT_IN_NOTTS_URL = /^https:\/\/(?:www\.)?builtinnotts\.com\/events\/?/;
+const EVENTBRITE_URL = /^https:\/\/(?:www\.)?eventbrite\.(?:com|co\.uk)\/e\/[^/?#]+\/?$/;
 
 /** @returns {Promise<{ slug: string, events?: string }[]>} */
 async function loadMeetups() {
@@ -251,60 +257,139 @@ async function fetchLumaNextEvent(calendarSlug) {
 	};
 }
 
-const HTML_ENTITIES = {
-	'&amp;': '&',
-	'&#x27;': "'",
-	'&quot;': '"',
-	'&#x2F;': '/',
-	'&lt;': '<',
-	'&gt;': '>',
-};
+/** Max sibling events (beyond the one the group's `events` field points at) pulled in per Eventbrite organizer. */
+const MAX_EVENTBRITE_SIBLINGS = 4;
 
-function decodeHtmlEntities(value) {
-	return value.replace(
-		/&(?:amp|#x27|quot|#x2F|lt|gt);/g,
-		(entity) => HTML_ENTITIES[entity],
-	);
-}
-
-/**
- * Built In Notts has no feed at all — its events page is server-rendered
- * Next.js markup, so the next event is scraped directly out of each
- * `<article>` card's heading, `<time datetime>`, and "View Event Details"
- * link. Brittle by nature: if their page markup changes this will just stop
- * matching and quietly return null, same as any other unreachable source.
- */
-async function fetchBuiltInNottsNextEvent(eventsUrl) {
+async function fetchJson(url) {
 	let html;
 	try {
-		const res = await fetch(eventsUrl, { headers: { 'User-Agent': USER_AGENT } });
+		const res = await fetch(url, { headers: { 'User-Agent': USER_AGENT } });
 		if (!res.ok) {
-			console.warn(`[next-events] ${eventsUrl} → HTTP ${res.status}`);
+			console.warn(`[next-events] ${url} → HTTP ${res.status}`);
 			return null;
 		}
 		html = await res.text();
 	} catch (err) {
-		console.warn(`[next-events] ${eventsUrl} → ${err.message}`);
+		console.warn(`[next-events] ${url} → ${err.message}`);
 		return null;
 	}
 
-	const cardPattern =
-		/<article[^>]*>[\s\S]*?<h3[^>]*>([\s\S]*?)<\/h3>[\s\S]*?<time datetime="([^"]+)"[\s\S]*?<a target="_self"[^>]*href="([^"]+)"/gi;
+	const match = html.match(
+		/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/,
+	);
+	if (!match) {
+		console.warn(`[next-events] no __NEXT_DATA__ found on ${url}`);
+		return null;
+	}
+	try {
+		return JSON.parse(match[1]);
+	} catch (err) {
+		console.warn(`[next-events] failed to parse __NEXT_DATA__ on ${url}: ${err.message}`);
+		return null;
+	}
+}
 
-	const now = new Date();
-	const events = [...html.matchAll(cardPattern)]
-		.map((m) => ({
-			title: decodeHtmlEntities(m[1]).trim(),
-			date: new Date(m[2]),
-			url: decodeHtmlEntities(m[3]),
-		}))
-		.filter((e) => e.title && e.url && !Number.isNaN(e.date.getTime()))
-		.filter((e) => e.date.getTime() > now.getTime())
-		.sort((a, b) => a.date.getTime() - b.date.getTime());
+/**
+ * Eventbrite event pages embed their data as a `__NEXT_DATA__` JSON blob
+ * rather than schema.org markup with a usable date: for a recurring event
+ * (`context.basicInfo.isSeries`), the JSON-LD/`basicInfo.startDate` is the
+ * *first* occurrence and `endDate` is when the series ends — neither is "the
+ * next one". `context.goodToKnow.highlights.nextAvailableSession` is the
+ * field Eventbrite's own page uses to answer that, and covers both series and
+ * one-off events, so it's used directly instead of scraping a date picker.
+ *
+ * Also returns the organizer's profile URL, so the caller can look up any
+ * other events the same organizer runs.
+ */
+async function fetchEventbriteEventDetails(eventUrl) {
+	const context = (await fetchJson(eventUrl))?.props?.pageProps?.context;
+	if (!context) return null;
 
-	if (events.length === 0) return null;
-	const next = events[0];
-	return { title: next.title, url: next.url, date: next.date.toISOString() };
+	const basicInfo = context.basicInfo;
+	const dateStr =
+		context.goodToKnow?.highlights?.nextAvailableSession ??
+		basicInfo?.startDate?.utc;
+	if (!basicInfo?.name || !dateStr) {
+		console.warn(`[next-events] no next session date found on ${eventUrl}`);
+		return null;
+	}
+
+	// nextAvailableSession carries a short UTC offset like "+01" rather than
+	// "+01:00", which Date can't parse.
+	const date = new Date(dateStr.replace(/([+-]\d{2})$/, '$1:00'));
+	if (Number.isNaN(date.getTime())) {
+		console.warn(`[next-events] unparseable date "${dateStr}" on ${eventUrl}`);
+		return null;
+	}
+	if (date.getTime() <= Date.now()) return null;
+
+	return {
+		title: basicInfo.name,
+		url: basicInfo.url ?? eventUrl,
+		date: date.toISOString(),
+		organizerUrl: basicInfo.organizer?.url ?? null,
+	};
+}
+
+/**
+ * An Eventbrite organizer's public profile page (`/o/<slug>-<id>`) also
+ * server-renders its own upcoming events — one entry per distinct series, not
+ * per occurrence — in `pageProps.upcomingEvents`. Used to find a group's other
+ * recurring events (e.g. monthly socials alongside a weekly meetup) starting
+ * from just the one event page a meetup lists, rather than requiring every
+ * sibling series to be listed by hand.
+ */
+async function fetchEventbriteOrganizerEventUrls(organizerUrl) {
+	const events = (await fetchJson(organizerUrl))?.props?.pageProps
+		?.upcomingEvents;
+	if (!Array.isArray(events)) return [];
+	return events.map((e) => e.url).filter((url) => typeof url === 'string');
+}
+
+/**
+ * Resolves a group's Eventbrite listing to its next occurrence, plus the next
+ * occurrence of any other series run by the same organizer.
+ */
+async function fetchEventbriteNextEvents(eventUrl) {
+	const primary = await fetchEventbriteEventDetails(eventUrl);
+	if (!primary) return [];
+
+	const siblingUrls = primary.organizerUrl
+		? (await fetchEventbriteOrganizerEventUrls(primary.organizerUrl))
+				.filter((url) => url !== eventUrl)
+				.slice(0, MAX_EVENTBRITE_SIBLINGS)
+		: [];
+
+	const siblings = (
+		await Promise.all(siblingUrls.map(fetchEventbriteEventDetails))
+	).filter(Boolean);
+
+	return [primary, ...siblings]
+		.sort((a, b) => new Date(a.date) - new Date(b.date))
+		.map(({ title, url, date }) => ({ title, url, date }));
+}
+
+/**
+ * Dispatches a meetup's `events` value to whichever fetcher recognises it,
+ * returning every upcoming event it resolves to (usually one, but an
+ * Eventbrite organizer running multiple series can contribute several).
+ */
+async function fetchNextEventsForSource(events) {
+	const meetupMatch = MEETUP_COM_URL.exec(events ?? '');
+	if (meetupMatch) {
+		const event = await fetchMeetupComNextEvent(meetupMatch[1]);
+		return event ? [event] : [];
+	}
+
+	const lumaMatch = LUMA_URL.exec(events ?? '');
+	if (lumaMatch) {
+		const event = await fetchLumaNextEvent(lumaMatch[1]);
+		return event ? [event] : [];
+	}
+
+	if (EVENTBRITE_URL.test(events ?? '')) return fetchEventbriteNextEvents(events);
+
+	return null;
 }
 
 async function main() {
@@ -313,33 +398,18 @@ async function main() {
 
 	await Promise.all(
 		meetups.map(async ({ slug, events }) => {
-			const meetupMatch = MEETUP_COM_URL.exec(events ?? '');
-			if (meetupMatch) {
-				const event = await fetchMeetupComNextEvent(meetupMatch[1]);
-				if (event) result[slug] = event;
+			const resolved = await fetchNextEventsForSource(events);
+			if (resolved === null) {
+				if (!events) {
+					console.warn(`[next-events] ${slug} has no events field — skipping`);
+				} else {
+					console.warn(
+						`[next-events] ${slug} events value "${events}" matches no known source — skipping`,
+					);
+				}
 				return;
 			}
-
-			const lumaMatch = LUMA_URL.exec(events ?? '');
-			if (lumaMatch) {
-				const event = await fetchLumaNextEvent(lumaMatch[1]);
-				if (event) result[slug] = event;
-				return;
-			}
-
-			if (BUILT_IN_NOTTS_URL.test(events ?? '')) {
-				const event = await fetchBuiltInNottsNextEvent(events);
-				if (event) result[slug] = event;
-				return;
-			}
-
-			if (!events) {
-				console.warn(`[next-events] ${slug} has no events field — skipping`);
-			} else {
-				console.warn(
-					`[next-events] ${slug} events value "${events}" matches no known source — skipping`,
-				);
-			}
+			if (resolved.length > 0) result[slug] = resolved;
 		}),
 	);
 

@@ -6,6 +6,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import CategoryFilters from '../components/CategoryFilters.astro';
 import Logo from '../components/Logo.astro';
 import MeetupCard from '../components/MeetupCard.astro';
+import NextUpHero from '../components/NextUpHero.astro';
 import ThemeToggle from '../components/ThemeToggle.astro';
 import EditModeToggle from '../components/EditModeToggle.astro';
 import EditPanelScript from '../components/EditPanelScript.astro';
@@ -18,7 +19,7 @@ import { GOATCOUNTER_DASHBOARD } from '../data/analytics';
  * since the file is gitignored and may not exist yet (e.g. `astro dev`
  * without a prior build) — an empty object then, so every card just falls
  * back to its static cadence text.
- * @type {Record<string, { title: string, url: string, date: string }>}
+ * @type {Record<string, { title: string, url: string, date: string }[]>}
  */
 const nextEventsPath = path.join(
 	process.cwd(),
@@ -34,7 +35,41 @@ const meetups = (await getCollection('meetups')).sort((a, b) =>
 
 const usedCategoryIds = new Set(meetups.map((m) => m.data.category));
 const activeCategories = CATEGORIES.filter((c) => usedCategoryIds.has(c.id));
-const hasNextEvents = meetups.some((m) => nextEvents[m.id]);
+const hasNextEvents = meetups.some((m) => nextEvents[m.id]?.length);
+
+/**
+ * All known upcoming events across every group, derived from the same
+ * generated data as each card's own "Next:" list — no new fetch, and
+ * coverage is necessarily partial (only groups whose feed the prebuild
+ * script understands appear here). A group can contribute more than one
+ * event here (e.g. an Eventbrite organizer running several series).
+ */
+const allNextEvents = meetups.flatMap((m) =>
+	(nextEvents[m.id] ?? []).map((event) => ({
+		meetupName: m.data.name,
+		category: m.data.category,
+		...event,
+	})),
+);
+
+const sortedNextEvents = allNextEvents.sort(
+	(a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+);
+const heroEvent = sortedNextEvents[0];
+
+/**
+ * Every event landing on the hero's calendar day, hero first — the hero
+ * component cycles through these on click, so two+ meetups meeting on the
+ * same day are all reachable rather than the runners-up just being a count.
+ */
+const heroDayEvents = heroEvent
+	? sortedNextEvents.filter(
+			(e) =>
+				new Date(e.date).toDateString() === new Date(heroEvent.date).toDateString(),
+		)
+	: [];
+
+const upcomingEventsCount = allNextEvents.length;
 
 const title =
 	'Nottingham Digital: Design and Development Events for the Tech Community';
@@ -46,6 +81,16 @@ const description =
 	<header class="header">
 		<Logo as="h1" />
 		<p class="site-strap">Local events for the tech community.</p>
+		<p class="site-stats">
+			{meetups.length} meetup{meetups.length === 1 ? '' : 's'}
+			{upcomingEventsCount > 0 && (
+				<>
+					{' '}with {upcomingEventsCount} upcoming event
+					{upcomingEventsCount === 1 ? '' : 's'}
+				</>
+			)}
+		</p>
+		{heroDayEvents.length > 0 && <NextUpHero events={heroDayEvents} />}
 		<CategoryFilters
 			total={meetups.length}
 			categories={activeCategories}
@@ -65,7 +110,7 @@ const description =
 						cadence={meetup.data.cadence}
 						category={meetup.data.category}
 						links={meetup.data.links}
-						nextEvent={nextEvents[meetup.id]}
+						nextEvents={nextEvents[meetup.id]}
 					/>
 				))
 			}

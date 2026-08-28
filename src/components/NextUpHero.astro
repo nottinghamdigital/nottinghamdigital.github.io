@@ -1,0 +1,130 @@
+---
+import { categoryById, type CategoryId } from '../data/categories';
+
+interface EventItem {
+	meetupName: string;
+	category: CategoryId;
+	title: string;
+	url: string;
+	date: string;
+}
+
+interface Props {
+	/** Every event on the hero's calendar day, soonest first. */
+	events: EventItem[];
+}
+
+const { events } = Astro.props;
+
+const enriched = events.map((e) => {
+	const { label: categoryLabel, icon } = categoryById(e.category);
+	const formattedDate = new Date(e.date).toLocaleDateString('en-GB', {
+		weekday: 'short',
+		day: 'numeric',
+		month: 'short',
+		hour: 'numeric',
+		minute: '2-digit',
+		timeZone: 'Europe/London',
+	});
+	return { ...e, categoryLabel, icon, formattedDate };
+});
+
+const [first, ...rest] = enriched;
+const moreCount = rest.length;
+---
+
+<div class="next-up">
+	<span class="next-up__label">Next up</span>
+	<div
+		class="next-up__card"
+		style={`--category-color: var(--color-category-${first.category});`}
+	>
+		<a class="next-up__link" href={first.url} rel="noopener">
+			<span class="next-up__stripe">
+				<span
+					class="icon next-up__icon"
+					style={`--icon-src: url(${first.icon});`}
+					aria-hidden="true"
+				></span>
+			</span>
+			<span class="next-up__body">
+				<span class="next-up__date">{first.formattedDate}</span>
+				<span class="next-up__title">{first.title}</span>
+				<span class="next-up__meetup">{first.meetupName}</span>
+			</span>
+			<span class="visually-hidden">Category: {first.categoryLabel}</span>
+		</a>
+		{
+			moreCount > 0 && (
+				<button
+					type="button"
+					class="next-up__more"
+					aria-expanded="false"
+					aria-controls="next-up-more-list"
+					aria-label={`Show ${moreCount} more event${moreCount === 1 ? '' : 's'} on this date`}
+					data-next-up-toggle
+				>
+					+{moreCount} more
+				</button>
+			)
+		}
+	</div>
+	{
+		moreCount > 0 && (
+			<ul class="next-up__more-list" id="next-up-more-list" hidden>
+				{rest.map((e) => (
+					<li class="next-up__more-item">
+						<div
+							class="next-up__card"
+							style={`--category-color: var(--color-category-${e.category});`}
+						>
+							<a class="next-up__link" href={e.url} rel="noopener">
+								<span class="next-up__stripe">
+									<span
+										class="icon next-up__icon"
+										style={`--icon-src: url(${e.icon});`}
+										aria-hidden="true"
+									/>
+								</span>
+								<span class="next-up__body">
+									<span class="next-up__date">{e.formattedDate}</span>
+									<span class="next-up__title">{e.title}</span>
+									<span class="next-up__meetup">{e.meetupName}</span>
+								</span>
+								<span class="visually-hidden">Category: {e.categoryLabel}</span>
+							</a>
+						</div>
+					</li>
+				))}
+			</ul>
+		)
+	}
+</div>
+
+{
+	moreCount > 0 && (
+		<script is:inline>
+			document.addEventListener('DOMContentLoaded', () => {
+				const toggle = document.querySelector('[data-next-up-toggle]');
+				const list = document.getElementById('next-up-more-list');
+				if (!(toggle instanceof HTMLButtonElement) || !(list instanceof HTMLElement)) {
+					return;
+				}
+
+				const collapsedLabel = toggle.textContent.trim();
+				const collapsedAriaLabel = toggle.getAttribute('aria-label') ?? collapsedLabel;
+
+				toggle.addEventListener('click', () => {
+					const expanded = toggle.getAttribute('aria-expanded') === 'true';
+					toggle.setAttribute('aria-expanded', String(!expanded));
+					list.hidden = expanded;
+					toggle.textContent = expanded ? collapsedLabel : 'Hide other events';
+					toggle.setAttribute(
+						'aria-label',
+						expanded ? collapsedAriaLabel : 'Hide other events on this date',
+					);
+				});
+			});
+		</script>
+	)
+}

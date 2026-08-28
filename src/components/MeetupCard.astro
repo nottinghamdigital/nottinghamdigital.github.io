@@ -1,5 +1,6 @@
 ---
 import { CATEGORIES, categoryById, type CategoryId } from '../data/categories';
+import { linkIcon } from '../data/link-icons';
 
 interface NextEvent {
 	title: string;
@@ -16,20 +17,28 @@ interface Props {
 	cadence: string;
 	category: CategoryId;
 	links: { label: string; url: string }[];
-	/** The group's next scheduled event, fetched from meetup.com's RSS feed at build time. Absent if there's none scheduled, or the feed couldn't be fetched. */
-	nextEvent?: NextEvent;
+	/**
+	 * The group's upcoming events, soonest first — one per event source
+	 * (usually one, but an Eventbrite organizer running multiple series can
+	 * contribute several), fetched at build time. Absent if none are
+	 * scheduled, or none of the sources could be fetched.
+	 */
+	nextEvents?: NextEvent[];
 }
 
-const { id, name, url, summary, cadence, category, links, nextEvent } =
+const { id, name, url, summary, cadence, category, links, nextEvents } =
 	Astro.props;
 const { label: categoryLabel, icon } = categoryById(category);
-const nextEventDate = nextEvent
-	? new Date(nextEvent.date).toLocaleDateString('en-GB', {
-			weekday: 'short',
-			day: 'numeric',
-			month: 'short',
-		})
-	: null;
+const formatDate = (date: string) =>
+	new Date(date).toLocaleDateString('en-GB', {
+		weekday: 'short',
+		day: 'numeric',
+		month: 'short',
+		timeZone: 'Europe/London',
+	});
+const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+const isThisWeek = (date: string) =>
+	new Date(date).getTime() - Date.now() <= ONE_WEEK_MS;
 
 const linksAsText = links.map((l) => `${l.label}: ${l.url}`).join('\n');
 ---
@@ -37,7 +46,7 @@ const linksAsText = links.map((l) => `${l.label}: ${l.url}`).join('\n');
 <li
 	class="meetup-card h-card"
 	data-category={category}
-	data-next-event-date={nextEvent?.date}
+	data-next-event-date={nextEvents?.[0]?.date}
 	style={`--category-color: var(--color-category-${category});`}
 >
 	<div class="meetup-card__stripe">
@@ -57,9 +66,27 @@ const linksAsText = links.map((l) => `${l.label}: ${l.url}`).join('\n');
 		></span>
 	</button>
 
-	<h2 class="meetup-card__title">
-		<a class="meetup-card__link p-name u-url" href={url}>{name}</a>
-	</h2>
+	<div class="meetup-card__header">
+		<h2 class="meetup-card__title">
+			<a class="meetup-card__link p-name u-url" href={url}>{name}</a>
+		</h2>
+
+		{
+			links.length > 0 && (
+				<p class="meetup-card__links">
+					{links.map((link) => (
+						<a href={link.url} rel="me noopener" aria-label={`${link.label} for ${name}`}>
+							<span
+								class="icon"
+								style={`--icon-src: url(${linkIcon(link.label)});`}
+								aria-hidden="true"
+							/>
+						</a>
+					))}
+				</p>
+			)
+		}
+	</div>
 
 	<p class="meetup-card__summary p-summary">{summary}</p>
 
@@ -75,27 +102,28 @@ const linksAsText = links.map((l) => `${l.label}: ${l.url}`).join('\n');
 	</p>
 
 	{
-		nextEvent && (
-			<p class="meetup-card__next-event">
-				Next:{' '}
-				<a href={nextEvent.url} rel="noopener">
-					{nextEventDate}
-					<span class="visually-hidden"> — {nextEvent.title}</span>
-				</a>
-			</p>
-		)
-	}
-
-	{
-		links.length > 0 && (
-			<p class="meetup-card__links">
-				{links.map((link) => (
-					<a href={link.url} rel="me noopener">
-						{link.label}
-						<span class="visually-hidden"> for {name}</span>
-					</a>
-				))}
-			</p>
+		nextEvents && nextEvents.length > 0 && (
+			<div
+				class="meetup-card__next-events"
+				data-multiple={nextEvents.length > 1}
+			>
+				<span class="meetup-card__next-events-label">Next:</span>
+				<ul>
+					{nextEvents.map((event) => (
+						<li>
+							<a href={event.url} rel="noopener">
+								<span class="meetup-card__next-events-date">
+									{formatDate(event.date)}
+								</span>
+								<span class="meetup-card__next-events-title"> — {event.title}</span>
+							</a>
+							{isThisWeek(event.date) && (
+								<span class="meetup-card__badge">This week</span>
+							)}
+						</li>
+					))}
+				</ul>
+			</div>
 		)
 	}
 
