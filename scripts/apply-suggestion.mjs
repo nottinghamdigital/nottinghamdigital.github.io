@@ -94,8 +94,17 @@ async function main() {
 	if (fields['New summary']) doc.set('summary', fields['New summary']);
 	if (fields['New notes']) doc.set('notes', fields['New notes']);
 
+	// GitHub's dropdown widget shows "None" as its button caption until a
+	// person actually opens it and clicks an option — if someone submits
+	// without touching it, the answer can come through as the literal text
+	// "None" rather than our "— leave unchanged —" default, so both count as
+	// no change here.
 	const categoryLabel = fields['New category'];
-	if (categoryLabel && categoryLabel !== '— leave unchanged —') {
+	if (
+		categoryLabel &&
+		categoryLabel !== '— leave unchanged —' &&
+		categoryLabel !== 'None'
+	) {
 		const id = categoryLabel.toLowerCase();
 		const validIds = await loadCategoryIds();
 		if (!validIds.includes(id)) {
