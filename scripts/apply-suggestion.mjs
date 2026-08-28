@@ -6,7 +6,7 @@
 // the answer (or `_No response_` for a field left blank), so the body is
 // parsed by matching those headings against the form's field labels.
 import { readFile, writeFile, readdir } from 'node:fs/promises';
-import { parseDocument } from 'yaml';
+import { parseDocument, stringify } from 'yaml';
 
 const MEETUPS_DIR = new URL('../src/content/meetups/', import.meta.url);
 const CATEGORIES_FILE = new URL('../src/data/categories.ts', import.meta.url);
@@ -50,6 +50,40 @@ function parseLinks(text) {
 	return links;
 }
 
+/**
+ * Renders just the "value" portion of `key: value` the way yaml would write
+ * it — same relative indentation yaml uses for a top-level key — so it can
+ * be spliced directly into another top-level key's value range below.
+ */
+function serializeFieldValue(key, value) {
+	const text = stringify({ [key]: value }, { lineWidth: 79 });
+	const pair = parseDocument(text).contents.items[0];
+	const [start, valueEnd] = pair.value.range;
+	return text.slice(start, valueEnd);
+}
+
+/**
+ * Replaces a single top-level field's value in raw YAML text, preserving
+ * every other line byte-for-byte. Re-serialising the whole document with
+ * the `yaml` package would otherwise reflow every multi-line scalar in the
+ * file to its own line width — since these files are hand-wrapped rather
+ * than wrapped to any width the library would reproduce, that turns an edit
+ * to one field into spurious diff noise across every other field.
+ */
+function setField(raw, key, value) {
+	const pair = parseDocument(raw).contents.items.find(
+		(p) => p.key.value === key,
+	);
+	const newValue = serializeFieldValue(key, value);
+	if (!pair) {
+		const eol = raw.includes('\r\n') ? '\r\n' : '\n';
+		const separator = raw.endsWith(eol) ? '' : eol;
+		return `${raw}${separator}${key}: ${newValue}${eol}`;
+	}
+	const [start, valueEnd] = pair.value.range;
+	return raw.slice(0, start) + newValue + raw.slice(valueEnd);
+}
+
 async function findMeetupFile(groupName) {
 	const files = (await readdir(MEETUPS_DIR)).filter((f) => f.endsWith('.yml'));
 	for (const file of files) {
@@ -58,7 +92,7 @@ async function findMeetupFile(groupName) {
 		const doc = parseDocument(raw);
 		const name = doc.get('name');
 		if (typeof name === 'string' && name.trim().toLowerCase() === groupName.trim().toLowerCase()) {
-			return { url, raw, doc };
+			return { url, raw };
 		}
 	}
 	return null;
@@ -85,14 +119,20 @@ async function main() {
 			`No meetup file found with name "${groupName}" — it must match exactly as shown on the site.`,
 		);
 	}
-	const { url, doc } = match;
+	let { url, raw } = match;
+	let finalName = groupName;
 
-	if (fields['New group name']) doc.set('name', fields['New group name']);
-	if (fields['New URL']) doc.set('url', fields['New URL']);
-	if (fields['New events URL']) doc.set('events', fields['New events URL']);
-	if (fields['New cadence']) doc.set('cadence', fields['New cadence']);
-	if (fields['New summary']) doc.set('summary', fields['New summary']);
-	if (fields['New notes']) doc.set('notes', fields['New notes']);
+	if (fields['New group name']) {
+		finalName = fields['New group name'];
+		raw = setField(raw, 'name', finalName);
+	}
+	if (fields['New URL']) raw = setField(raw, 'url', fields['New URL']);
+	if (fields['New events URL']) {
+		raw = setField(raw, 'events', fields['New events URL']);
+	}
+	if (fields['New cadence']) raw = setField(raw, 'cadence', fields['New cadence']);
+	if (fields['New summary']) raw = setField(raw, 'summary', fields['New summary']);
+	if (fields['New notes']) raw = setField(raw, 'notes', fields['New notes']);
 
 	// GitHub's dropdown widget shows "None" as its button caption until a
 	// person actually opens it and clicks an option — if someone submits
@@ -110,18 +150,28 @@ async function main() {
 		if (!validIds.includes(id)) {
 			throw new Error(`Unknown category "${categoryLabel}".`);
 		}
-		doc.set('category', id);
+		raw = setField(raw, 'category', id);
 	}
 
 	if (fields['Links to add']) {
-		doc.set('links', parseLinks(fields['Links to add']));
+		raw = setField(raw, 'links', parseLinks(fields['Links to add']));
 	}
 
-	await writeFile(url, String(doc));
+	await writeFile(url, raw);
 
-	const finalName = doc.get('name');
+	const filePath = `src/content/meetups/${decodeURIComponent(url.pathname.split('/').pop())}`;
+
+	// Sets these as step outputs (steps.apply.outputs.*) for the workflow —
+	// plain console.log doesn't do this in modern Actions; it has to be
+	// written to the file at $GITHUB_OUTPUT.
+	const githubOutput = process.env.GITHUB_OUTPUT;
+	if (githubOutput) {
+		await writeFile(githubOutput, `group-name=${finalName}\nfile-path=${filePath}\n`, {
+			flag: 'a',
+		});
+	}
 	console.log(`group-name=${finalName}`);
-	console.log(`file-path=src/content/meetups/${decodeURIComponent(url.pathname.split('/').pop())}`);
+	console.log(`file-path=${filePath}`);
 }
 
 await main();
