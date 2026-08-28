@@ -25,6 +25,8 @@ const meetups = defineCollection({
 		events: z.string().url().optional(),
 		/** A sentence or two, written by the organisers. */
 		summary: z.string().min(1),
+		/** A short callout that needs to stand out from the summary, e.g. a venue change or booking requirement. */
+		notes: z.string().min(1).optional(),
 		/** How often it runs, in plain English: "Second Thursday". */
 		cadence: z.string().min(1),
 		category: z.enum(CATEGORY_IDS),
