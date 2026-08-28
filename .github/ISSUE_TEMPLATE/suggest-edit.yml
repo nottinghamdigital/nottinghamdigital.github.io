@@ -1,0 +1,117 @@
+name: Suggest an edit to a group's listing
+description: >-
+  For meetup organisers who'd rather not fork the repo and edit YAML — fill
+  this in and a pull request will be opened automatically for a maintainer to
+  review.
+title: '[Edit suggestion]: '
+labels: ['event-suggestion']
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Only fill in the fields you want changed — leave the rest blank and
+        they'll be left as they are. If you got here via the pencil icon on
+        nottingham.digital, that's already done for you. If you're
+        comfortable with git/YAML, you're also welcome to open a pull request
+        directly instead (see `contributor-guide.md`).
+
+  - type: input
+    id: group-name
+    attributes:
+      label: Which group is this for?
+      description: >-
+        The exact name as it currently appears on nottingham.digital (e.g.
+        ".NET Notts").
+      placeholder: '.NET Notts'
+    validations:
+      required: true
+
+  - type: input
+    id: new-cadence
+    attributes:
+      label: New cadence
+      description: >-
+        Leave blank to keep as-is. Plain English, e.g. "Second Thursday" or
+        "Quarterly".
+
+  - type: textarea
+    id: new-summary
+    attributes:
+      label: New summary
+      description: Leave blank to keep the current summary. A sentence or two.
+
+  - type: textarea
+    id: new-links
+    attributes:
+      label: Links to add
+      description: >-
+        Leave blank to keep the current links as they are. Otherwise, list
+        every link the group should show (this **replaces** the current
+        list), one per line, as `Label: https://url`.
+      placeholder: |
+        LinkedIn: https://www.linkedin.com/company/your-group/
+        X: https://x.com/yourgroup
+
+  - type: markdown
+    attributes:
+      value: |
+        ### Advanced — only if something else needs fixing
+        Renaming the group, changing its URL, events feed or category, or
+        adding a notes callout. Most suggestions won't need any of this.
+
+  - type: input
+    id: new-name
+    attributes:
+      label: New group name
+      description: Leave blank to keep the current name.
+
+  - type: input
+    id: new-url
+    attributes:
+      label: New URL
+      description: >-
+        Leave blank to keep the current URL. Where people should go for
+        details — Meetup page or your own site.
+      placeholder: 'https://www.meetup.com/your-group/'
+
+  - type: input
+    id: new-events
+    attributes:
+      label: New events URL
+      description: >-
+        Leave blank to keep as-is. Only needed if the group's events live
+        somewhere different from its URL above — a separate calendar or
+        `/events` page.
+      placeholder: 'https://luma.com/your-group'
+
+  - type: dropdown
+    id: new-category
+    attributes:
+      label: New category
+      description: Leave as "— leave unchanged —" to keep the current category.
+      options:
+        - '— leave unchanged —'
+        - Tech
+        - Design
+        - Ops
+      default: 0
+
+  - type: textarea
+    id: new-notes
+    attributes:
+      label: New notes
+      description: >-
+        Leave blank to keep as-is. A short callout that stands out from the
+        summary, e.g. a venue change or booking requirement.
+
+  - type: markdown
+    attributes:
+      value: '### Anything else?'
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes for the reviewer
+      description: >-
+        Optional — not applied automatically, just shown alongside the
+        suggestion.

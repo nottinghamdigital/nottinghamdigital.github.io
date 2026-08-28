@@ -8,6 +8,8 @@ import Logo from '../components/Logo.astro';
 import MeetupCard from '../components/MeetupCard.astro';
 import NextUpHero from '../components/NextUpHero.astro';
 import ThemeToggle from '../components/ThemeToggle.astro';
+import EditModeToggle from '../components/EditModeToggle.astro';
+import EditPanelScript from '../components/EditPanelScript.astro';
 import { CATEGORIES } from '../data/categories';
 import { GOATCOUNTER_DASHBOARD } from '../data/analytics';
 
@@ -101,8 +103,10 @@ const description =
 			{
 				meetups.map((meetup) => (
 					<MeetupCard
+						id={meetup.id}
 						name={meetup.data.name}
 						url={meetup.data.url}
+						events={meetup.data.events}
 						summary={meetup.data.summary}
 						notes={meetup.data.notes}
 						cadence={meetup.data.cadence}
@@ -136,6 +140,8 @@ const description =
 			Visitor stats are <a href={GOATCOUNTER_DASHBOARD}>public</a> — no cookies,
 			no personal data
 		</p>
+		<EditModeToggle />
 		<ThemeToggle />
 	</footer>
+	<EditPanelScript />
 </BaseLayout>

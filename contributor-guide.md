@@ -5,6 +5,18 @@ from all.
 
 To contribute, fork the repository and open a pull request.
 
+## Suggesting an edit without git
+
+If you organise a group and just want to fix a detail on your listing — new
+cadence, an updated summary, different links — you don't need to fork the
+repo or edit YAML. Turn on "Show edit links" in the site footer, then click
+the pencil icon on your group's card: it opens an on-site panel pre-filled
+with your group's current details. Edit whatever's changed and click
+"Continue to GitHub" — it hands off to a pre-filled [edit suggestion
+issue](../../issues/new?template=suggest-edit.yml) carrying only the fields
+you actually changed. Submit it there and a pull request is opened
+automatically for a maintainer to review and merge.
+
 ## Adding your meetup
 
 Add one YAML file to [`src/content/meetups/`](src/content/meetups), named after
