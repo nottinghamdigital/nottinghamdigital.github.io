@@ -6,6 +6,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import CategoryFilters from '../components/CategoryFilters.astro';
 import Logo from '../components/Logo.astro';
 import MeetupCard from '../components/MeetupCard.astro';
+import NextUpHero from '../components/NextUpHero.astro';
 import ThemeToggle from '../components/ThemeToggle.astro';
 import { CATEGORIES } from '../data/categories';
 import { GOATCOUNTER_DASHBOARD } from '../data/analytics';
@@ -34,6 +35,39 @@ const usedCategoryIds = new Set(meetups.map((m) => m.data.category));
 const activeCategories = CATEGORIES.filter((c) => usedCategoryIds.has(c.id));
 const hasNextEvents = meetups.some((m) => nextEvents[m.id]);
 
+/**
+ * All known upcoming events across every group, derived from the same
+ * generated data as each card's own "Next:" line — no new fetch, and
+ * coverage is necessarily partial (only groups whose feed the prebuild
+ * script understands appear here).
+ */
+const allNextEvents = meetups
+	.filter((m) => nextEvents[m.id])
+	.map((m) => ({
+		meetupName: m.data.name,
+		category: m.data.category,
+		...nextEvents[m.id],
+	}));
+
+const sortedNextEvents = allNextEvents.sort(
+	(a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+);
+const heroEvent = sortedNextEvents[0];
+
+/**
+ * Every event landing on the hero's calendar day, hero first — the hero
+ * component cycles through these on click, so two+ meetups meeting on the
+ * same day are all reachable rather than the runners-up just being a count.
+ */
+const heroDayEvents = heroEvent
+	? sortedNextEvents.filter(
+			(e) =>
+				new Date(e.date).toDateString() === new Date(heroEvent.date).toDateString(),
+		)
+	: [];
+
+const upcomingEventsCount = allNextEvents.length;
+
 const title =
 	'Nottingham Digital: Design and Development Events for the Tech Community';
 const description =
@@ -44,6 +78,16 @@ const description =
 	<header class="header">
 		<Logo as="h1" />
 		<p class="site-strap">Local events for the tech community.</p>
+		<p class="site-stats">
+			{meetups.length} meetup{meetups.length === 1 ? '' : 's'}
+			{upcomingEventsCount > 0 && (
+				<>
+					{' '}with {upcomingEventsCount} upcoming event
+					{upcomingEventsCount === 1 ? '' : 's'}
+				</>
+			)}
+		</p>
+		{heroDayEvents.length > 0 && <NextUpHero events={heroDayEvents} />}
 		<CategoryFilters
 			total={meetups.length}
 			categories={activeCategories}

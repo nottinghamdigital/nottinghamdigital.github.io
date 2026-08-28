@@ -29,6 +29,10 @@ const nextEventDate = nextEvent
 			month: 'short',
 		})
 	: null;
+const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+const isThisWeek = nextEvent
+	? new Date(nextEvent.date).getTime() - Date.now() <= ONE_WEEK_MS
+	: false;
 ---
 
 <li
@@ -85,6 +89,7 @@ const nextEventDate = nextEvent
 					{nextEventDate}
 					<span class="visually-hidden"> — {nextEvent.title}</span>
 				</a>
+				{isThisWeek && <span class="meetup-card__badge">This week</span>}
 			</p>
 		)
 	}
