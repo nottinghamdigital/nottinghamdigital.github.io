@@ -4,6 +4,6 @@ import { defineConfig } from 'vitest/config';
 // `test` from @playwright/test and would fail here.
 export default defineConfig({
 	test: {
-		include: ['tests/unit/**/*.test.ts'],
+		include: ['tests/{unit,integration}/**/*.test.ts'],
 	},
 });
