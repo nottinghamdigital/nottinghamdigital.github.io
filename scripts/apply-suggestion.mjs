@@ -6,6 +6,7 @@
 // the answer (or `_No response_` for a field left blank), so the body is
 // parsed by matching those headings against the form's field labels.
 import { readFile, writeFile, readdir } from 'node:fs/promises';
+import { pathToFileURL } from 'node:url';
 import { parseDocument, stringify } from 'yaml';
 
 const MEETUPS_DIR = new URL('../src/content/meetups/', import.meta.url);
@@ -169,7 +170,7 @@ async function main() {
 	});
 
 	const meetupsDirOverride = process.env.MEETUPS_DIR
-		? new URL(`file://${process.env.MEETUPS_DIR}/`)
+		? pathToFileURL(process.env.MEETUPS_DIR + (process.env.MEETUPS_DIR.endsWith('/') ? '' : '/'))
 		: undefined;
 	const { finalName, filePath, newRaw, url } = await applySuggestion({
 		body,
