@@ -1,7 +1,7 @@
 # Everything is owned by the current maintainers by default.
 # Architectural / feature changes require a review from one of these owners
 # (in addition to the "2 approvals" rule enforced by .github/workflows/review-policy.yml).
-* @sdh100shaun @pavlakis @chrisemerson @adam-blakey @thebiggh
+* @sdh100shaun @chrisemerson @adam-blakey @thebiggh
 
 # Content-only changes (meetup YAML) are intentionally *unowned* so that
 # authors can merge them once required status checks are green.
