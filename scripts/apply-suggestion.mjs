@@ -185,6 +185,10 @@ async function main() {
 }
 
 // Only run main() when invoked as a script, not when imported by a test.
-if (import.meta.url === `file://${process.argv[1]}`) {
+const invokedAsScript =
+	process.argv[1] &&
+	import.meta.url.endsWith(process.argv[1].replaceAll('\\', '/'));
+
+if (invokedAsScript) {
 	await main();
 }
