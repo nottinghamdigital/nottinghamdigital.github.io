@@ -379,6 +379,159 @@ test.describe('Past events', () => {
 	});
 });
 
+test.describe('Edit panel', () => {
+	// Covers src/components/EditPanelScript.astro. The "Continue to GitHub"
+	// link's href/target/rel are set on click (not opened via window.open())
+	// specifically so mobile/in-app webviews get a normal, trusted link
+	// navigation — see the fix note in that file. These tests assert on the
+	// resulting anchor attributes rather than intercepting a popup.
+
+	// The pencil icon and edit panel are only shown once "Show edit links" is
+	// switched on (see EditModeToggle.astro) — stored under nd-edit-mode.
+	test.beforeEach(async ({ page }) => {
+		await page.addInitScript(() => {
+			localStorage.setItem('nd-edit-mode', 'true');
+		});
+	});
+
+	test('toggling the edit panel updates aria-expanded and visibility', async ({
+		page,
+	}) => {
+		await page.goto('/');
+		const card = page.locator('#meetup-list > li').first();
+		const toggle = card.locator('[data-edit-toggle]');
+		const panel = card.locator('[data-edit-panel]');
+
+		await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+		await expect(panel).toBeHidden();
+
+		await toggle.click();
+		await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+		await expect(panel).toBeVisible();
+
+		await toggle.click();
+		await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+		await expect(panel).toBeHidden();
+	});
+
+	test('fields are pre-filled with the card\'s current values', async ({ page }) => {
+		await page.goto('/');
+		const card = page.locator('#meetup-list > li').first();
+		await card.locator('[data-edit-toggle]').click();
+		const panel = card.locator('[data-edit-panel]');
+
+		const name = await card.locator('.p-name').innerText();
+		await expect(panel.locator('[data-field="name"]')).toHaveValue(name);
+
+		const summary = await card.locator('.p-summary').innerText();
+		await expect(panel.locator('[data-field="summary"]')).toHaveValue(summary);
+
+		const categorySelect = panel.locator('[data-field="category"]');
+		const defaultCategory = await categorySelect.getAttribute('data-default-value');
+		await expect(categorySelect).toHaveValue(defaultCategory ?? '');
+	});
+
+	test('continuing without changing any field carries only group-name and template', async ({
+		page,
+	}) => {
+		await page.goto('/');
+		const card = page.locator('#meetup-list > li').first();
+		await card.locator('[data-edit-toggle]').click();
+		const panel = card.locator('[data-edit-panel]');
+		const continueLink = panel.locator('[data-edit-continue]');
+
+		await continueLink.click();
+
+		const href = await continueLink.getAttribute('href');
+		expect(href).toBeTruthy();
+		const url = new URL(href ?? '');
+		expect(url.origin + url.pathname).toBe(
+			'https://github.com/nottinghamdigital/nottinghamdigital.github.io/issues/new',
+		);
+		expect(url.searchParams.get('template')).toBe('suggest-edit.yml');
+		expect(url.searchParams.get('group-name')).toBeTruthy();
+		for (const param of [
+			'new-name',
+			'new-url',
+			'new-events',
+			'new-cadence',
+			'new-summary',
+			'new-notes',
+			'new-category',
+			'new-links',
+		]) {
+			expect(url.searchParams.has(param)).toBe(false);
+		}
+	});
+
+	test('only changed fields are carried over, others are left out', async ({ page }) => {
+		await page.goto('/');
+		const card = page.locator('#meetup-list > li').first();
+		await card.locator('[data-edit-toggle]').click();
+		const panel = card.locator('[data-edit-panel]');
+
+		const summaryField = panel.locator('[data-field="summary"]');
+		await summaryField.fill('A brand new summary for testing');
+
+		const continueLink = panel.locator('[data-edit-continue]');
+		await continueLink.click();
+
+		const href = await continueLink.getAttribute('href');
+		const url = new URL(href ?? '');
+		expect(url.searchParams.get('new-summary')).toBe(
+			'A brand new summary for testing',
+		);
+		expect(url.searchParams.has('new-name')).toBe(false);
+		expect(url.searchParams.has('new-url')).toBe(false);
+	});
+
+	test('changing the category select is detected, leaving it unchanged is not', async ({
+		page,
+	}) => {
+		await page.goto('/');
+		const card = page.locator('#meetup-list > li').first();
+		await card.locator('[data-edit-toggle]').click();
+		const panel = card.locator('[data-edit-panel]');
+		await panel.locator('.edit-panel__advanced summary').click();
+
+		const categorySelect = panel.locator('[data-field="category"]');
+		const defaultCategory = await categorySelect.getAttribute('data-default-value');
+		const options = await categorySelect.locator('option').allTextContents();
+		const otherOption = options.find((o) => o !== defaultCategory);
+		test.skip(!otherOption, 'needs at least two category options');
+
+		const continueLink = panel.locator('[data-edit-continue]');
+
+		await continueLink.click();
+		let href = await continueLink.getAttribute('href');
+		expect(new URL(href ?? '').searchParams.has('new-category')).toBe(false);
+
+		await categorySelect.selectOption({ label: otherOption });
+		await continueLink.click();
+		href = await continueLink.getAttribute('href');
+		expect(new URL(href ?? '').searchParams.get('new-category')).toBe(otherOption);
+	});
+
+	test('"Continue to GitHub" is a real navigable link, not a JS-only popup', async ({
+		page,
+	}) => {
+		await page.goto('/');
+		const card = page.locator('#meetup-list > li').first();
+		await card.locator('[data-edit-toggle]').click();
+		const panel = card.locator('[data-edit-panel]');
+		const continueLink = panel.locator('[data-edit-continue]');
+
+		await expect(continueLink).toHaveJSProperty('tagName', 'A');
+		await continueLink.click();
+
+		await expect(continueLink).toHaveAttribute('target', '_blank');
+		await expect(continueLink).toHaveAttribute('rel', /noopener/);
+		const href = await continueLink.getAttribute('href');
+		expect(href).toBeTruthy();
+		expect(href).not.toBe('#');
+	});
+});
+
 test.describe('Monitoring metadata', () => {
 	// scripts/check-live-site.mjs reads this stamp off the published page to
 	// tell whether the daily deploy is still running. Losing it would break
