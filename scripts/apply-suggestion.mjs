@@ -168,7 +168,13 @@ async function main() {
 		process.stdin.on('error', reject);
 	});
 
-	const { finalName, filePath, newRaw, url } = await applySuggestion({ body });
+	const meetupsDirOverride = process.env.MEETUPS_DIR
+		? new URL(`file://${process.env.MEETUPS_DIR}/`)
+		: undefined;
+	const { finalName, filePath, newRaw, url } = await applySuggestion({
+		body,
+		...(meetupsDirOverride && { meetupsDir: meetupsDirOverride }),
+	});
 	await writeFile(url, newRaw);
 
 	// Sets these as step outputs (steps.apply.outputs.*) for the workflow —

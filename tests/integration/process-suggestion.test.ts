@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { spawn } from 'node:child_process';
-import { mkdtemp, cp, readFile, writeFile, rm } from 'node:fs/promises';
+import { mkdtemp, cp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -20,32 +20,18 @@ describe('scripts/apply-suggestion.mjs (subprocess)', () => {
 	let tmpDir: string;
 	let meetupsCopyDir: string;
 	let githubOutputFile: string;
-	let originalMeetupsRaw: Record<string, string>;
 
 	beforeAll(async () => {
 		tmpDir = await mkdtemp(join(tmpdir(), 'process-suggestion-'));
 		meetupsCopyDir = join(tmpDir, 'meetups');
 		githubOutputFile = join(tmpDir, 'github-output');
 
-		// The script's MEETUPS_DIR is resolved from `import.meta.url`, so it
-		// always looks at the real src/content/meetups/ in the repo — we back
-		// up every file, let the script mutate the real ones, then restore.
+		// Copy the real meetups into a temp dir; the script is pointed at that
+		// copy via MEETUPS_DIR so the repo checkout is never mutated.
 		await cp(REPO_MEETUPS_DIR, meetupsCopyDir, { recursive: true });
-		originalMeetupsRaw = {};
-		const { readdir } = await import('node:fs/promises');
-		for (const file of await readdir(meetupsCopyDir)) {
-			originalMeetupsRaw[file] = await readFile(
-				join(meetupsCopyDir, file),
-				'utf-8',
-			);
-		}
 	});
 
 	afterAll(async () => {
-		// Restore every meetup file to what the copy captured, then wipe tmp.
-		for (const [file, raw] of Object.entries(originalMeetupsRaw)) {
-			await writeFile(join(REPO_MEETUPS_DIR, file), raw);
-		}
 		await rm(tmpDir, { recursive: true, force: true });
 	});
 
@@ -56,7 +42,11 @@ describe('scripts/apply-suggestion.mjs (subprocess)', () => {
 	}> {
 		return new Promise((resolve, reject) => {
 			const child = spawn('node', [SCRIPT], {
-				env: { ...process.env, GITHUB_OUTPUT: githubOutputFile },
+				env: {
+					...process.env,
+					GITHUB_OUTPUT: githubOutputFile,
+					MEETUPS_DIR: meetupsCopyDir,
+				},
 				stdio: ['pipe', 'pipe', 'pipe'],
 			});
 			let stdout = '';
@@ -132,10 +122,13 @@ describe('scripts/apply-suggestion.mjs (subprocess)', () => {
 		);
 
 		const mutated = await readFile(
+			join(meetupsCopyDir, 'nottingham-programmers.yml'),
+			'utf-8',
+		);
+		const original = await readFile(
 			join(REPO_MEETUPS_DIR, 'nottingham-programmers.yml'),
 			'utf-8',
 		);
-		const original = originalMeetupsRaw['nottingham-programmers.yml'];
 
 		// The links block was originally commented out in the fixture; the
 		// script rewrites the `links:` key (appending it if missing) and adds
