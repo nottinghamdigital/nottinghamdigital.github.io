@@ -11,7 +11,7 @@ import { parseDocument, stringify } from 'yaml';
 const MEETUPS_DIR = new URL('../src/content/meetups/', import.meta.url);
 const CATEGORIES_FILE = new URL('../src/data/categories.ts', import.meta.url);
 
-function parseIssueBody(body) {
+export function parseIssueBody(body) {
 	const fields = {};
 	const headingPattern = /^### (.+)$/gm;
 	const matches = [...body.matchAll(headingPattern)];
@@ -26,12 +26,12 @@ function parseIssueBody(body) {
 }
 
 /** Reads the valid category ids straight from the single source of truth. */
-async function loadCategoryIds() {
+export async function loadCategoryIds() {
 	const source = await readFile(CATEGORIES_FILE, 'utf-8');
 	return [...source.matchAll(/id:\s*'([a-z-]+)'/g)].map((m) => m[1]);
 }
 
-function parseLinks(text) {
+export function parseLinks(text) {
 	const links = [];
 	for (const rawLine of text.split('\n')) {
 		const line = rawLine.trim();
@@ -55,7 +55,7 @@ function parseLinks(text) {
  * it — same relative indentation yaml uses for a top-level key — so it can
  * be spliced directly into another top-level key's value range below.
  */
-function serializeFieldValue(key, value) {
+export function serializeFieldValue(key, value) {
 	const text = stringify({ [key]: value }, { lineWidth: 79 });
 	const pair = parseDocument(text).contents.items[0];
 	const [start, valueEnd] = pair.value.range;
@@ -70,7 +70,7 @@ function serializeFieldValue(key, value) {
  * than wrapped to any width the library would reproduce, that turns an edit
  * to one field into spurious diff noise across every other field.
  */
-function setField(raw, key, value) {
+export function setField(raw, key, value) {
 	const pair = parseDocument(raw).contents.items.find(
 		(p) => p.key.value === key,
 	);
@@ -84,10 +84,10 @@ function setField(raw, key, value) {
 	return raw.slice(0, start) + newValue + raw.slice(valueEnd);
 }
 
-async function findMeetupFile(groupName) {
-	const files = (await readdir(MEETUPS_DIR)).filter((f) => f.endsWith('.yml'));
+export async function findMeetupFile(groupName, meetupsDir = MEETUPS_DIR) {
+	const files = (await readdir(meetupsDir)).filter((f) => f.endsWith('.yml'));
 	for (const file of files) {
-		const url = new URL(file, MEETUPS_DIR);
+		const url = new URL(file, meetupsDir);
 		const raw = await readFile(url, 'utf-8');
 		const doc = parseDocument(raw);
 		const name = doc.get('name');
@@ -98,22 +98,20 @@ async function findMeetupFile(groupName) {
 	return null;
 }
 
-async function main() {
-	const body = await new Promise((resolve, reject) => {
-		let data = '';
-		process.stdin.setEncoding('utf-8');
-		process.stdin.on('data', (chunk) => (data += chunk));
-		process.stdin.on('end', () => resolve(data));
-		process.stdin.on('error', reject);
-	});
-
+/**
+ * Pure transform: given an issue body and the source of truth for the
+ * meetup dir and category ids, works out the target file and returns the
+ * patched YAML text. Doesn't touch the filesystem for writes — the CLI
+ * `main()` does that, tests just assert against `newRaw`.
+ */
+export async function applySuggestion({ body, meetupsDir = MEETUPS_DIR, categoryIds }) {
 	const fields = parseIssueBody(body);
 	const groupName = fields['Which group is this for?']?.trim();
 	if (!groupName) {
 		throw new Error('No group name found in the issue body.');
 	}
 
-	const match = await findMeetupFile(groupName);
+	const match = await findMeetupFile(groupName, meetupsDir);
 	if (!match) {
 		throw new Error(
 			`No meetup file found with name "${groupName}" — it must match exactly as shown on the site.`,
@@ -146,7 +144,7 @@ async function main() {
 		categoryLabel !== 'None'
 	) {
 		const id = categoryLabel.toLowerCase();
-		const validIds = await loadCategoryIds();
+		const validIds = categoryIds ?? (await loadCategoryIds());
 		if (!validIds.includes(id)) {
 			throw new Error(`Unknown category "${categoryLabel}".`);
 		}
@@ -157,9 +155,21 @@ async function main() {
 		raw = setField(raw, 'links', parseLinks(fields['Links to add']));
 	}
 
-	await writeFile(url, raw);
-
 	const filePath = `src/content/meetups/${decodeURIComponent(url.pathname.split('/').pop())}`;
+	return { finalName, filePath, newRaw: raw, url };
+}
+
+async function main() {
+	const body = await new Promise((resolve, reject) => {
+		let data = '';
+		process.stdin.setEncoding('utf-8');
+		process.stdin.on('data', (chunk) => (data += chunk));
+		process.stdin.on('end', () => resolve(data));
+		process.stdin.on('error', reject);
+	});
+
+	const { finalName, filePath, newRaw, url } = await applySuggestion({ body });
+	await writeFile(url, newRaw);
 
 	// Sets these as step outputs (steps.apply.outputs.*) for the workflow —
 	// plain console.log doesn't do this in modern Actions; it has to be
@@ -174,4 +184,7 @@ async function main() {
 	console.log(`file-path=${filePath}`);
 }
 
-await main();
+// Only run main() when invoked as a script, not when imported by a test.
+if (import.meta.url === `file://${process.argv[1]}`) {
+	await main();
+}
