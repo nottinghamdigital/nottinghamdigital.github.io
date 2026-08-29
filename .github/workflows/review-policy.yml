@@ -2,12 +2,12 @@ name: review-policy
 
 # Enforces the repo review rules:
 #   - Content-only PRs (changes only under src/content/meetups/**) need at
-#     least 1 approving review from a collaborator/member/owner.
+#     least 1 approving review from someone with write access.
 #   - Any PR touching files outside src/content/meetups/** ("architectural /
 #     feature changes") needs at least 2 approving reviews from users with
 #     write access.
-# Wired into the branch ruleset as a required status check named "review-policy"
-# so the merge button stays disabled until this check passes.
+# To make this binding, add a required status check named "review-policy" to
+# the branch ruleset for main. Until that is done this job only reports.
 
 on:
   pull_request:
@@ -64,18 +64,44 @@ jobs:
             fi
           fi
 
-          # 3. Count approving reviews from trusted associations only
-          # (OWNER, MEMBER, COLLABORATOR). GitHub review history is append-only,
-          # so keep only each reviewer's latest non-COMMENTED review state.
-          # An APPROVED that is later dismissed shows as DISMISSED and won't count.
-          approvals=$(gh api --paginate \
+          # 3. Find each reviewer's current review state. GitHub review history
+          # is append-only, so keep only the latest non-COMMENTED review per
+          # user — an APPROVED that was later dismissed shows as DISMISSED and
+          # so drops out here.
+          #
+          # --slurp is required with --paginate so all pages arrive as one
+          # array; without it gh would apply the filter to each page separately
+          # and emit one count per page. --slurp cannot be combined with --jq,
+          # so the filter runs in a piped jq instead.
+          approvers=$(gh api --paginate --slurp \
             "repos/${REPO}/pulls/${PR_NUMBER}/reviews" \
-            --jq '[.[] | select(.state != "COMMENTED")
-                       | select(.author_association | IN("OWNER","MEMBER","COLLABORATOR"))]
-                  | group_by(.user.login)
-                  | map(sort_by(.submitted_at) | last)
-                  | map(select(.state == "APPROVED" and (.author_association == "OWNER" or .author_association == "MEMBER" or .author_association == "COLLABORATOR")))
-                  | length')
+            | jq -r '[.[][] | select(.state != "COMMENTED")]
+                     | group_by(.user.login)
+                     | map(sort_by(.submitted_at) | last)
+                     | map(select(.state == "APPROVED") | .user.login)
+                     | .[]')
+
+          # 4. Keep only approvers who actually have write access.
+          #
+          # Deliberately NOT using author_association: that field is resolved
+          # relative to what the requesting token can see, and this repo grants
+          # write via the nottingham-digital-maintainers team while org
+          # membership is private. The repo-scoped Actions token therefore sees
+          # every team maintainer as CONTRIBUTOR — never MEMBER (private
+          # membership) and never COLLABORATOR (direct collaborators only) — so
+          # an association filter counts zero approvals on every PR.
+          approvals=0
+          for login in $approvers; do
+            if ! perm=$(gh api "repos/${REPO}/collaborators/${login}/permission" --jq '.permission'); then
+              echo "::error::Could not resolve repository permission for ${login}."
+              exit 1
+            fi
+            echo "Approval from ${login} (permission: ${perm})"
+            case "$perm" in
+              admin | write) approvals=$((approvals + 1)) ;;
+              *) echo "  ignored — no write access" ;;
+            esac
+          done
 
           echo "Classification: ${classification} — ${required} approving review(s) required."
           echo "Current approving reviews: ${approvals}"
