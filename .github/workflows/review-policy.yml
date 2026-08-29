@@ -74,7 +74,7 @@ jobs:
                        | select(.author_association | IN("OWNER","MEMBER","COLLABORATOR"))]
                   | group_by(.user.login)
                   | map(sort_by(.submitted_at) | last)
-                  | map(select(.state == "APPROVED"))
+                  | map(select(.state == "APPROVED" and (.author_association == "OWNER" or .author_association == "MEMBER" or .author_association == "COLLABORATOR")))
                   | length')
 
           echo "Classification: ${classification} — ${required} approving review(s) required."
