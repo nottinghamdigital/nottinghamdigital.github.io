@@ -557,7 +557,7 @@ h3 {
 	align-items: center;
 	flex-shrink: 0;
 	margin-inline-start: auto;
-	padding: 1px 6px;
+	padding: 3px 10px;
 	background: var(--category-color);
 	border-radius: var(--radius-pill);
 	color: var(--color-on-accent);
