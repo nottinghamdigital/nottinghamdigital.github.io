@@ -1,9 +1,10 @@
 name: review-policy
 
 # Enforces the repo review rules:
-#   - Content-only PRs (touch only src/content/meetups/**) need no approvals.
-#   - Any PR touching other files ("architectural / feature changes") needs
-#     at least 2 approving reviews from users with write access.
+#   - Every PR needs at least 1 approving review.
+#   - Any PR touching files outside src/content/meetups/** ("architectural /
+#     feature changes") needs at least 2 approving reviews from users with
+#     write access.
 # Wired into the branch ruleset as a required status check named "review-policy"
 # so the merge button stays disabled until this check passes.
 
@@ -39,24 +40,28 @@ jobs:
             "repos/${REPO}/pulls/${PR_NUMBER}/files" \
             --jq '.[].filename')
 
-          if [ -z "$files" ]; then
-            echo "No files changed — treating as content-only."
-            exit 0
-          fi
-
           echo "Changed files:"
-          echo "$files" | sed 's/^/  /'
+          if [ -z "$files" ]; then
+            echo "  (none)"
+          else
+            echo "$files" | sed 's/^/  /'
+          fi
 
           # 2. Classify: content-only if every path is under src/content/meetups/.
+          # A PR with no file changes is treated as non-content (safer default —
+          # an empty diff shouldn't skip the higher bar).
           non_content=$(echo "$files" | grep -Ev '^src/content/meetups/' || true)
-
-          if [ -z "$non_content" ]; then
-            echo "::notice::Content-only PR — no approvals required."
-            exit 0
+          if [ -n "$files" ] && [ -z "$non_content" ]; then
+            required=1
+            classification="content-only"
+          else
+            required=2
+            classification="non-content"
+            if [ -n "$non_content" ]; then
+              echo "Non-content files present:"
+              echo "$non_content" | sed 's/^/  /'
+            fi
           fi
-
-          echo "Non-content files present — 2 approving reviews required:"
-          echo "$non_content" | sed 's/^/  /'
 
           # 3. Count approving reviews. GitHub review history is append-only,
           # so keep only each reviewer's latest non-COMMENTED review state.
@@ -69,10 +74,11 @@ jobs:
                   | map(select(.state == "APPROVED"))
                   | length')
 
+          echo "Classification: ${classification} — ${required} approving review(s) required."
           echo "Current approving reviews: ${approvals}"
 
-          if [ "${approvals}" -lt 2 ]; then
-            echo "::error::This PR touches non-content files and needs 2 approving reviews (has ${approvals})."
+          if [ "${approvals}" -lt "${required}" ]; then
+            echo "::error::This ${classification} PR needs ${required} approving review(s) (has ${approvals})."
             exit 1
           fi
 
