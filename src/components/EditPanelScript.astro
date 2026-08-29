@@ -13,6 +13,13 @@
  * that actually changed through to the GitHub issue form's query-string
  * prefill — untouched fields are left out, so the GitHub form treats them
  * as "no change" the same way it would for a manually-opened issue.
+ *
+ * The link's href/target/rel are set on click rather than opened via
+ * window.open() — a JS-driven window.open() is an unreliable popup in
+ * mobile in-app webviews (including GitHub's own mobile app), which can
+ * drop the query string and land on the plain template chooser instead of
+ * the prefilled form. Setting a real href and letting the click proceed
+ * natively keeps it a normal, trusted link navigation everywhere.
  */
 const REPO_ISSUES_URL =
 	'https://github.com/nottinghamdigital/nottinghamdigital.github.io/issues/new';
@@ -35,7 +42,6 @@ const REPO_ISSUES_URL =
 
 			const continueLink = event.target.closest('[data-edit-continue]');
 			if (continueLink) {
-				event.preventDefault();
 				const panel = continueLink.closest('[data-edit-panel]');
 				if (!(panel instanceof HTMLElement)) return;
 
@@ -75,7 +81,9 @@ const REPO_ISSUES_URL =
 					}
 				}
 
-				window.open(`${REPO_ISSUES_URL}?${params}`, '_blank', 'noopener');
+				continueLink.href = `${REPO_ISSUES_URL}?${params}`;
+				continueLink.target = '_blank';
+				continueLink.rel = 'noopener';
 			}
 		});
 	});
