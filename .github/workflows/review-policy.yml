@@ -1,7 +1,8 @@
 name: review-policy
 
 # Enforces the repo review rules:
-#   - Every PR needs at least 1 approving review.
+#   - Content-only PRs (changes only under src/content/meetups/**) need at
+#     least 1 approving review from a collaborator/member/owner.
 #   - Any PR touching files outside src/content/meetups/** ("architectural /
 #     feature changes") needs at least 2 approving reviews from users with
 #     write access.
@@ -63,12 +64,14 @@ jobs:
             fi
           fi
 
-          # 3. Count approving reviews. GitHub review history is append-only,
+          # 3. Count approving reviews from trusted associations only
+          # (OWNER, MEMBER, COLLABORATOR). GitHub review history is append-only,
           # so keep only each reviewer's latest non-COMMENTED review state.
           # An APPROVED that is later dismissed shows as DISMISSED and won't count.
           approvals=$(gh api --paginate \
             "repos/${REPO}/pulls/${PR_NUMBER}/reviews" \
-            --jq '[.[] | select(.state != "COMMENTED")]
+            --jq '[.[] | select(.state != "COMMENTED")
+                       | select(.author_association | IN("OWNER","MEMBER","COLLABORATOR"))]
                   | group_by(.user.login)
                   | map(sort_by(.submitted_at) | last)
                   | map(select(.state == "APPROVED"))

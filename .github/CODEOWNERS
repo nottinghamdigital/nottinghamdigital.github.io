@@ -4,7 +4,7 @@
 * @sdh100shaun @chrisemerson @adam-blakey @thebiggh
 
 # Content-only changes (meetup YAML) are intentionally *unowned* so any
-# reviewer with write access can satisfy the "1 approval" rule enforced by
+# collaborator/member/owner can satisfy the "1 approval" rule enforced by
 # .github/workflows/review-policy.yml — no specific maintainer sign-off needed.
 # A pattern with no owner removes ownership from previous patterns.
 src/content/meetups/**
