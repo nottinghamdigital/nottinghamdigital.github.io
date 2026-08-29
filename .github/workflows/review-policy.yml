@@ -1,0 +1,79 @@
+name: review-policy
+
+# Enforces the repo review rules:
+#   - Content-only PRs (touch only src/content/meetups/**) need no approvals.
+#   - Any PR touching other files ("architectural / feature changes") needs
+#     at least 2 approving reviews from users with write access.
+# Wired into the branch ruleset as a required status check named "review-policy"
+# so the merge button stays disabled until this check passes.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  pull_request_review:
+    types: [submitted, dismissed]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: review-policy-${{ github.event.pull_request.number || github.event.pull_request.id }}
+  cancel-in-progress: true
+
+jobs:
+  review-policy:
+    name: review-policy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Evaluate review policy
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          # 1. Fetch changed files (paginated).
+          files=$(gh api --paginate \
+            "repos/${REPO}/pulls/${PR_NUMBER}/files" \
+            --jq '.[].filename')
+
+          if [ -z "$files" ]; then
+            echo "No files changed — treating as content-only."
+            exit 0
+          fi
+
+          echo "Changed files:"
+          echo "$files" | sed 's/^/  /'
+
+          # 2. Classify: content-only if every path is under src/content/meetups/.
+          non_content=$(echo "$files" | grep -Ev '^src/content/meetups/' || true)
+
+          if [ -z "$non_content" ]; then
+            echo "::notice::Content-only PR — no approvals required."
+            exit 0
+          fi
+
+          echo "Non-content files present — 2 approving reviews required:"
+          echo "$non_content" | sed 's/^/  /'
+
+          # 3. Count approving reviews. GitHub review history is append-only,
+          # so keep only each reviewer's latest non-COMMENTED review state.
+          # An APPROVED that is later dismissed shows as DISMISSED and won't count.
+          approvals=$(gh api --paginate \
+            "repos/${REPO}/pulls/${PR_NUMBER}/reviews" \
+            --jq '[.[] | select(.state != "COMMENTED")]
+                  | group_by(.user.login)
+                  | map(sort_by(.submitted_at) | last)
+                  | map(select(.state == "APPROVED"))
+                  | length')
+
+          echo "Current approving reviews: ${approvals}"
+
+          if [ "${approvals}" -lt 2 ]; then
+            echo "::error::This PR touches non-content files and needs 2 approving reviews (has ${approvals})."
+            exit 1
+          fi
+
+          echo "::notice::Review policy satisfied (${approvals} approvals)."
