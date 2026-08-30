@@ -1,0 +1,14 @@
+# Groups the pull requests that `--generate-notes` lists in each release cut by
+# the `release` job in .github/workflows/deploy.yml. Categories are matched in
+# order, so the `Changes` catch-all has to stay last.
+#
+# `dependencies` is applied by Dependabot itself; `event-suggestion` is applied
+# by process-suggestion.yml to both the issue and the PR it opens.
+changelog:
+  categories:
+    - title: Listings
+      labels: ['event-suggestion']
+    - title: Dependencies
+      labels: ['dependencies']
+    - title: Changes
+      labels: ['*']

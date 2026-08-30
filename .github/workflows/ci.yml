@@ -11,7 +11,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      # Full history: the release reminder below diffs against the base branch.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -28,6 +31,29 @@ jobs:
         run: |
           test -f dist/CNAME
           grep -qx 'nottingham.digital' dist/CNAME
+
+      # deploy.yml cuts a release only when package.json's version changes, so
+      # a code change merged without a bump is published but never tagged.
+      # This is a nudge, not a gate: content-only PRs are the common case and
+      # have no business bumping a version, and a contributor should never see
+      # a red check for it.
+      - name: Remind about the version bump
+        if: github.event_name == 'pull_request'
+        env:
+          BASE: ${{ github.base_ref }}
+        run: |
+          set -euo pipefail
+
+          head_version=$(jq -r .version package.json)
+          base_version=$(git show "origin/$BASE:package.json" | jq -r .version)
+
+          # Anything outside the meetup listings counts as a code change.
+          code_changes=$(git diff --name-only "origin/$BASE...HEAD" \
+            | grep -v '^src/content/meetups/' || true)
+
+          if [ -n "$code_changes" ] && [ "$head_version" = "$base_version" ]; then
+            echo "::notice::This PR changes site code but leaves package.json at $head_version — merging it will deploy, but will not cut a tag or release. Bump the version if this change is worth one."
+          fi
 
   test:
     runs-on: ubuntu-latest

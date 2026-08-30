@@ -49,3 +49,46 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  # A release marks what is live: it runs after deploy succeeds, and only on
+  # pushes — the daily cron rebuild republishes identical content, so tagging it
+  # would add a release a day for no change. package.json's version is the
+  # trigger: bump it in a PR and merging cuts the release, leave it alone and
+  # this job is a no-op.
+  release:
+    needs: deploy
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    # Overrides the workflow-level permissions: this job creates a tag and a
+    # release, and needs nothing else.
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      # jq rather than `node -p "require(...)"` — package.json sets
+      # "type": "module", which makes the node one-liner awkward.
+      - id: version
+        run: echo "version=$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Create the tag and release if this version is new
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: v${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          # Checking for the release rather than the tag keeps re-runs
+          # idempotent, and self-heals if a tag exists without a release.
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "$TAG is already released — package.json was not bumped."
+            exit 0
+          fi
+
+          # gh creates the tag at --target when it doesn't already exist, so
+          # there is no separate `git tag && git push` step to keep in sync.
+          # Notes are grouped by the categories in .github/release.yml.
+          gh release create "$TAG" \
+            --target "$GITHUB_SHA" \
+            --title "$TAG" \
+            --generate-notes

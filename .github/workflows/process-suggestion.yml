@@ -83,6 +83,9 @@ jobs:
             This PR was opened automatically from a "suggest an edit" issue
             form submission — please review the diff before merging.
           add-paths: src/content/meetups/*.yml
+          # Also labels the PR, not just the issue — .github/release.yml
+          # groups listing changes in the release notes by this label.
+          labels: event-suggestion
 
       - name: Link the PR from the issue
         if: steps.pr.outputs.pull-request-number

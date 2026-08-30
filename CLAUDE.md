@@ -127,6 +127,21 @@ accent colours change. Cards carry h-card microformat classes (`h-card`, `p-name
   `dist/CNAME` exists and reads `nottingham.digital`.
 - `.github/workflows/deploy.yml` on push to `main`: builds and publishes `dist/`
   to GitHub Pages. Repo Settings → Pages → Source must be **GitHub Actions**.
+- `deploy.yml` has a third job, `release`, which runs after the Pages deploy
+  succeeds and only when `github.event_name == 'push'`. It creates tag
+  `v<package.json version>` and a GitHub Release with generated notes — but
+  only if that version has no release yet, so it is a no-op on every push that
+  didn't bump. **Bumping the version in `package.json` is the act that cuts a
+  release**; merging without a bump deploys and releases nothing. The daily
+  cron rebuild and `workflow_dispatch` runs skip the job entirely, because
+  they republish identical content. `.github/release.yml` groups the generated
+  notes by label (`event-suggestion` → Listings, `dependencies` →
+  Dependencies, everything else → Changes), which is why
+  `process-suggestion.yml` labels the PR it opens and not just the issue.
+  `ci.yml`'s `build` job prints a non-blocking `::notice::` when a PR changes
+  files outside `src/content/meetups/**` without bumping the version — that
+  is the only thing reminding a human to bump, so keep it advisory rather than
+  making it a required check.
 - `public/CNAME` is the one that ships (public/ is copied into dist/). The root
   `CNAME` is a leftover from when Pages served the branch root directly.
 - `astro.config.mjs` pins `build.format: 'directory'` — do not switch to `file`
