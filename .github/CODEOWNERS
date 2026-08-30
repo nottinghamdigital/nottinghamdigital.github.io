@@ -1,0 +1,10 @@
+# Everything is owned by the current maintainers by default.
+# Architectural / feature changes require a review from one of these owners
+# (in addition to the "2 approvals" rule enforced by .github/workflows/review-policy.yml).
+* @sdh100shaun @chrisemerson @adam-blakey @thebiggh
+
+# Content-only changes (meetup YAML) are intentionally *unowned* so any
+# collaborator/member/owner can satisfy the "1 approval" rule enforced by
+# .github/workflows/review-policy.yml — no specific maintainer sign-off needed.
+# A pattern with no owner removes ownership from previous patterns.
+src/content/meetups/**
