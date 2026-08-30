@@ -70,7 +70,7 @@ jobs:
 
       - name: Open a pull request with the change
         id: pr
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v8
         with:
           branch: suggestion/${{ github.event.issue.number }}
           commit-message: >-
