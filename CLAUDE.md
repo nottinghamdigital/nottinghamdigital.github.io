@@ -8,8 +8,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Astro and deployed to GitHub Pages. No server, no client-side framework: the
 meetup list is rendered to plain HTML at build time. Client JS is limited to
 small inline `<script>`s: category filtering in `CategoryFilters.astro`, the
-light/dark/auto control in `ThemeToggle.astro`, and the pre-paint setup
-(`js` class, stored theme) in `BaseLayout.astro`.
+light/dark/auto control in `ThemeToggle.astro`, the pre-paint setup (`js`
+class, stored theme) in `BaseLayout.astro`, and the edit-mode pair
+(`EditModeToggle.astro` + `EditPanelScript.astro`) that hands a visitor's
+proposed change to a prefilled GitHub issue. All of it is progressive
+enhancement — nothing here fetches data or renders content.
 
 Requires Node.js >= 20.3 (CI runs 22).
 
@@ -21,19 +24,32 @@ npm run build    # static output into dist/ — also validates every meetup YAML
 npm run check    # astro check: type-check components and content
 npm test         # Playwright — webServer builds the site and serves dist/
 npm run test:ui  # Playwright UI mode
+npm run test:unit       # vitest, once (unit + integration; no browser, no build)
+npm run test:unit:watch # vitest in watch mode
+npm run test:all        # vitest then Playwright — what CI covers between two jobs
 npm run lighthouse  # Lighthouse budgets against the built site (needs Chrome)
 ```
 
-The tests run against the **built** site, not the dev server: Playwright's
+**Two test runners, split by filename**, because they can't share files:
+`tests/**/*.spec.ts` is Playwright (`testMatch` in `playwright.config.ts`) and
+`tests/{unit,integration}/**/*.test.ts` is vitest (`include` in
+`vitest.config.ts`). Both filters exist so vitest can't pick up a `.spec.ts`
+that imports `test` from `@playwright/test` and fail on it. A new test file
+must land on the right side of that line — `.spec.ts` only for browser tests.
+
+The Playwright tests run against the **built** site, not the dev server:
 `webServer` runs `npm run build && node scripts/serve-dist.mjs`. Both `astro
 dev` and `astro preview` daemonise and return immediately, which Playwright
-reports as "webServer exited early" — so neither can be used there.
+reports as "webServer exited early" — so neither can be used there. The vitest
+side touches neither a browser nor a build, so it's the fast feedback loop.
 
 Single test / single file:
 
 ```sh
 npx playwright test tests/homepage.spec.ts
 npx playwright test -g 'filtering meetups by category works'
+npx vitest run tests/unit/apply-suggestion.test.ts
+npx vitest run -t 'skips blank lines'
 ```
 
 `npm run build` is the de-facto lint: the content schema rejects malformed
@@ -50,6 +66,37 @@ the `glob` loader in `src/content.config.ts` → validated against a Zod schema 
 `getCollection('meetups')` in `src/pages/index.astro`, sorted alphabetically by
 `name` with `en-GB` collation → one `MeetupCard` per entry. There is no CMS, no
 fetch, no runtime data source.
+
+**The "suggest an edit" pipeline is the second write path into that content,
+and it is a five-part contract.** A visitor toggles edit mode
+(`EditModeToggle.astro`), opens a card's panel (`EditPanelScript.astro`, one
+delegated script for all cards), and is sent to a prefilled GitHub issue form
+(`.github/ISSUE_TEMPLATE/suggest-edit.yml`); only fields they actually changed
+are carried into the query string, so untouched fields read as "no change".
+`.github/workflows/process-suggestion.yml` then pipes the raw issue body into
+`scripts/apply-suggestion.mjs`, which parses GitHub's `### <label>` headings
+back into fields, finds the meetup file by group name, edits *only* the
+changed keys in place, and opens a PR.
+
+The fragile seam is that the same field ids and labels are restated in the
+form, the edit panel's `fieldToParam` map, and the script's lookups, while the
+workflow's trigger matches the template's title prefix — a rename in any one
+breaks the flow silently, at runtime, for a real contributor.
+`tests/unit/suggest-edit-contract.test.ts` is what pins it: it reads the
+template, `EditPanelScript.astro`, `apply-suggestion.mjs`,
+`process-suggestion.yml` and `categories.ts`, and asserts the ids, labels,
+title prefix and category options still line up. If you rename a field, expect
+that test to fail and change all of them together rather than loosening the
+test.
+
+Two more properties of `apply-suggestion.mjs` are load-bearing and easy to
+break: it splices values into the YAML text rather than re-serialising the
+document, so an edit to one field leaves every other byte identical (no
+reflowed summaries in the PR diff), and its I/O contract is stdin for the
+issue body plus `$GITHUB_OUTPUT` for the step outputs, with `MEETUPS_DIR`
+overriding the target directory. `tests/integration/process-suggestion.test.ts`
+runs the real script as a subprocess against a temp copy of the meetups to hold
+both of those in place.
 
 **Categories are the one cross-cutting concept.** `src/data/categories.ts` is the
 single list; `CATEGORY_IDS` feeds the schema's `z.enum()`, so an unknown category
@@ -123,17 +170,28 @@ accent colours change. Cards carry h-card microformat classes (`h-card`, `p-name
 
 ## Deployment and CI
 
-- `.github/workflows/ci.yml` on PRs: `npm ci` + `npm run build`, then asserts
-  `dist/CNAME` exists and reads `nottingham.digital`.
+- `.github/workflows/ci.yml` on PRs runs four jobs: `build` (`npm ci` + `npm
+  run build`, then asserts `dist/CNAME` exists and reads `nottingham.digital`),
+  `unit` (vitest), `test` (Playwright) and `lighthouse`.
 - `.github/workflows/deploy.yml` on push to `main`: builds and publishes `dist/`
   to GitHub Pages. Repo Settings → Pages → Source must be **GitHub Actions**.
+  Its `deploy` job needs `[build, unit, test]` — it re-runs the same vitest and
+  Playwright jobs rather than trusting the PR run, so a direct push, an admin
+  merge, or the cron can't republish a broken build. Those jobs are duplicated
+  between the two workflow files; a change to one usually needs the same change
+  in the other.
 - `public/CNAME` is the one that ships (public/ is copied into dist/). The root
   `CNAME` is a leftover from when Pages served the branch root directly.
 - `astro.config.mjs` pins `build.format: 'directory'` — do not switch to `file`
   format, it breaks the apex-domain URLs.
-- `.github/workflows/ci.yml` also runs the Playwright suite on PRs, installing
-  chromium only, and uploads `playwright-report/` as an artifact when it fails.
-- `.github/workflows/ci.yml` has a third job running Lighthouse via
+- The Playwright jobs install chromium only (the suite declares a single
+  project) and upload `playwright-report/` as an artifact when they fail. Both
+  cache `~/.cache/ms-playwright` keyed on the `package-lock.json` hash, since
+  the browser build is pinned to the `@playwright/test` release.
+- The `unit` job runs `npm run test:unit` with no browser install and no build,
+  so it is the one that fails fast on a broken `apply-suggestion.mjs` or a
+  drifted issue-form contract.
+- The `lighthouse` job runs Lighthouse via
   `treosh/lighthouse-ci-action` against the built site, configured by
   `lighthouserc.json`. The job carries `continue-on-error: true` because the
   thresholds there (accessibility and SEO 1, best-practices 0.95, performance
@@ -153,8 +211,12 @@ accent colours change. Cards carry h-card microformat classes (`h-card`, `p-name
 - `playwright-report/` and `test-results/` are tracked in git rather than
   ignored, so a local test run leaves them dirty and can block `git stash pop`
   or a rebase. `npm run check` is deliberately not in CI: it currently reports
-  4 pre-existing errors from the deprecated `z.string().url()` in the content
-  schema.
+  3 pre-existing errors — an implicit `any` on the `event` parameter in
+  `src/pages/index.astro`, and two implicit-`any` index expressions in
+  `tests/unit/apply-suggestion.test.ts` (`parseIssueBody` returns an untyped
+  map). The deprecated `z.string().url()` in the content schema is now a
+  warning rather than an error. Fixing those three is what would let `check`
+  become a CI gate.
 
 ## Contribution rules that affect edits
 

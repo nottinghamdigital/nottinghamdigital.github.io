@@ -29,6 +29,21 @@ jobs:
           test -f dist/CNAME
           grep -qx 'nottingham.digital' dist/CNAME
 
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Runs vitest (tests/{unit,integration}/**/*.test.ts). No browser, no build — pure Node.
+      - run: npm run test:unit
+
   test:
     runs-on: ubuntu-latest
     steps:
@@ -40,6 +55,15 @@ jobs:
           cache: npm
 
       - run: npm ci
+
+      # Cache the chromium binary keyed on the Playwright package version —
+      # the browser is pinned to the @playwright/test release, so the lockfile
+      # hash is the right cache key.
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
 
       # Only chromium: the suite declares a single project, so installing the
       # other engines would add a couple of minutes for nothing.
