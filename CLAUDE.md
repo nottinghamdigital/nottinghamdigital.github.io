@@ -127,7 +127,7 @@ accent colours change. Cards carry h-card microformat classes (`h-card`, `p-name
   `dist/CNAME` exists and reads `nottingham.digital`.
 - `.github/workflows/deploy.yml` on push to `main`: builds and publishes `dist/`
   to GitHub Pages. Repo Settings → Pages → Source must be **GitHub Actions**.
-- `deploy.yml` has a third job, `release`, which runs after the Pages deploy
+- `.github/workflows/deploy.yml` has a third job, `release`, which runs after the Pages deploy
   succeeds and only when `github.event_name == 'push'`. It creates tag
   `v<package.json version>` and a GitHub Release with generated notes — but
   only if that version has no release yet, so it is a no-op on every push that
