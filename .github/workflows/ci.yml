@@ -41,7 +41,7 @@ jobs:
 
       - run: npm ci
 
-      # Runs vitest (tests/unit/**). No browser, no build — pure Node.
+      # Runs vitest (tests/{unit,integration}/**/*.test.ts). No browser, no build — pure Node.
       - run: npm run test:unit
 
   test:
