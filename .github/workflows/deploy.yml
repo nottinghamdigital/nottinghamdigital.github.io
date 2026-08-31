@@ -81,7 +81,7 @@ jobs:
           # Checking for the release rather than the tag keeps re-runs
           # idempotent, and self-heals if a tag exists without a release.
           if gh release view "$TAG" >/dev/null 2>&1; then
-            echo "$TAG is already released — package.json was not bumped."
+            echo "$TAG is already released — skipping."
             exit 0
           fi
 
