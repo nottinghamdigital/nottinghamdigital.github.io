@@ -60,7 +60,7 @@ jobs:
       # the browser is pinned to the @playwright/test release, so the lockfile
       # hash is the right cache key.
       - name: Cache Playwright browsers
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
