@@ -36,7 +36,7 @@
     "node": ">=20.3.0"
   },
   "dependencies": {
-    "astro": "^7.2.4",
+    "astro": "^7.2.9",
     "fast-xml-parser": "^5.11.0",
     "yaml": "^2.8.3"
   },
