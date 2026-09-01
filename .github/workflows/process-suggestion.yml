@@ -20,7 +20,7 @@ jobs:
     if: startsWith(github.event.issue.title, '[Edit suggestion]:')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # Labels the issue for visibility/triage — best-effort, not required
       # for the automation above to work, so a failure here (e.g. missing
