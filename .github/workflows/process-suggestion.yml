@@ -78,10 +78,11 @@ jobs:
           title: >-
             Suggested edit: ${{ steps.apply.outputs.group-name }}
           body: >-
-            Suggested via #${{ github.event.issue.number }}.
+            Closes #${{ github.event.issue.number }}.
 
             This PR was opened automatically from a "suggest an edit" issue
-            form submission — please review the diff before merging.
+            form submission — please review the diff before merging. Merging
+            it will close the issue automatically.
           add-paths: src/content/meetups/*.yml
 
       - name: Link the PR from the issue
