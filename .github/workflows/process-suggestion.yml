@@ -84,6 +84,9 @@ jobs:
             form submission — please review the diff before merging. Merging
             it will close the issue automatically.
           add-paths: src/content/meetups/*.yml
+          # Also labels the PR, not just the issue — .github/release.yml
+          # groups listing changes in the release notes by this label.
+          labels: event-suggestion
 
       - name: Link the PR from the issue
         if: steps.pr.outputs.pull-request-number
