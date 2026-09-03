@@ -2,6 +2,8 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
 	testDir: './tests',
+	// Only *.spec.ts — leaves tests/unit/*.test.ts for vitest.
+	testMatch: /.*\.spec\.ts$/,
 	fullyParallel: true,
 	forbidOnly: !!process.env.CI,
 	retries: process.env.CI ? 2 : 0,
