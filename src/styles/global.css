@@ -280,6 +280,13 @@ h3 {
 	display: none;
 }
 
+/* The list also holds the events on later days, ready for the hero to promote
+   one as today's pass (see NextUpHero.astro); only the shown event's own day
+   is ever revealed, so the rest stay hidden inside the expanded list. */
+.next-up__more-item[hidden] {
+	display: none;
+}
+
 .next-up__more:hover {
 	border-color: var(--color-muted);
 	color: var(--color-heading);

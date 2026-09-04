@@ -52,22 +52,18 @@ const allNextEvents = meetups.flatMap((m) =>
 	})),
 );
 
+/**
+ * Every upcoming event, soonest first — the whole list goes to the hero, not
+ * just the soonest day's. The hero drops events as they pass and promotes the
+ * next one itself, so anything it isn't given is a gap it can't cover: the
+ * site is only rebuilt daily (deploy.yml's 06:00 cron), so a hero holding one
+ * day would go blank from the moment that evening's meetup started until the
+ * next morning's build. With the full list it always has a next event to show
+ * for as long as any remain — typically weeks out.
+ */
 const sortedNextEvents = allNextEvents.sort(
 	(a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
 );
-const heroEvent = sortedNextEvents[0];
-
-/**
- * Every event landing on the hero's calendar day, hero first — the hero
- * component cycles through these on click, so two+ meetups meeting on the
- * same day are all reachable rather than the runners-up just being a count.
- */
-const heroDayEvents = heroEvent
-	? sortedNextEvents.filter(
-			(e) =>
-				new Date(e.date).toDateString() === new Date(heroEvent.date).toDateString(),
-		)
-	: [];
 
 const upcomingEventsCount = allNextEvents.length;
 
@@ -90,7 +86,7 @@ const description =
 				</>
 			)}
 		</p>
-		{heroDayEvents.length > 0 && <NextUpHero events={heroDayEvents} />}
+		{sortedNextEvents.length > 0 && <NextUpHero events={sortedNextEvents} />}
 		<CategoryFilters
 			total={meetups.length}
 			categories={activeCategories}

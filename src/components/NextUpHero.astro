@@ -10,11 +10,24 @@ interface EventItem {
 }
 
 interface Props {
-	/** Every event on the hero's calendar day, soonest first. */
+	/**
+	 * Every known upcoming event, soonest first — not just the soonest day's.
+	 * The hero shows the first and keeps the rest in the DOM so it can promote
+	 * one itself as events pass, however long the gap to the next one is.
+	 */
 	events: EventItem[];
 }
 
 const { events } = Astro.props;
+
+/**
+ * Calendar day in Europe/London, as YYYY-MM-DD — the grouping key behind
+ * "+N more", which offers only the events sharing the shown event's date.
+ * London rather than the build machine's zone (UTC in CI), so an 8pm event
+ * groups with the day it reads as on the card.
+ */
+const londonDay = (date: string) =>
+	new Date(date).toLocaleDateString('en-CA', { timeZone: 'Europe/London' });
 
 const enriched = events.map((e) => {
 	const { label: categoryLabel, icon } = categoryById(e.category);
@@ -26,11 +39,13 @@ const enriched = events.map((e) => {
 		minute: '2-digit',
 		timeZone: 'Europe/London',
 	});
-	return { ...e, categoryLabel, icon, formattedDate };
+	return { ...e, categoryLabel, icon, formattedDate, day: londonDay(e.date) };
 });
 
 const [first, ...rest] = enriched;
-const moreCount = rest.length;
+// Only same-day siblings are offered up front; later days are rendered too,
+// but stay hidden until one of them is promoted into the card above.
+const moreCount = rest.filter((e) => e.day === first.day).length;
 ---
 
 <div class="next-up">
@@ -38,6 +53,7 @@ const moreCount = rest.length;
 	<div
 		class="next-up__card"
 		data-event-date={first.date}
+		data-day={first.day}
 		data-primary
 		style={`--category-color: var(--color-category-${first.category});`}
 	>
@@ -57,7 +73,7 @@ const moreCount = rest.length;
 			<span class="visually-hidden">Category: {first.categoryLabel}</span>
 		</a>
 		{
-			moreCount > 0 && (
+			rest.length > 0 && (
 				<button
 					type="button"
 					class="next-up__more"
@@ -65,6 +81,7 @@ const moreCount = rest.length;
 					aria-controls="next-up-more-list"
 					aria-label={`Show ${moreCount} more event${moreCount === 1 ? '' : 's'} on this date`}
 					data-next-up-toggle
+					hidden={moreCount === 0}
 				>
 					+{moreCount} more
 				</button>
@@ -72,13 +89,14 @@ const moreCount = rest.length;
 		}
 	</div>
 	{
-		moreCount > 0 && (
+		rest.length > 0 && (
 			<ul class="next-up__more-list" id="next-up-more-list" hidden>
 				{rest.map((e) => (
-					<li class="next-up__more-item">
+					<li class="next-up__more-item" hidden={e.day !== first.day}>
 						<div
 							class="next-up__card"
 							data-event-date={e.date}
+							data-day={e.day}
 							data-category={e.category}
 							data-icon={e.icon}
 							data-formatted-date={e.formattedDate}
@@ -118,6 +136,19 @@ const moreCount = rest.length;
 		const toggle = document.querySelector('[data-next-up-toggle]');
 		const list = document.getElementById('next-up-more-list');
 
+		/**
+		 * The queued events, soonest first — every upcoming event bar the one in
+		 * the card above, whatever day it falls on. Only those sharing the shown
+		 * event's day are ever revealed, but the later ones stay here so the hero
+		 * has something to promote between the daily rebuilds.
+		 */
+		function items() {
+			if (!(list instanceof HTMLElement)) return [];
+			return Array.from(list.querySelectorAll('.next-up__more-item'))
+				.map((item) => ({ item, card: item.querySelector('.next-up__card') }))
+				.filter(({ item, card }) => item instanceof HTMLElement && card instanceof HTMLElement);
+		}
+
 		function hasPassed(card) {
 			const eventDate = new Date(card.dataset.eventDate).getTime();
 			return !Number.isNaN(eventDate) && eventDate <= Date.now();
@@ -125,6 +156,7 @@ const moreCount = rest.length;
 
 		function promote(primaryCard, sourceCard) {
 			primaryCard.dataset.eventDate = sourceCard.dataset.eventDate;
+			primaryCard.dataset.day = sourceCard.dataset.day ?? '';
 			primaryCard.style.setProperty(
 				'--category-color',
 				`var(--color-category-${sourceCard.dataset.category})`,
@@ -146,52 +178,58 @@ const moreCount = rest.length;
 			if (categoryEl) categoryEl.textContent = `Category: ${sourceCard.dataset.categoryLabel ?? ''}`;
 		}
 
+		/** Same-day siblings of the event currently shown, i.e. what "+N more" opens. */
+		function sameDayItems() {
+			if (!(primary instanceof HTMLElement)) return [];
+			return items().filter(({ card }) => card.dataset.day === primary.dataset.day);
+		}
+
+		function labelToggle(expanded) {
+			if (!(toggle instanceof HTMLButtonElement)) return;
+			const count = sameDayItems().length;
+			toggle.hidden = count === 0;
+			toggle.textContent = expanded ? 'Hide other events' : `+${count} more`;
+			toggle.setAttribute(
+				'aria-label',
+				expanded
+					? 'Hide other events on this date'
+					: `Show ${count} more event${count === 1 ? '' : 's'} on this date`,
+			);
+		}
+
 		function refresh() {
 			if (!(root instanceof HTMLElement) || !(primary instanceof HTMLElement)) return;
 
+			for (const { item, card } of items()) {
+				if (hasPassed(card)) item.remove();
+			}
+
+			// Nothing passed is left in the queue, so the first entry is the soonest
+			// event still to come — whether that is later today or weeks out.
 			if (hasPassed(primary)) {
-				const candidates =
-					list instanceof HTMLElement
-						? Array.from(list.querySelectorAll('.next-up__card'))
-						: [];
-				const next = candidates.find(
-					(card) => card instanceof HTMLElement && !hasPassed(card),
-				);
-				if (next instanceof HTMLElement) {
-					promote(primary, next);
-					next.closest('.next-up__more-item')?.remove();
-				} else {
+				const next = items()[0];
+				if (!next) {
 					root.hidden = true;
 					return;
 				}
+				promote(primary, next.card);
+				next.item.remove();
 			}
 			root.hidden = false;
 
-			if (list instanceof HTMLElement) {
-				for (const card of list.querySelectorAll('.next-up__card')) {
-					if (card instanceof HTMLElement && hasPassed(card)) {
-						card.closest('.next-up__more-item')?.remove();
-					}
-				}
+			for (const { item, card } of items()) {
+				item.hidden = card.dataset.day !== primary.dataset.day;
 			}
 
-			const remaining = list instanceof HTMLElement ? list.childElementCount : 0;
+			const expanded =
+				toggle instanceof HTMLButtonElement &&
+				toggle.getAttribute('aria-expanded') === 'true' &&
+				sameDayItems().length > 0;
 			if (toggle instanceof HTMLButtonElement) {
-				if (remaining === 0) {
-					toggle.hidden = true;
-				} else {
-					const expanded = toggle.getAttribute('aria-expanded') === 'true';
-					toggle.textContent = expanded
-						? 'Hide other events'
-						: `+${remaining} more`;
-					toggle.setAttribute(
-						'aria-label',
-						expanded
-							? 'Hide other events on this date'
-							: `Show ${remaining} more event${remaining === 1 ? '' : 's'} on this date`,
-					);
-				}
+				toggle.setAttribute('aria-expanded', String(expanded));
 			}
+			if (list instanceof HTMLElement) list.hidden = !expanded;
+			labelToggle(expanded);
 		}
 
 		if (toggle instanceof HTMLButtonElement && list instanceof HTMLElement) {
@@ -199,14 +237,7 @@ const moreCount = rest.length;
 				const expanded = toggle.getAttribute('aria-expanded') === 'true';
 				toggle.setAttribute('aria-expanded', String(!expanded));
 				list.hidden = expanded;
-				const remaining = list.childElementCount;
-				toggle.textContent = expanded ? `+${remaining} more` : 'Hide other events';
-				toggle.setAttribute(
-					'aria-label',
-					expanded
-						? `Show ${remaining} more event${remaining === 1 ? '' : 's'} on this date`
-						: 'Hide other events on this date',
-				);
+				labelToggle(!expanded);
 			});
 		}
 
