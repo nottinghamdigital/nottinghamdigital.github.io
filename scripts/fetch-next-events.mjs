@@ -6,6 +6,11 @@
 // are discovered from the organizer's public profile page rather than
 // needing to be listed by hand.
 //
+// Each event also carries, when the source offers them, an end time and a
+// venue — src/lib/ics.mjs and src/lib/calendar-links.mjs consume those to
+// build calendar exports, and both fields are optional so an older generated
+// file (the output is gitignored) still renders.
+//
 // Runs before `astro build` (see package.json). Network failures are
 // non-fatal: a source that can't be fetched simply contributes no entry, and
 // MeetupCard falls back to showing only the static cadence text if none
@@ -20,12 +25,29 @@ import {
 } from 'node:fs/promises';
 import path from 'node:path';
 import { parse } from 'yaml';
+import { unescapeIcsValue, unfoldIcsLines } from '../src/lib/ics.mjs';
 
 const MEETUPS_DIR = new URL('../src/content/meetups/', import.meta.url);
 const OUTPUT_FILE = new URL(
 	'../src/data/next-events.generated.json',
 	import.meta.url,
 );
+
+/**
+ * @typedef {Object} EventLocation
+ * @property {string} [name] - Venue name, if known.
+ * @property {string} [address] - A single display line, if known.
+ * @property {boolean} online - True for a purely online event.
+ */
+
+/**
+ * @typedef {Object} ResolvedEvent
+ * @property {string} title
+ * @property {string} url
+ * @property {string} date - ISO 8601, UTC.
+ * @property {string} [end] - ISO 8601, UTC. Omitted when the source gave no end time.
+ * @property {EventLocation} [location] - Omitted when the source gave no venue.
+ */
 
 const MEETUP_COM_URL = /^https:\/\/www\.meetup\.com\/([^/]+)\/?/;
 const LUMA_URL = /^https:\/\/(?:www\.)?(?:lu\.ma|luma\.com)\/([^/?#]+)\/?/;
@@ -50,10 +72,13 @@ const USER_AGENT = 'nottingham.digital next-events fetcher';
  * event happens — the actual date only appears as free text in the title
  * ("Thursday, 15th September"). The event's own page carries a proper
  * schema.org Event <script type="application/ld+json"> block with a real
- * `startDate`, so each RSS item is followed up with one fetch of its event
- * page to get an accurate, sortable date.
+ * `startDate` — and, in the same block, `endDate` and `location` — so each
+ * RSS item is followed up with one fetch of its event page to get an
+ * accurate, sortable date plus whatever end time and venue the block gives.
+ *
+ * @returns {Promise<{ date: Date, end: Date | null, location: EventLocation | null } | null>}
  */
-async function fetchEventStartDate(eventUrl) {
+async function fetchEventDetails(eventUrl) {
 	let html;
 	try {
 		const res = await fetch(eventUrl, { headers: { 'User-Agent': USER_AGENT } });
@@ -72,16 +97,85 @@ async function fetchEventStartDate(eventUrl) {
 	)) {
 		try {
 			const data = JSON.parse(match[1]);
-			if (data['@type'] === 'Event' && data.startDate) {
-				const date = new Date(data.startDate);
-				if (!Number.isNaN(date.getTime())) return date;
-			}
+			if (data['@type'] !== 'Event' || !data.startDate) continue;
+			const date = new Date(data.startDate);
+			if (Number.isNaN(date.getTime())) continue;
+
+			const end = data.endDate ? new Date(data.endDate) : null;
+			return {
+				date,
+				end: end && !Number.isNaN(end.getTime()) ? end : null,
+				location: extractSchemaOrgLocation(data.location),
+			};
 		} catch {
 			// not JSON, or not the block we want — try the next one
 		}
 	}
 	console.warn(`[next-events] no Event startDate found on ${eventUrl}`);
 	return null;
+}
+
+/**
+ * Normalises a schema.org Event's `location` — a `Place` (name + address) or
+ * `VirtualLocation` (an online event, no address) — to this script's
+ * `EventLocation` shape. `location` can also be an array, when a page lists
+ * both a physical venue and a streaming option; the first `Place` or
+ * `VirtualLocation` found wins.
+ *
+ * @returns {EventLocation | null}
+ */
+function extractSchemaOrgLocation(location) {
+	const candidates = Array.isArray(location) ? location : [location];
+	for (const loc of candidates) {
+		if (!loc || typeof loc !== 'object') continue;
+		if (loc['@type'] === 'VirtualLocation') return { online: true };
+		if (loc['@type'] === 'Place') {
+			const name = typeof loc.name === 'string' ? loc.name : undefined;
+			const address = formatPostalAddress(loc.address);
+			if (!name && !address) continue;
+			return { name, address, online: false };
+		}
+	}
+	return null;
+}
+
+/**
+ * schema.org `address` is either a plain string or a `PostalAddress` object
+ * — join whichever parts of the object are present into one display line.
+ */
+function formatPostalAddress(address) {
+	if (typeof address === 'string') return address;
+	if (!address || typeof address !== 'object') return undefined;
+	const parts = [
+		address.streetAddress,
+		address.addressLocality,
+		address.postalCode,
+	].filter((p) => typeof p === 'string' && p.trim());
+	return parts.length > 0 ? parts.join(', ') : undefined;
+}
+
+/**
+ * Converts an internal event (Date objects, `location` possibly null) into
+ * the shape written to next-events.generated.json — ISO strings, and `end`/
+ * `location` omitted entirely rather than emitted as `null`, so the file
+ * only ever records what a source actually said.
+ *
+ * @returns {ResolvedEvent}
+ */
+function toOutputEvent({ title, url, date, end, location }) {
+	/** @type {ResolvedEvent} */
+	const output = { title, url, date: toIso(date) };
+	const endIso = toIso(end);
+	if (endIso) output.end = endIso;
+	if (location) output.location = location;
+	return output;
+}
+
+/** @returns {string | undefined} */
+function toIso(value) {
+	if (!value) return undefined;
+	const date = value instanceof Date ? value : new Date(value);
+	return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
 }
 
 /**
@@ -125,8 +219,8 @@ async function fetchMeetupComNextEvent(groupSlug) {
 	const events = (
 		await Promise.all(
 			candidates.map(async (c) => {
-				const date = await fetchEventStartDate(c.link);
-				return date && { title: c.title, url: c.link, date };
+				const details = await fetchEventDetails(c.link);
+				return details && { title: c.title, url: c.link, ...details };
 			}),
 		)
 	)
@@ -135,24 +229,7 @@ async function fetchMeetupComNextEvent(groupSlug) {
 		.sort((a, b) => a.date.getTime() - b.date.getTime());
 	if (events.length === 0) return null;
 
-	const next = events[0];
-	return { title: next.title, url: next.url, date: next.date.toISOString() };
-}
-
-/**
- * Unfolds RFC 5545 line continuations (a line starting with a space is a
- * continuation of the previous one) and un-escapes `\,` `\;` `\n` `\\`.
- */
-function unescapeIcsValue(value) {
-	return value
-		.replace(/\\n/gi, '\n')
-		.replace(/\\,/g, ',')
-		.replace(/\\;/g, ';')
-		.replace(/\\\\/g, '\\');
-}
-
-function unfoldIcsLines(ics) {
-	return ics.replace(/\r\n[ \t]/g, '').split(/\r\n|\n/);
+	return toOutputEvent(events[0]);
 }
 
 /**
@@ -224,16 +301,14 @@ async function fetchLumaNextEvent(calendarSlug) {
 			const key = line.slice(0, colonIndex).split(';')[0];
 			const value = unescapeIcsValue(line.slice(colonIndex + 1));
 			if (key === 'SUMMARY') current.title = value;
-			if (key === 'DTSTART') {
-				// Bare (no VALUE=DATE param) DTSTART with a trailing Z is UTC, e.g. 20260908T180000Z.
-				const m = value.match(
-					/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z?$/,
-				);
-				current.start = m
-					? new Date(
-							Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]),
-						)
-					: new Date(value);
+			if (key === 'DTSTART') current.start = parseIcsDateTime(value);
+			if (key === 'DTEND') current.end = parseIcsDateTime(value);
+			if (key === 'LOCATION' && value.trim()) {
+				// Best-effort: Luma's ICS LOCATION is free text, either a venue
+				// name/address or (for an online event) the join link itself.
+				current.location = /^https?:\/\//.test(value)
+					? { online: true }
+					: { name: value, online: false };
 			}
 			if (key === 'DESCRIPTION') {
 				const urlMatch = value.match(/https:\/\/luma\.com\/\S+/);
@@ -250,11 +325,24 @@ async function fetchLumaNextEvent(calendarSlug) {
 	if (upcoming.length === 0) return null;
 
 	const next = upcoming[0];
-	return {
+	return toOutputEvent({
 		title: next.title,
 		url: next.url ?? calendarUrl,
-		date: next.start.toISOString(),
-	};
+		date: next.start,
+		end: next.end,
+		location: next.location,
+	});
+}
+
+/**
+ * Bare (no VALUE=DATE param) ICS date-times with a trailing Z are UTC, e.g.
+ * `20260908T180000Z`. Used for both DTSTART and DTEND.
+ */
+function parseIcsDateTime(value) {
+	const m = value.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z?$/);
+	return m
+		? new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]))
+		: new Date(value);
 }
 
 /** Max sibling events (beyond the one the group's `events` field points at) pulled in per Eventbrite organizer. */
@@ -297,6 +385,10 @@ async function fetchJson(url) {
  * next one". `context.goodToKnow.highlights.nextAvailableSession` is the
  * field Eventbrite's own page uses to answer that, and covers both series and
  * one-off events, so it's used directly instead of scraping a date picker.
+ * The same series/occurrence gap means `basicInfo.endDate` is only trusted
+ * for a genuine one-off — for a series it's when the whole series ends, not
+ * when this occurrence does, so a series event gets no `end` at all rather
+ * than a wildly wrong one.
  *
  * Also returns the organizer's profile URL, so the caller can look up any
  * other events the same organizer runs.
@@ -323,12 +415,49 @@ async function fetchEventbriteEventDetails(eventUrl) {
 	}
 	if (date.getTime() <= Date.now()) return null;
 
+	const end =
+		!basicInfo.isSeries && basicInfo.endDate?.utc
+			? new Date(basicInfo.endDate.utc)
+			: null;
+
 	return {
 		title: basicInfo.name,
 		url: basicInfo.url ?? eventUrl,
-		date: date.toISOString(),
+		date,
+		end: end && !Number.isNaN(end.getTime()) ? end : null,
+		location: extractEventbriteLocation(context),
 		organizerUrl: basicInfo.organizer?.url ?? null,
 	};
+}
+
+/**
+ * Eventbrite's `__NEXT_DATA__` venue shape is undocumented, and this project
+ * has not captured a live payload to confirm it — unlike the date fields
+ * above, which a previous change already relied on and verified. This reads
+ * from the couple of paths a public event page is expected to use and
+ * returns undefined rather than guessing further; a missing venue degrades
+ * to no `LOCATION` in the eventual calendar file, which is handled
+ * everywhere venue data is consumed. Re-check this against a real payload
+ * before leaning on it further, and update the fixture in
+ * tests/integration/calendar-export.test.ts to match.
+ *
+ * @returns {EventLocation | undefined}
+ */
+function extractEventbriteLocation(context) {
+	if (context?.basicInfo?.isOnlineEvent) return { online: true };
+
+	const venue = context?.venue ?? context?.eventDetails?.venue;
+	if (!venue || typeof venue !== 'object') return undefined;
+
+	const name = typeof venue.name === 'string' ? venue.name : undefined;
+	const address =
+		typeof venue.address?.localizedAddressDisplay === 'string'
+			? venue.address.localizedAddressDisplay
+			: typeof venue.address === 'string'
+				? venue.address
+				: undefined;
+
+	return name || address ? { name, address, online: false } : undefined;
 }
 
 /**
@@ -365,8 +494,8 @@ async function fetchEventbriteNextEvents(eventUrl) {
 	).filter(Boolean);
 
 	return [primary, ...siblings]
-		.sort((a, b) => new Date(a.date) - new Date(b.date))
-		.map(({ title, url, date }) => ({ title, url, date }));
+		.sort((a, b) => a.date.getTime() - b.date.getTime())
+		.map(toOutputEvent);
 }
 
 /**
@@ -421,6 +550,8 @@ async function main() {
 		.map((m) => m.slug)
 		.filter((slug) => !(slug in result))
 		.sort();
+	const allEvents = Object.values(result).flat();
+	const withoutLocation = allEvents.filter((e) => !e.location).length;
 
 	console.log(
 		`[next-events] wrote ${resolved.length}/${meetups.length} events to src/data/next-events.generated.json`,
@@ -428,17 +559,23 @@ async function main() {
 	if (missing.length > 0) {
 		console.log(`[next-events] no upcoming event for: ${missing.join(', ')}`);
 	}
+	if (withoutLocation > 0) {
+		console.log(
+			`[next-events] ${withoutLocation}/${allEvents.length} events have no venue — those won't carry a schema.org location or a LOCATION in their calendar file`,
+		);
+	}
 
-	await writeStepSummary(meetups.length, resolved.length, missing);
+	await writeStepSummary(meetups.length, resolved.length, missing, withoutLocation, allEvents.length);
 }
 
 /**
  * Records the run in the GitHub Actions job summary, so a deploy that quietly
- * resolved fewer events than usual is visible on the run page rather than only
- * in the logs. A failure here is never worth failing the build over, and
- * outside Actions there is no summary file, so this is a no-op locally.
+ * resolved fewer events (or lost venue data) than usual is visible on the run
+ * page rather than only in the logs. A failure here is never worth failing
+ * the build over, and outside Actions there is no summary file, so this is a
+ * no-op locally.
  */
-async function writeStepSummary(total, resolved, missing) {
+async function writeStepSummary(total, resolved, missing, withoutLocation, totalEvents) {
 	const summaryFile = process.env.GITHUB_STEP_SUMMARY;
 	if (!summaryFile) return;
 
@@ -452,6 +589,12 @@ async function writeStepSummary(total, resolved, missing) {
 		lines.push('No upcoming event found for:', '');
 		lines.push(...missing.map((slug) => `- \`${slug}\``));
 		lines.push('');
+	}
+	if (withoutLocation > 0) {
+		lines.push(
+			`**${withoutLocation} of ${totalEvents}** resolved events have no venue — those are ineligible for a schema.org Event rich result and ship no calendar LOCATION.`,
+			'',
+		);
 	}
 
 	try {
