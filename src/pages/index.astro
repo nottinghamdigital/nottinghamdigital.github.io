@@ -63,6 +63,15 @@ const heroDayEvents = heroEvent
 
 const upcomingEventsCount = allNextEvents.length;
 
+// webcal: rather than https: is what tells a calendar app to subscribe
+// (fetch and refresh on its own schedule) instead of just downloading the
+// file once. Built from Astro.site rather than hardcoded, so a fork
+// publishing under a different domain gets the right link automatically.
+const webcalUrl = new URL('/events.ics', Astro.site).toString().replace(
+	/^https?:/,
+	'webcal:',
+);
+
 // One schema.org Event per resolved next event, rendered once as JSON-LD
 // rather than itemscope/itemprop microdata on each card — NextUpHero
 // rewrites its own DOM when an event passes (see promote() there), so
@@ -146,6 +155,14 @@ const description =
 			Visitor stats are <a href={GOATCOUNTER_DASHBOARD}>public</a> — no cookies,
 			no personal data
 		</p>
+		{
+			upcomingEventsCount > 0 && (
+				<p>
+					<a href={webcalUrl}>Subscribe</a> to every upcoming event in one
+					calendar
+				</p>
+			)
+		}
 		<EditModeToggle />
 		<ThemeToggle />
 	</footer>
