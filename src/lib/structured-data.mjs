@@ -17,14 +17,15 @@
 /**
  * @typedef {import('./calendar-links.mjs').NextEvent} NextEvent
  * @typedef {{ id: string, data: { name: string, url: string, summary: string } }} MeetupEntry
+ * @typedef {{ '@context': 'https://schema.org', '@graph': object[] }} JsonLdGraph
  */
 
 /**
  * @param {MeetupEntry[]} meetups
  * @param {Record<string, NextEvent[]>} nextEvents - Keyed by meetup id, as
  *   produced by `src/lib/next-events.mjs`.
- * @returns {object | null} `null` when there are no upcoming events at all,
- *   rather than a `@graph` with no `Event` in it.
+ * @returns {JsonLdGraph | null} `null` when there are no upcoming events at
+ *   all, rather than a `@graph` with no `Event` in it.
  */
 export function eventGraph(meetups, nextEvents) {
 	const meetupsById = new Map(meetups.map((m) => [m.id, m]));
@@ -112,7 +113,7 @@ function schemaLocation(location, eventUrl) {
  * early in the surrounding HTML — `<` is escaped to the six characters `\u003c` (a valid JSON
  * string escape, and invisible to any JSON-LD consumer) to rule that out.
  *
- * @param {object} graph
+ * @param {JsonLdGraph} graph
  * @returns {string}
  */
 export function toJsonLdScript(graph) {

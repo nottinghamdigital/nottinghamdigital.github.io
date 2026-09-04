@@ -121,12 +121,20 @@ function fold(text) {
 /**
  * Unfolds RFC 5545 line continuations (a line starting with a space or tab
  * is a continuation of the previous one) and splits into raw lines.
+ *
+ * @param {string} ics
+ * @returns {string[]}
  */
 export function unfoldIcsLines(ics) {
 	return ics.replace(/\r\n[ \t]/g, '').split(/\r\n|\n/);
 }
 
-/** Un-escapes `\,` `\;` `\n` `\\` — the inverse of `escapeText()` above. */
+/**
+ * Un-escapes `\,` `\;` `\n` `\\` — the inverse of `escapeText()` above.
+ *
+ * @param {string} value
+ * @returns {string}
+ */
 export function unescapeIcsValue(value) {
 	return value
 		.replace(/\\n/gi, '\n')
@@ -142,6 +150,9 @@ export function unescapeIcsValue(value) {
 /**
  * Compact UTC form used in DTSTART/DTEND/DTSTAMP and, via `icsUidFor`, in
  * UIDs and calendar filenames — e.g. `20260928T180000Z`.
+ *
+ * @param {Date | string} value
+ * @returns {string}
  */
 export function formatIcsUtc(value) {
 	const date = value instanceof Date ? value : new Date(value);
@@ -156,21 +167,52 @@ export function formatIcsUtc(value) {
  * same event (so a re-import updates the existing calendar entry instead of
  * duplicating it), distinct across events (including two events for the
  * same group).
+ *
+ * @param {string} slug
+ * @param {Date | string} isoDate
+ * @returns {string}
  */
 export function icsUidFor(slug, isoDate) {
 	return `${slug}-${formatIcsUtc(isoDate)}@nottingham.digital`;
 }
 
 /**
- * A single-line LOCATION value from an `EventLocation`, or undefined when
- * there is nothing to show. An online event with no separate venue renders
- * as "Online" rather than being silently dropped.
+ * A single-line description of an `EventLocation`, or undefined when there
+ * is nothing to show. An online event with no separate venue describes as
+ * "Online" rather than being silently dropped. Exported so
+ * `src/lib/calendar-links.mjs`'s Google/Outlook links describe the same
+ * venue this module's LOCATION does, rather than a second implementation
+ * drifting from this one.
+ *
+ * @param {EventLocation} [location]
+ * @returns {string | undefined}
  */
-function locationText(location) {
+export function locationText(location) {
 	if (!location) return undefined;
 	const parts = [location.name, location.address].filter(Boolean);
 	if (parts.length > 0) return parts.join(', ');
 	return location.online ? 'Online' : undefined;
+}
+
+/**
+ * The end instant for an event that may not have one: the given `end`, or
+ * `date` + `defaultDurationMinutes`. Exported so `calendar-links.mjs`
+ * applies the exact same fallback as `DTEND` here, rather than a second
+ * constant that could drift from this one — `tests/unit/calendar-links.test.ts`
+ * asserts the two agree by calling both.
+ *
+ * @param {{ date: string, end?: string }} event
+ * @param {number} [defaultDurationMinutes]
+ * @returns {Date}
+ */
+export function resolveEnd(
+	event,
+	defaultDurationMinutes = DEFAULT_EVENT_DURATION_MINUTES,
+) {
+	if (event.end) return new Date(event.end);
+	return new Date(
+		new Date(event.date).getTime() + defaultDurationMinutes * 60_000,
+	);
 }
 
 function calendarHeaderLines() {
@@ -189,9 +231,7 @@ function calendarHeaderLines() {
  */
 function eventLines(event, now, defaultDurationMinutes) {
 	const start = new Date(event.date);
-	const end = event.end
-		? new Date(event.end)
-		: new Date(start.getTime() + defaultDurationMinutes * 60_000);
+	const end = resolveEnd(event, defaultDurationMinutes);
 
 	const description = [event.groupName, event.groupSummary, event.url]
 		.filter(Boolean)
@@ -228,6 +268,7 @@ function eventLines(event, now, defaultDurationMinutes) {
  * @param {{ now: Date, defaultDurationMinutes?: number }} opts - `now` is
  *   injected (build time, in production) rather than read from the clock,
  *   so output is deterministic in tests.
+ * @returns {string}
  */
 export function buildEventIcs(
 	event,
@@ -248,6 +289,7 @@ export function buildEventIcs(
  *
  * @param {CalendarEvent[]} events
  * @param {{ now: Date, defaultDurationMinutes?: number, calendarName?: string }} opts
+ * @returns {string}
  */
 export function buildIcs(
 	events,

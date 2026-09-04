@@ -160,7 +160,7 @@ describe('toJsonLdScript', () => {
 			[meetup('a', { name: 'Evil</script><script>alert(1)</script>' })],
 			{ a: [{ title: 'Talk', url: 'https://example.com/a/1', date: '2026-09-28T18:00:00.000Z' }] },
 		);
-		const script = toJsonLdScript(graph);
+		const script = toJsonLdScript(graph!);
 		expect(script).not.toContain('</script>');
 		expect(script).not.toContain('<script>');
 		// Still round-trips to the same data once a JSON-LD consumer parses it —

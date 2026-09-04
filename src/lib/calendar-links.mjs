@@ -61,19 +61,36 @@ export function outlookCalendarUrl(event) {
 }
 
 /**
- * The path (relative to the site root) this event's own `.ics` file is
- * served at — matching `src/pages/calendar/[event].ics.ts`'s
- * `getStaticPaths()`. The start time makes the file content-addressed: a
- * rescheduled event gets a new URL rather than a stale cached body, rather
- * than an index-based name serving a *different* event under a bookmarked
- * link. `siblingIndex` disambiguates the one case where a group can have two
- * events at the same instant — an Eventbrite organizer's sibling series.
+ * The filename stem (no directory, no extension) identifying this event's
+ * calendar file. Exported (rather than folded into `icsPathFor` alone) so
+ * `src/pages/calendar/[event].ics.ts`'s `getStaticPaths()` can compute the
+ * exact same dynamic-route param a card links to — one function, so the
+ * page a link points at and the page Astro actually builds cannot name an
+ * event differently.
+ *
+ * The start time makes the file content-addressed: a rescheduled event gets
+ * a new URL rather than a stale cached body, rather than an index-based
+ * name serving a *different* event under a bookmarked link. `siblingIndex`
+ * disambiguates the one case where a group can have two events at the same
+ * instant — an Eventbrite organizer's sibling series.
  *
  * @param {string} slug - The meetup's content-collection id.
  * @param {NextEvent} event
  * @param {number} [siblingIndex]
  */
-export function icsPathFor(slug, event, siblingIndex = 0) {
+export function icsFileId(slug, event, siblingIndex = 0) {
 	const suffix = siblingIndex > 0 ? `-${siblingIndex + 1}` : '';
-	return `/calendar/${slug}-${formatIcsUtc(event.date)}${suffix}.ics`;
+	return `${slug}-${formatIcsUtc(event.date)}${suffix}`;
+}
+
+/**
+ * The path (relative to the site root) this event's own `.ics` file is
+ * served at.
+ *
+ * @param {string} slug
+ * @param {NextEvent} event
+ * @param {number} [siblingIndex]
+ */
+export function icsPathFor(slug, event, siblingIndex = 0) {
+	return `/calendar/${icsFileId(slug, event, siblingIndex)}.ics`;
 }

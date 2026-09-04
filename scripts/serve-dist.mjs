@@ -24,6 +24,7 @@ const TYPES = {
 	'.svg': 'image/svg+xml',
 	'.png': 'image/png',
 	'.webmanifest': 'application/manifest+json',
+	'.ics': 'text/calendar; charset=utf-8',
 };
 
 async function resolve(pathname) {
