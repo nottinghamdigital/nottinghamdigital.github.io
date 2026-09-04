@@ -106,7 +106,7 @@ these directly and `npm run check` still type-checks them from the JSDoc.
 
 | File | Contents |
 | --- | --- |
-| `src/lib/ics.mjs` | `buildIcs(events, opts)`, `buildEventIcs(event, opts)`, `foldIcsLine`, `escapeIcsText`, `formatIcsUtc`, plus the existing `unfoldIcsLines`/`unescapeIcsValue` moved here |
+| `src/lib/ics.mjs` | `buildIcs(events, opts)`, `buildEventIcs(event, opts)`, the private `property()` line-builder every property goes through, `formatIcsUtc`, plus the existing `unfoldIcsLines`/`unescapeIcsValue` moved here |
 | `src/lib/calendar-links.mjs` | `googleCalendarUrl(event)`, `outlookCalendarUrl(event)`, `icsPathFor(slug, event)` |
 | `src/lib/structured-data.mjs` | `eventGraph(meetups, nextEvents, site)` → the JSON-LD object |
 | `src/lib/next-events.mjs` | `loadNextEvents()` — the read-and-catch currently inlined in `index.astro`, so the page and the `.ics` endpoint share one loader |
@@ -147,10 +147,15 @@ These are the things real clients reject, and each one has a test in §5:
 - **Folding at 75 octets**, continuation lines starting with a single space —
   and folded on *octet* boundaries without splitting a UTF-8 multi-byte
   sequence. Group names contain em dashes and the occasional emoji.
-- **Escaping** of `\` `;` `,` and newlines in every TEXT value, and stripping
-  of control characters. This is not cosmetic: `SUMMARY`, `DESCRIPTION` and
-  `LOCATION` are filled from third-party feed text, so an unescaped `\r\n`
-  in a scraped title is a property-injection hole. Tested explicitly.
+- **One chokepoint for every property line.** `SUMMARY`, `DESCRIPTION` and
+  `LOCATION` are filled from scraped third-party feed text, so escaping is
+  not a convention to remember at each call site: `buildEventIcs` never
+  concatenates a line or accepts pre-built ones. Every line is produced by a
+  single private `property(name, value, params)` helper that escapes `\` `;`
+  `,` and newlines, strips control characters, and folds — so a value
+  physically cannot introduce a second line, and there is no code path that
+  writes a raw one. The escaping rules live in that one function; adding a
+  property later cannot get them wrong by omission.
 - **`UID`** stable and globally unique: `<slug>-<compact start>@nottingham.digital`.
   Stability is what makes a re-import update the existing entry instead of
   duplicating it.
@@ -171,9 +176,13 @@ These are the things real clients reject, and each one has a test in §5:
   the event URL), `URL`, `STATUS:CONFIRMED`, `TRANSP:OPAQUE`, and `LOCATION`
   only when known — an empty `LOCATION:` renders as a blank venue field in
   Outlook rather than no venue.
-- Served as `text/calendar; charset=utf-8`. GitHub Pages maps `.ics` to that
-  already; **`scripts/serve-dist.mjs` does not** — add `'.ics'` to its `TYPES`
-  map or the Playwright check in §5 will see `application/octet-stream`.
+- Served as `text/calendar; charset=utf-8` — the header iOS Safari and
+  Android Chrome use to decide between opening the file in a calendar and
+  showing it as text. GitHub Pages maps `.ics` to that from its standard MIME
+  table, so the published site needs nothing. `scripts/serve-dist.mjs` has
+  its own small `TYPES` map and needs `'.ics'` added to it, so local runs and
+  the Playwright suite behave like production; that lands in the same step as
+  the endpoint (§Order of work, step 4), before anything depends on it.
 
 ### Optional: a whole-site feed
 
@@ -316,8 +325,10 @@ papered over.
 - folding never splits a multi-byte UTF-8 sequence (title with `—` and an
   emoji, asserted byte-wise)
 - escaping of `,` `;` `\` and newlines in `SUMMARY`/`DESCRIPTION`/`LOCATION`
-- **injection**: a title containing `\r\nBEGIN:VEVENT\r\nSUMMARY:evil` produces
-  exactly one `VEVENT` and no injected property
+- **the chokepoint invariant**: a title containing
+  `\r\nBEGIN:VEVENT\r\nSUMMARY:evil` produces exactly one `VEVENT` and no
+  injected property. The `property()` helper is what makes this true; the
+  test is the regression pin on it, not the thing preventing it
 - `UID` identical across two builds of the same event, distinct across events
 - UTC formatting, and `DTEND` = start + 120 minutes when no end is known
 - unknown location omits `LOCATION` entirely rather than emitting an empty one
@@ -361,9 +372,11 @@ shape comes out — no network, same subprocess-against-fixtures approach as
 
 - every card with a next event has an `.add-to-calendar` control with three
   links
-- the `.ics` link returns **200** with `content-type: text/calendar` and a
-  body starting `BEGIN:VCALENDAR` (this is what needs the `serve-dist.mjs`
-  MIME addition)
+- the `.ics` link returns **200** and a body starting `BEGIN:VCALENDAR`.
+  Deliberately no content-type assertion here: locally that would only be
+  reading back `serve-dist.mjs`'s own `TYPES` map, which proves nothing about
+  what visitors get. The `text/calendar` claim is checked where it is real —
+  against the published host, in `check-live-site.mjs` (§6)
 - `time.dt-start[datetime]` matches the card's `data-next-event-date`
 - the page's JSON-LD parses and contains one `Event` per rendered next event
 - **with `javaScriptEnabled: false`**: the `<details>` menu still opens and
@@ -434,8 +447,11 @@ not prove Apple Calendar accepts it. So:
 ## Risks
 
 - **Third-party text lands in a structured format.** Titles and venues come
-  from scraped feeds; escaping is the mitigation and the injection test is
-  what holds it. Same applies to the JSON-LD block — it is serialised with
+  from scraped feeds. Handled by construction rather than by vigilance: the
+  single `property()` helper above is the only thing that can emit an ICS
+  line, so the risk reduces to keeping it that way — a review point for any
+  later change to `ics.mjs`, and pinned by a test. Same applies to the
+  JSON-LD block — it is serialised with
   `JSON.stringify`, never string-concatenated, and rendered with
   `set:html` on a `<script type="application/ld+json">`, with `<` in any
   value escaped to `\u003c` so a scraped title containing `</script>` cannot
@@ -460,7 +476,8 @@ not prove Apple Calendar accepts it. So:
    `ics.test.ts` alongside it.
 3. `src/lib/calendar-links.mjs` + `structured-data.mjs` + `next-events.mjs`,
    with their tests.
-4. The `.ics` endpoint, the `serve-dist.mjs` MIME fix, and `ls dist/calendar/`
+4. The `.ics` endpoint, together with the `serve-dist.mjs` MIME entry so
+   local serving matches production from the start, and `ls dist/calendar/`
    to confirm the emitted filenames.
 5. Card markup: h-event, `<time datetime>`, the `<details>` menu, the icon,
    the styles, the print rule; the same for `NextUpHero` including
