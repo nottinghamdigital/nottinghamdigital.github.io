@@ -54,6 +54,9 @@ npm run check    # type-check components and content
 | `src/components/Logo.astro` | The site wordmark |
 | `src/assets/nd-monogram.svg` | The "nd" mark, traced from the logo artwork |
 | `src/data/analytics.ts` | The GoatCounter endpoint — the only analytics config |
+| `src/lib/ics.mjs` | The RFC 5545 (iCalendar) writer, and reader, behind calendar export |
+| `src/lib/calendar-links.mjs` | Google/Outlook "add to calendar" links and each event's `.ics` path |
+| `src/lib/structured-data.mjs` | The schema.org JSON-LD graph rendered on the homepage |
 | `scripts/check-live-site.mjs` | Daily health check run against the published site |
 | `.github/workflows/deploy.yml` | Build and publish to GitHub Pages |
 | `.github/workflows/monitor.yml` | Daily check that the live site is up and fresh |

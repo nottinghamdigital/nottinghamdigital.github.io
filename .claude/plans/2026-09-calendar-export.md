@@ -491,22 +491,49 @@ shape comes out — no network, same subprocess-against-fixtures approach as
 ### Compatibility — how "supported calendars" gets verified
 
 Automated round-tripping proves we produce what we think we produce; it does
-not prove Apple Calendar accepts it. So:
+not prove Apple Calendar accepts it. Two tiers, and this implementation only
+ever had access to the first:
 
-- **In CI**, the round-trip above. Optionally add `ical.js` as a devDependency
-  and parse with a third-party implementation instead of our own reader — it
-  is dependency-free, which is the bar this repo holds vendors to, and it
-  removes the "our parser agrees with our writer" circularity. Try the
-  in-house reader first; reach for `ical.js` only if the round-trip test feels
-  like it is grading its own homework.
-- **Once, by hand, recorded in this file** as a table: Apple Calendar
-  (macOS + iOS), Google Calendar (import, and the template link), Outlook
-  desktop (Windows + Mac), Outlook Web, Thunderbird, Android (Google Calendar
-  + Samsung Calendar). Plus a run through an external ICS validator.
-  Known gotchas to check for specifically: iOS Safari must open the file in
-  Calendar rather than as text (correct `Content-Type` is what decides this);
-  Android Chrome is the other MIME-sensitive one; Outlook desktop is the
-  strictest about CRLF and folding.
+- **Automated, and done.** `ical.js` (MIT, no further dependencies of its
+  own) is a devDependency purely for `tests/unit/ics.test.ts`'s third describe
+  block, which parses `buildEventIcs()`/`buildIcs()` output with it instead of
+  our own reader — removing the "our parser agrees with our writer"
+  circularity the in-house `unfoldIcsLines`/`unescapeIcsValue` round-trip
+  still has. It confirms: `SUMMARY`/`UID`/`DTSTART`/`DTEND`/`LOCATION` parse to
+  the exact values given, including a folded multi-byte title and a
+  comma-escaped venue; the chokepoint's injection resistance holds against an
+  independent parser, not just our own; and a multi-event `VCALENDAR` yields
+  exactly the right number of `VEVENT`s. This is real evidence the file is
+  well-formed RFC 5545 — `ical.js` is used by real calendar software (it's
+  Mozilla's own parser, originally written for Lightning/Thunderbird), so a
+  file it accepts is meaningfully more likely to be accepted elsewhere too.
+- **By hand, on real devices — not done, and not doable from here.** This
+  plan was executed by an agent in a headless container with no access to
+  Apple Calendar, Outlook desktop, Thunderbird, or an Android phone; claiming
+  that pass would mean fabricating results nobody produced. This step is
+  still real work and still owed before calling the feature done: pull a
+  generated `.ics` URL from a deployed preview and, per client, subscribe or
+  import a downloaded copy and confirm title/time/venue/end-time all show up
+  correctly:
+  - [ ] Apple Calendar — macOS
+  - [ ] Apple Calendar — iOS (confirm the file opens *in* Calendar, not as a
+    text download — this is what a correct `Content-Type: text/calendar`
+    header decides, already covered by `scripts/serve-dist.mjs`'s mapping
+    and, on the published site, by GitHub Pages' own MIME table)
+  - [ ] Google Calendar — both the "Download .ics" import and the
+    Google Calendar template link from the card
+  - [ ] Outlook desktop (Windows or Mac) — the strictest client on CRLF and
+    folding; the most likely to surface a real bug the automated checks missed
+  - [ ] Outlook Web — the template link from the card
+  - [ ] Thunderbird
+  - [ ] Android — Google Calendar and, if available, Samsung Calendar (the
+    other MIME-sensitive platform alongside iOS Safari)
+  - [ ] one file through an external validator (e.g. icalendar.org's) as a
+    second independent opinion beyond `ical.js`
+  
+  Whoever picks this up: check off each row in this file as it's done, so the
+  gap between "automated confidence" and "verified everywhere claimed" stays
+  visible rather than silently assumed closed.
 
 ## 6. Everything else that has to change
 
@@ -588,8 +615,10 @@ not prove Apple Calendar accepts it. So:
    the styles, the print rule; the same for `NextUpHero` including
    `promote()`.
 6. JSON-LD in `index.astro`.
-7. `tests/calendar.spec.ts`, then the by-hand compatibility pass; record the
-   matrix in this file.
+7. `tests/calendar.spec.ts`, the `ical.js` cross-parse in `ics.test.ts`, then
+   the by-hand device pass — the one part of this plan that needs a human at
+   a real device, tracked as a checklist in this file rather than assumed
+   done.
 8. Optional `events.ics` + footer subscription link + the monitor check.
 9. Docs (`README.md`, `CLAUDE.md`), version bump, `npm run test:all` and
    `npm run build` before the PR.

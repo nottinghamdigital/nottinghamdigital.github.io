@@ -98,6 +98,39 @@ overriding the target directory. `tests/integration/process-suggestion.test.ts`
 runs the real script as a subprocess against a temp copy of the meetups to hold
 both of those in place.
 
+**Calendar export is the third pipeline into that generated data.**
+`scripts/fetch-next-events.mjs` widens each resolved event with an optional
+`end` and `location` alongside `title`/`url`/`date`, written into
+`next-events.generated.json` the same as before — both new fields are
+genuinely optional, so an older generated file still renders everything
+downstream. `src/lib/ics.mjs` is the RFC 5545 writer: every property line —
+`SUMMARY`, `DTSTART`, `UID`, the `VCALENDAR` wrapper's own — goes through one
+private `line()` function that escapes, strips control characters and folds,
+so `SUMMARY`/`DESCRIPTION`/`LOCATION` (filled from scraped third-party feed
+text) can't smuggle in a second property or a raw line; `tests/unit/ics.test.ts`
+pins that invariant directly, and cross-parses the output with `ical.js` (an
+independent implementation) rather than only round-tripping through this
+project's own reader. That reader — `unfoldIcsLines`/`unescapeIcsValue` — used
+to live in `fetch-next-events.mjs`'s Luma parser and now lives in `ics.mjs`
+too, imported back into the fetch script, so the module that reads ICS and
+the module that writes it are the same one. `src/lib/calendar-links.mjs`
+builds the Google Calendar/Outlook Web links and each event's `.ics` path
+from the same `resolveEnd()`/`locationText()` helpers `ics.mjs` exports, so
+none of the four places an event's time and venue are shown (the file, the
+two web calendars, the card's own display) can drift from another.
+`src/pages/calendar/[event].ics.ts` and `src/pages/events.ics.ts` are both
+thin shells over that library code — one static file per event, or every
+event in one subscribable feed — and `MeetupCard.astro` walks `nextEvents`
+the same way `[event].ics.ts`'s `getStaticPaths()` does (counting same-instant
+siblings in order) so a card's "Download .ics" link and the file the endpoint
+actually generates for that occurrence can't name it differently.
+`src/lib/structured-data.mjs` builds the schema.org JSON-LD graph rendered
+once in `index.astro`'s `<head>` (via a named `head` slot on `BaseLayout`)
+rather than as microdata on each card, because `NextUpHero`'s `promote()`
+rewrites its own DOM when an event passes — including the hidden
+`dt-end`/`p-location` h-event values, which have no visible element to
+piggyback a fix onto and are easy to miss entirely.
+
 **Categories are the one cross-cutting concept.** `src/data/categories.ts` is the
 single list; `CATEGORY_IDS` feeds the schema's `z.enum()`, so an unknown category
 in a YAML file fails the build. Adding a category requires three coordinated
@@ -157,11 +190,14 @@ which would leave only a POST that cannot execute anything.
 contract with `scripts/check-live-site.mjs`, which fetches the *published* site
 daily from `.github/workflows/monitor.yml` and fails when the site is
 unreachable, the stamp is over 48h old, fewer cards are published than there
-are meetup files, or almost no group resolved an upcoming event. That last check
-exists because `scripts/fetch-next-events.mjs` treats feed failures as
-non-fatal by design, so the next-event feature can degrade to nothing while
-every deploy stays green. Keep the meta tag and the `data-category` /
-`data-next-event-date` attributes on `MeetupCard` — the monitor greps for them.
+are meetup files, almost no group resolved an upcoming event, or `/events.ics`
+(the whole-site calendar feed) is unreachable, wrongly typed, or carries fewer
+`VEVENT`s than the page showed next events. Those last two exist because
+`scripts/fetch-next-events.mjs` treats feed failures as non-fatal by design,
+so both the next-event feature and the calendar export built on top of it can
+degrade to nothing while every deploy stays green. Keep the meta tag and the
+`data-category` / `data-next-event-date` attributes on `MeetupCard` — the
+monitor greps for them.
 
 **Accessibility is load-bearing in the tokens file.** `--color-on-accent` is dark
 ink because white fails AA against the red accent — re-check contrast if the
@@ -226,12 +262,14 @@ accent colours change. Cards carry h-card microformat classes (`h-card`, `p-name
 - `playwright-report/` and `test-results/` are tracked in git rather than
   ignored, so a local test run leaves them dirty and can block `git stash pop`
   or a rebase. `npm run check` is deliberately not in CI: it currently reports
-  3 pre-existing errors — an implicit `any` on the `event` parameter in
-  `src/pages/index.astro`, and two implicit-`any` index expressions in
+  2 pre-existing errors, both implicit-`any` index expressions in
   `tests/unit/apply-suggestion.test.ts` (`parseIssueBody` returns an untyped
-  map). The deprecated `z.string().url()` in the content schema is now a
-  warning rather than an error. Fixing those three is what would let `check`
-  become a CI gate.
+  map). (A third — an implicit `any` on the `event` parameter in
+  `src/pages/index.astro` — went away when that file switched to
+  `loadNextEvents()`'s typed return instead of an inline JSDoc-typed
+  `readFile`.) The deprecated `z.string().url()` in the content schema is now
+  a warning rather than an error. Fixing the remaining two is what would let
+  `check` become a CI gate.
 
 ## Contribution rules that affect edits
 
