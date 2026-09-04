@@ -106,7 +106,7 @@ these directly and `npm run check` still type-checks them from the JSDoc.
 
 | File | Contents |
 | --- | --- |
-| `src/lib/ics.mjs` | `buildIcs(events, opts)`, `buildEventIcs(event, opts)`, the private `property()` line-builder every property goes through, `formatIcsUtc`, plus the existing `unfoldIcsLines`/`unescapeIcsValue` moved here |
+| `src/lib/ics.mjs` | `buildIcs(events, opts)`, `buildEventIcs(event, opts)`, the private `line()` builder every property goes through, `formatIcsUtc`, plus the existing `unfoldIcsLines`/`unescapeIcsValue` moved here |
 | `src/lib/calendar-links.mjs` | `googleCalendarUrl(event)`, `outlookCalendarUrl(event)`, `icsPathFor(slug, event)` |
 | `src/lib/structured-data.mjs` | `eventGraph(meetups, nextEvents, site)` → the JSON-LD object |
 | `src/lib/next-events.mjs` | `loadNextEvents()` — the read-and-catch currently inlined in `index.astro`, so the page and the `.ics` endpoint share one loader |
@@ -151,7 +151,7 @@ These are the things real clients reject, and each one has a test in §5:
   `LOCATION` are filled from scraped third-party feed text, so escaping is
   not a convention to remember at each call site: `buildEventIcs` never
   concatenates a line or accepts pre-built ones. Every line is produced by a
-  single private `property(name, value, params)` helper that escapes `\` `;`
+  single private `line(name, value, opts)` helper that escapes `\` `;`
   `,` and newlines, strips control characters, and folds — so a value
   physically cannot introduce a second line, and there is no code path that
   writes a raw one. The escaping rules live in that one function; adding a
@@ -183,6 +183,102 @@ These are the things real clients reject, and each one has a test in §5:
   its own small `TYPES` map and needs `'.ics'` added to it, so local runs and
   the Playwright suite behave like production; that lands in the same step as
   the endpoint (§Order of work, step 4), before anything depends on it.
+
+### The one function that writes lines
+
+The chokepoint above is the whole mitigation, so it is worth being concrete
+about its shape — including the part that "just escape everything" gets
+wrong:
+
+```js
+const CRLF = '\r\n';
+
+/**
+ * The only function in this module that produces an ICS line. Every
+ * property — SUMMARY, DTSTART, UID, the VCALENDAR wrapper's own — is built
+ * here, so escaping and folding cannot be forgotten at a call site and a
+ * value cannot introduce a line of its own.
+ *
+ * `text: false` is for values that are not RFC 5545 TEXT: URI (`URL`),
+ * DATE-TIME (`DTSTART`), and the structural `BEGIN`/`END`/`VERSION`.
+ * Escaping those as TEXT is not merely unnecessary, it corrupts them — a
+ * comma is legal in a URL and would be emitted as `\,`. They still go
+ * through here, and still have every control character removed, so the
+ * injection property holds for both value types.
+ */
+function line(name, value, { params = {}, text = true } = {}) {
+	const encoded = text ? escapeText(value) : stripControls(value);
+	const paramText = Object.entries(params)
+		.map(([k, v]) => `;${k}=${stripControls(v)}`)
+		.join('');
+	return fold(`${name}${paramText}:${encoded}`);
+}
+
+/**
+ * RFC 5545 TEXT escaping. Order matters twice over: backslashes before the
+ * characters whose escapes introduce one, and the newline rule before
+ * `stripControls`, so a real newline survives as the two characters `\n`
+ * while every other control character is removed.
+ */
+function escapeText(value) {
+	return stripControls(
+		String(value)
+			.replace(/\\/g, '\\\\')
+			.replace(/;/g, '\\;')
+			.replace(/,/g, '\\,')
+			.replace(/\r\n|[\r\n]/g, '\\n'),
+	);
+}
+
+/** Removes every C0 control character and DEL — CR and LF included. */
+function stripControls(value) {
+	return String(value).replace(/[\u0000-\u001f\u007f]/g, '');
+}
+
+/** Folds to 75 octets, never splitting a UTF-8 sequence. */
+function fold(text) {
+	const bytes = Buffer.from(text, 'utf8');
+	if (bytes.length <= 75) return text;
+	const parts = [];
+	for (let start = 0; start < bytes.length; ) {
+		// 75 octets on the first line; 74 after, since the fold's leading space counts.
+		let end = Math.min(start + (start === 0 ? 75 : 74), bytes.length);
+		// Back off any UTF-8 continuation byte (0b10xxxxxx) so a character is never split.
+		while (end < bytes.length && (bytes[end] & 0xc0) === 0x80) end--;
+		parts.push((start === 0 ? '' : ' ') + bytes.subarray(start, end).toString('utf8'));
+		start = end;
+	}
+	return parts.join(CRLF);
+}
+```
+
+`stripControls` strips CR and LF along with everything else, which is what
+makes the non-TEXT path safe: a URL or a parameter value has no escaping
+mechanism to fall back on, so its newlines must simply cease to exist. TEXT
+values reach it having already had theirs converted, so nothing is lost.
+
+`buildEventIcs` is then only assembly, with nothing to get wrong:
+
+```js
+export function buildEventIcs(event, { now, defaultDurationMinutes = 120 }) {
+	const lines = [
+		line('BEGIN', 'VCALENDAR', { text: false }),
+		line('VERSION', '2.0', { text: false }),
+		// … PRODID, CALSCALE, METHOD, BEGIN:VEVENT, UID, DTSTAMP, DTSTART, DTEND
+		line('SUMMARY', event.title),
+		line('URL', event.url, { text: false }),
+	];
+	if (event.location?.name) lines.push(line('LOCATION', event.location.name));
+	// … END:VEVENT, END:VCALENDAR
+	return lines.join(CRLF) + CRLF;
+}
+```
+
+There is no `push` of a template literal anywhere in the module — that is the
+invariant a reviewer checks, and §5 pins it from the outside by asserting
+every emitted line either opens a property (`/^[A-Z][A-Z-]*[;:]/`) or is a
+fold continuation (`/^ /`). A raw line smuggled in by a later change fails
+that whether or not anyone thought to test the value it carried.
 
 ### Optional: a whole-site feed
 
@@ -325,13 +421,21 @@ papered over.
 - folding never splits a multi-byte UTF-8 sequence (title with `—` and an
   emoji, asserted byte-wise)
 - escaping of `,` `;` `\` and newlines in `SUMMARY`/`DESCRIPTION`/`LOCATION`
-- **the chokepoint invariant**: a title containing
+- **the chokepoint invariant**, two ways: a title containing
   `\r\nBEGIN:VEVENT\r\nSUMMARY:evil` produces exactly one `VEVENT` and no
-  injected property. The `property()` helper is what makes this true; the
-  test is the regression pin on it, not the thing preventing it
+  injected property; and *every* line of the output either opens a property
+  or is a fold continuation, which catches a raw line added later without
+  anyone having thought to test the value it carried. The `line()` helper is
+  what makes both true — these are regression pins on it, not the thing
+  preventing the problem
+- the same attempt through a **non-TEXT** value (a `url` containing
+  `\r\nSUMMARY:evil`) is contained too, by removal rather than escaping
 - `UID` identical across two builds of the same event, distinct across events
 - UTC formatting, and `DTEND` = start + 120 minutes when no end is known
 - unknown location omits `LOCATION` entirely rather than emitting an empty one
+- a URL containing a comma survives `URL:` unescaped (the non-TEXT path) while
+  the same comma in `SUMMARY:` is escaped — the two value types cannot be
+  collapsed into one rule, and this is the test that says so
 - `DTSTAMP` comes from the injected `now`
 
 `calendar-links.test.ts`:
@@ -448,9 +552,10 @@ not prove Apple Calendar accepts it. So:
 
 - **Third-party text lands in a structured format.** Titles and venues come
   from scraped feeds. Handled by construction rather than by vigilance: the
-  single `property()` helper above is the only thing that can emit an ICS
+  single `line()` helper above is the only thing that can emit an ICS
   line, so the risk reduces to keeping it that way — a review point for any
-  later change to `ics.mjs`, and pinned by a test. Same applies to the
+  later change to `ics.mjs`, and pinned from the outside by the
+  every-line-is-a-property assertion in §5. Same applies to the
   JSON-LD block — it is serialised with
   `JSON.stringify`, never string-concatenated, and rendered with
   `set:html` on a `<script type="application/ld+json">`, with `<` in any
