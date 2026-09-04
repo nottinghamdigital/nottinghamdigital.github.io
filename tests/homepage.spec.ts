@@ -420,7 +420,10 @@ test.describe('Edit panel', () => {
 		await card.locator('[data-edit-toggle]').click();
 		const panel = card.locator('[data-edit-panel]');
 
-		const name = await card.locator('.p-name').innerText();
+		// .p-name alone would also match a next-event item's own nested h-event
+		// p-name (see MeetupCard.astro) -- .meetup-card__link is specifically
+		// the group's own name link.
+		const name = await card.locator('.meetup-card__link').innerText();
 		await expect(panel.locator('[data-field="name"]')).toHaveValue(name);
 
 		const summary = await card.locator('.p-summary').innerText();
