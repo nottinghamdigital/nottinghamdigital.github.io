@@ -498,7 +498,10 @@ h3 {
 	font-size: var(--text-sm);
 }
 
-.meetup-card__next-events ul {
+/* Direct-child combinator: the add-to-calendar menu below nests its own
+   <ul>/<li> inside each event item, which must not inherit this row-of-events
+   layout or the comma-separator rule two blocks down. */
+.meetup-card__next-events > ul {
 	display: flex;
 	flex: 1;
 	flex-wrap: wrap;
@@ -508,13 +511,14 @@ h3 {
 	padding: 0;
 }
 
-.meetup-card__next-events li {
+.meetup-card__next-events-item {
 	display: flex;
 	flex: 1 1 auto;
 	align-items: center;
+	position: relative;
 }
 
-.meetup-card__next-events li:not(:last-child)::after {
+.meetup-card__next-events-item:not(:last-child)::after {
 	content: ',';
 }
 
@@ -537,13 +541,13 @@ h3 {
 	gap: var(--space-2xs);
 }
 
-.meetup-card__next-events[data-multiple='true'] ul {
+.meetup-card__next-events[data-multiple='true'] > ul {
 	flex-direction: column;
 	align-items: stretch;
 	gap: var(--space-2xs);
 }
 
-.meetup-card__next-events[data-multiple='true'] li::after {
+.meetup-card__next-events[data-multiple='true'] .meetup-card__next-events-item::after {
 	content: none;
 }
 
@@ -556,7 +560,6 @@ h3 {
 	display: inline-flex;
 	align-items: center;
 	flex-shrink: 0;
-	margin-inline-start: auto;
 	padding: 3px 10px;
 	background: var(--category-color);
 	border-radius: var(--radius-pill);
@@ -567,6 +570,75 @@ h3 {
 	letter-spacing: 0.05em;
 	text-transform: uppercase;
 	white-space: nowrap;
+}
+
+/* Add-to-calendar: a <details> disclosure, so the menu works with JavaScript
+   off — the rest of the site's interactive bits only approximate that. The
+   auto margin (moved here from .meetup-card__badge above) keeps this pinned
+   to the row's end whether or not a "This week" badge is also present. */
+.add-to-calendar {
+	position: relative;
+	flex-shrink: 0;
+	margin-inline-start: auto;
+}
+
+.add-to-calendar > summary {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2xs);
+	padding: 2px var(--space-2xs);
+	border-radius: var(--radius-pill);
+	color: var(--color-muted);
+	cursor: pointer;
+	list-style: none;
+}
+
+.add-to-calendar > summary::-webkit-details-marker {
+	display: none;
+}
+
+.add-to-calendar > summary:hover,
+.add-to-calendar[open] > summary {
+	background: color-mix(in srgb, var(--category-color) 12%, transparent);
+	color: var(--category-color);
+}
+
+.add-to-calendar .icon {
+	width: 1em;
+	height: 1em;
+}
+
+.add-to-calendar > ul {
+	position: absolute;
+	inset-inline-end: 0;
+	top: 100%;
+	z-index: 1;
+	margin-top: var(--space-2xs);
+	min-width: 11rem;
+	padding: var(--space-2xs);
+	list-style: none;
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-card);
+	box-shadow: var(--shadow-card);
+}
+
+.add-to-calendar li {
+	display: block;
+}
+
+.add-to-calendar a {
+	display: block;
+	padding: var(--space-2xs) var(--space-xs);
+	border-radius: var(--radius-card);
+	white-space: nowrap;
+	color: var(--color-text);
+	font-weight: 400;
+}
+
+.add-to-calendar a:hover {
+	background: color-mix(in srgb, var(--category-color) 12%, transparent);
+	color: var(--category-color);
 }
 
 .meetup-card__links {

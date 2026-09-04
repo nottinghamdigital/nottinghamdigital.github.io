@@ -1,12 +1,18 @@
 ---
 import { categoryById, type CategoryId } from '../data/categories';
 
+type EventLocation = import('../lib/ics.mjs').EventLocation;
+
 interface EventItem {
 	meetupName: string;
 	category: CategoryId;
 	title: string;
 	url: string;
 	date: string;
+	/** ISO 8601, UTC. Absent when the source gave no end time. */
+	end?: string;
+	/** Absent when the source gave no venue. */
+	location?: EventLocation;
 }
 
 interface Props {
@@ -36,12 +42,12 @@ const moreCount = rest.length;
 <div class="next-up">
 	<span class="next-up__label">Next up</span>
 	<div
-		class="next-up__card"
+		class="next-up__card h-event"
 		data-event-date={first.date}
 		data-primary
 		style={`--category-color: var(--color-category-${first.category});`}
 	>
-		<a class="next-up__link" href={first.url} rel="noopener">
+		<a class="next-up__link u-url" href={first.url} rel="noopener">
 			<span class="next-up__stripe">
 				<span
 					class="icon next-up__icon"
@@ -50,12 +56,20 @@ const moreCount = rest.length;
 				></span>
 			</span>
 			<span class="next-up__body">
-				<span class="next-up__date">{first.formattedDate}</span>
-				<span class="next-up__title">{first.title}</span>
+				<time class="next-up__date dt-start" datetime={first.date}>
+					{first.formattedDate}
+				</time>
+				<span class="next-up__title p-name">{first.title}</span>
 				<span class="next-up__meetup">{first.meetupName}</span>
 			</span>
 			<span class="visually-hidden">Category: {first.categoryLabel}</span>
 		</a>
+		{first.end && <time class="dt-end" datetime={first.end} hidden />}
+		{
+			first.location?.name && (
+				<span class="p-location" hidden>{first.location.name}</span>
+			)
+		}
 		{
 			moreCount > 0 && (
 				<button
@@ -77,7 +91,7 @@ const moreCount = rest.length;
 				{rest.map((e) => (
 					<li class="next-up__more-item">
 						<div
-							class="next-up__card"
+							class="next-up__card h-event"
 							data-event-date={e.date}
 							data-category={e.category}
 							data-icon={e.icon}
@@ -86,9 +100,11 @@ const moreCount = rest.length;
 							data-meetup-name={e.meetupName}
 							data-category-label={e.categoryLabel}
 							data-url={e.url}
+							data-end={e.end ?? ''}
+							data-location-name={e.location?.name ?? ''}
 							style={`--category-color: var(--color-category-${e.category});`}
 						>
-							<a class="next-up__link" href={e.url} rel="noopener">
+							<a class="next-up__link u-url" href={e.url} rel="noopener">
 								<span class="next-up__stripe">
 									<span
 										class="icon next-up__icon"
@@ -97,12 +113,20 @@ const moreCount = rest.length;
 									/>
 								</span>
 								<span class="next-up__body">
-									<span class="next-up__date">{e.formattedDate}</span>
-									<span class="next-up__title">{e.title}</span>
+									<time class="next-up__date dt-start" datetime={e.date}>
+										{e.formattedDate}
+									</time>
+									<span class="next-up__title p-name">{e.title}</span>
 									<span class="next-up__meetup">{e.meetupName}</span>
 								</span>
 								<span class="visually-hidden">Category: {e.categoryLabel}</span>
 							</a>
+							{e.end && <time class="dt-end" datetime={e.end} hidden />}
+							{
+								e.location?.name && (
+									<span class="p-location" hidden>{e.location.name}</span>
+								)
+							}
 						</div>
 					</li>
 				))}
@@ -123,6 +147,31 @@ const moreCount = rest.length;
 			return !Number.isNaN(eventDate) && eventDate <= Date.now();
 		}
 
+		/**
+		 * Creates, updates, or removes a hidden h-event value (dt-end,
+		 * p-location) that has no visible counterpart to fall back on. Returns
+		 * the element actually holding the value (or `insertAfter` if there
+		 * is none now), so a second call can chain off it and keep a stable
+		 * element order rather than every optional element piling up right
+		 * after the link.
+		 */
+		function syncHiddenValue(card, insertAfter, tagName, className, value) {
+			let el = card.querySelector(`${tagName}.${className}`);
+			if (!value) {
+				el?.remove();
+				return insertAfter;
+			}
+			if (!el) {
+				el = document.createElement(tagName);
+				el.className = className;
+				el.hidden = true;
+				insertAfter.after(el);
+			}
+			if (tagName === 'time') el.setAttribute('datetime', value);
+			else el.textContent = value;
+			return el;
+		}
+
 		function promote(primaryCard, sourceCard) {
 			primaryCard.dataset.eventDate = sourceCard.dataset.eventDate;
 			primaryCard.style.setProperty(
@@ -137,13 +186,26 @@ const moreCount = rest.length;
 				icon.style.setProperty('--icon-src', `url(${sourceCard.dataset.icon})`);
 			}
 			const dateEl = link.querySelector('.next-up__date');
-			if (dateEl) dateEl.textContent = sourceCard.dataset.formattedDate ?? '';
+			if (dateEl) {
+				dateEl.textContent = sourceCard.dataset.formattedDate ?? '';
+				// The visible text is only half of what this element carries —
+				// dt-start is read by microformat consumers from `datetime`,
+				// which nothing above touches, and a promoted card that fixed
+				// only the label would describe the event that just ended.
+				dateEl.setAttribute('datetime', sourceCard.dataset.eventDate ?? '');
+			}
 			const titleEl = link.querySelector('.next-up__title');
 			if (titleEl) titleEl.textContent = sourceCard.dataset.title ?? '';
 			const meetupEl = link.querySelector('.next-up__meetup');
 			if (meetupEl) meetupEl.textContent = sourceCard.dataset.meetupName ?? '';
 			const categoryEl = link.querySelector('.visually-hidden');
 			if (categoryEl) categoryEl.textContent = `Category: ${sourceCard.dataset.categoryLabel ?? ''}`;
+
+			// dt-end and p-location have no visible element to piggyback a fix
+			// onto at all, so they're easy to miss entirely — nothing on
+			// screen would look wrong if a promoted card kept the old values.
+			let afterEl = syncHiddenValue(primaryCard, link, 'time', 'dt-end', sourceCard.dataset.end);
+			syncHiddenValue(primaryCard, afterEl, 'span', 'p-location', sourceCard.dataset.locationName);
 		}
 
 		function refresh() {

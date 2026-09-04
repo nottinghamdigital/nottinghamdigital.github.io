@@ -1,11 +1,22 @@
 ---
 import { CATEGORIES, categoryById, type CategoryId } from '../data/categories';
 import { linkIcon } from '../data/link-icons';
+import {
+	googleCalendarUrl,
+	outlookCalendarUrl,
+	icsPathFor,
+} from '../lib/calendar-links.mjs';
+
+type EventLocation = import('../lib/ics.mjs').EventLocation;
 
 interface NextEvent {
 	title: string;
 	url: string;
 	date: string;
+	/** ISO 8601, UTC. Absent when the source gave no end time. */
+	end?: string;
+	/** Absent when the source gave no venue. */
+	location?: EventLocation;
 }
 
 interface Props {
@@ -54,6 +65,22 @@ const isThisWeek = (date: string) =>
 	new Date(date).getTime() - Date.now() <= ONE_WEEK_MS;
 
 const linksAsText = links.map((l) => `${l.label}: ${l.url}`).join('\n');
+
+/**
+ * Same-instant sibling events (an Eventbrite organizer's other series
+ * sharing this group's next start time) need the same disambiguating
+ * `siblingIndex` here as `src/pages/calendar/[event].ics.ts`'s
+ * `getStaticPaths()` assigns them — both walk `nextEvents` in the same
+ * order and count repeats of the same `date`, so a card's "Download .ics"
+ * link always points at the file that endpoint actually generates for that
+ * occurrence, not always the first one.
+ */
+const seenAtInstant = new Map<string, number>();
+const eventsWithIcsHref = (nextEvents ?? []).map((event) => {
+	const siblingIndex = seenAtInstant.get(event.date) ?? 0;
+	seenAtInstant.set(event.date, siblingIndex + 1);
+	return { event, icsHref: icsPathFor(id, event, siblingIndex) };
+});
 ---
 
 <li
@@ -125,17 +152,59 @@ const linksAsText = links.map((l) => `${l.label}: ${l.url}`).join('\n');
 			>
 				<span class="meetup-card__next-events-label">Next:</span>
 				<ul>
-					{nextEvents.map((event) => (
-						<li data-event-date={event.date}>
-							<a href={event.url} rel="noopener">
-								<span class="meetup-card__next-events-date">
+					{eventsWithIcsHref.map(({ event, icsHref }) => (
+						<li
+							class="meetup-card__next-events-item h-event"
+							data-event-date={event.date}
+						>
+							<a class="u-url" href={event.url} rel="noopener">
+								<time
+									class="meetup-card__next-events-date dt-start"
+									datetime={event.date}
+								>
 									{formatDate(event.date)}
+								</time>
+								<span class="meetup-card__next-events-title p-name">
+									{' '}
+									— {event.title}
 								</span>
-								<span class="meetup-card__next-events-title"> — {event.title}</span>
 							</a>
+							{event.end && (
+								<time class="dt-end" datetime={event.end} hidden />
+							)}
+							{event.location?.name && (
+								<span class="p-location" hidden>{event.location.name}</span>
+							)}
 							{isThisWeek(event.date) && (
 								<span class="meetup-card__badge">This week</span>
 							)}
+							<details class="add-to-calendar">
+								<summary aria-label={`Add ${event.title} to your calendar`}>
+									<span
+										class="icon"
+										style="--icon-src: url(/img/calendar-add.svg);"
+										aria-hidden="true"
+									/>
+									Add to calendar
+								</summary>
+								<ul>
+									<li>
+										<a href={googleCalendarUrl(event)} rel="noopener">
+											Google Calendar
+										</a>
+									</li>
+									<li>
+										<a href={outlookCalendarUrl(event)} rel="noopener">
+											Outlook Web
+										</a>
+									</li>
+									<li>
+										<a href={icsHref} download>
+											Download .ics
+										</a>
+									</li>
+								</ul>
+							</details>
 						</li>
 					))}
 				</ul>

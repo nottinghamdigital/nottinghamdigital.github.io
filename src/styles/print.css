@@ -25,7 +25,8 @@
 
 	.filters,
 	.footer,
-	.skip-link {
+	.skip-link,
+	.add-to-calendar {
 		display: none !important;
 	}
 
