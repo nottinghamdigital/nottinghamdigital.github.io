@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import ICAL from 'ical.js';
 import {
 	buildEventIcs,
 	buildIcs,
@@ -316,5 +317,85 @@ describe('buildIcs', () => {
 
 		const withoutName = rawLines(buildIcs([baseEvent()], { now: NOW }));
 		expect(withoutName.some((l) => l.startsWith('X-WR-CALNAME'))).toBe(false);
+	});
+});
+
+// Our own reader (unfoldIcsLines/unescapeIcsValue) agreeing with our own
+// writer proves the two are consistent with each other, not that either is
+// RFC 5545-correct -- ical.js is an independent, widely-used implementation
+// with no shared code or assumptions, so parsing our output with it is a
+// real compliance check rather than the writer grading its own homework.
+describe('buildEventIcs output parses correctly in ical.js (an independent implementation)', () => {
+	function parseFirstVevent(ics: string) {
+		const comp = new ICAL.Component(ICAL.parse(ics));
+		const vevent = comp.getFirstSubcomponent('vevent');
+		if (!vevent) throw new Error('no VEVENT found in parsed ICS');
+		return { vevent, event: new ICAL.Event(vevent) };
+	}
+
+	it('parses a plain event with the expected fields', () => {
+		const ics = buildEventIcs(
+			baseEvent({ location: { name: 'Tech Hub', address: '1 Example St' } }),
+			{ now: NOW },
+		);
+		const { vevent, event } = parseFirstVevent(ics);
+
+		expect(event.summary).toBe('Monthly meetup');
+		expect(event.uid).toBe(
+			icsUidFor('dot-net-notts', '2026-09-28T18:00:00.000Z'),
+		);
+		expect(event.startDate.toJSDate().toISOString()).toBe(
+			'2026-09-28T18:00:00.000Z',
+		);
+		expect(event.endDate.toJSDate().toISOString()).toBe(
+			'2026-09-28T20:00:00.000Z', // default 120-minute duration
+		);
+		expect(vevent.getFirstPropertyValue('location')).toBe(
+			'Tech Hub, 1 Example St',
+		);
+		expect(String(vevent.getFirstPropertyValue('url'))).toBe(
+			'https://www.meetup.com/dotnetnotts/events/123456/',
+		);
+	});
+
+	it('round-trips folded, escaped, and multi-byte text unchanged', () => {
+		const title = '📅 Monthly meetup — a title, with; a backslash\\ and a — dash';
+		const address =
+			'1 Very Long Street Name That Goes On For Quite A While, Nottingham, England, NG1 1AA';
+		const ics = buildEventIcs(
+			baseEvent({
+				title,
+				location: { name: 'Venue, with a comma', address },
+			}),
+			{ now: NOW },
+		);
+		const { vevent, event } = parseFirstVevent(ics);
+
+		expect(event.summary).toBe(title);
+		expect(vevent.getFirstPropertyValue('location')).toBe(
+			`Venue, with a comma, ${address}`,
+		);
+	});
+
+	it('does not let an injected value open a second VEVENT or a raw property', () => {
+		const ics = buildEventIcs(
+			baseEvent({
+				title: 'Evil\r\nBEGIN:VEVENT\r\nSUMMARY:evil\r\nEND:VEVENT',
+			}),
+			{ now: NOW },
+		);
+		const comp = new ICAL.Component(ICAL.parse(ics));
+		expect(comp.getAllSubcomponents('vevent')).toHaveLength(1);
+		const vevent = comp.getFirstSubcomponent('vevent');
+		expect(vevent?.getFirstPropertyValue('summary')).toContain('BEGIN:VEVENT');
+	});
+
+	it('parses a multi-event calendar with the exact event count', () => {
+		const ics = buildIcs(
+			[baseEvent(), baseEvent({ slug: 'codebar', date: '2026-10-01T18:00:00.000Z' })],
+			{ now: NOW, calendarName: 'Nottingham Digital' },
+		);
+		const comp = new ICAL.Component(ICAL.parse(ics));
+		expect(comp.getAllSubcomponents('vevent')).toHaveLength(2);
 	});
 });

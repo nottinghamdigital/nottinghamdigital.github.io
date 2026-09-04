@@ -1,6 +1,6 @@
 {
   "name": "nottinghamdigital",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "private": true,
   "type": "module",
   "description": "The defacto place to find digital events and meetups in Nottingham",
@@ -44,6 +44,7 @@
     "@astrojs/check": "^0.9.10",
     "@playwright/test": "^1.62.1",
     "@types/node": "^22.20.1",
+    "ical.js": "^2.2.1",
     "typescript": "^6.0.3",
     "vitest": "^4.1.11"
   }
