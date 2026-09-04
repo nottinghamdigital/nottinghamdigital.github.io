@@ -64,6 +64,10 @@ const buildTime = new Date().toISOString();
 				}
 			} catch (e) {}
 		</script>
+
+		{/* Per-page head extras — index.astro uses this for its schema.org
+		    JSON-LD block. Empty on any page that doesn't fill it. */}
+		<slot name="head" />
 	</head>
 	<body>
 		<a class="skip-link" href="#meetup-list">Skip to the meetup list</a>
