@@ -329,7 +329,28 @@ test.describe('Past events', () => {
 		expect(state.cardNextEventDate).toBe(second);
 	});
 
-	test('promotes the next same-day event in the hero once the current one has passed', async ({
+	test('carries every upcoming event, not just the soonest day\'s', async ({ page }) => {
+		// The regression this guards: the hero used to be given only the events
+		// sharing the soonest one's calendar day, so once that evening's meetups
+		// had started it had nothing left to promote and hid itself until the
+		// next daily rebuild.
+		await page.goto('/');
+		const { hero, cards } = await page.evaluate(() => {
+			const future = (nodes) =>
+				Array.from(nodes)
+					.map((el) => el.getAttribute('data-event-date') ?? '')
+					.filter((d) => new Date(d).getTime() > Date.now())
+					.sort();
+			return {
+				hero: future(document.querySelectorAll('.next-up [data-event-date]')),
+				cards: future(document.querySelectorAll('[data-next-events] li[data-event-date]')),
+			};
+		});
+		test.skip(cards.length === 0, 'no upcoming events in the generated data');
+		expect(hero).toEqual(cards);
+	});
+
+	test('promotes the next event in the hero once the current one has passed', async ({
 		page,
 	}) => {
 		await page.goto('/');
@@ -344,7 +365,7 @@ test.describe('Past events', () => {
 		const sorted = [...new Set(heroDates.map((d) => new Date(d ?? '').getTime()))].sort(
 			(a, b) => a - b,
 		);
-		test.skip(sorted.length < 2, 'no day currently has 2+ distinct hero event times');
+		test.skip(sorted.length < 2, 'fewer than 2 distinct hero event times in the current data');
 		const between = (sorted[0] + sorted[1]) / 2;
 
 		await page.clock.install({ time: between });
@@ -358,7 +379,33 @@ test.describe('Past events', () => {
 		expect(new Date(primaryDate ?? '').getTime()).toBeGreaterThanOrEqual(sorted[1]);
 	});
 
-	test('hides the hero entirely once every event on its day has passed', async ({ page }) => {
+	test('promotes an event on a later day once the whole of the current day has passed', async ({
+		page,
+	}) => {
+		// The daily rebuild is the only thing that refreshes the hero's data, so
+		// between builds it has to be able to move on to a different day — not
+		// just to a sibling of the event it was built with.
+		await page.goto('/');
+		const days = await page.evaluate(() => {
+			const groups = new Map();
+			for (const card of document.querySelectorAll('.next-up [data-event-date][data-day]')) {
+				const day = card.getAttribute('data-day') ?? '';
+				const date = new Date(card.getAttribute('data-event-date') ?? '').getTime();
+				groups.set(day, Math.max(groups.get(day) ?? 0, date));
+			}
+			return [...groups].sort((a, b) => a[1] - b[1]).map(([day, last]) => ({ day, last }));
+		});
+		test.skip(days.length < 2, 'all hero events fall on one day in the current data');
+
+		await page.clock.install({ time: days[0].last + 60 * 1000 });
+		await page.goto('/');
+
+		const primary = page.locator('.next-up__card[data-primary]');
+		await expect(page.locator('.next-up')).toBeVisible();
+		await expect(primary).toHaveAttribute('data-day', days[1].day);
+	});
+
+	test('hides the hero entirely once every known upcoming event has passed', async ({ page }) => {
 		await page.goto('/');
 		const heroDates = await page.evaluate(() => {
 			const root = document.querySelector('.next-up');
