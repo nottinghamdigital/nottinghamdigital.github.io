@@ -61,8 +61,11 @@ const formatDate = (date: string) =>
 		timeZone: 'Europe/London',
 	});
 const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-const isThisWeek = (date: string) =>
-	new Date(date).getTime() - Date.now() <= ONE_WEEK_MS;
+// Future-only: a stale build must not badge an occurrence that has already passed.
+const isThisWeek = (date: string) => {
+	const delta = new Date(date).getTime() - Date.now();
+	return delta >= 0 && delta <= ONE_WEEK_MS;
+};
 
 const linksAsText = links.map((l) => `${l.label}: ${l.url}`).join('\n');
 
@@ -157,6 +160,9 @@ const eventsWithIcsHref = (nextEvents ?? []).map((event) => {
 							class="meetup-card__next-events-item h-event"
 							data-event-date={event.date}
 						>
+							{isThisWeek(event.date) && (
+								<span class="meetup-card__badge">This week</span>
+							)}
 							<a class="u-url" href={event.url} rel="noopener">
 								<time
 									class="meetup-card__next-events-date dt-start"
@@ -174,9 +180,6 @@ const eventsWithIcsHref = (nextEvents ?? []).map((event) => {
 							)}
 							{event.location?.name && (
 								<span class="p-location" hidden>{event.location.name}</span>
-							)}
-							{isThisWeek(event.date) && (
-								<span class="meetup-card__badge">This week</span>
 							)}
 							<details class="add-to-calendar">
 								<summary aria-label={`Add ${event.title} to your calendar`}>

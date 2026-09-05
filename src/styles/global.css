@@ -515,6 +515,7 @@ h3 {
 	display: flex;
 	flex: 1 1 auto;
 	align-items: center;
+	gap: var(--space-2xs);
 	position: relative;
 }
 
@@ -574,8 +575,7 @@ h3 {
 
 /* Add-to-calendar: a <details> disclosure, so the menu works with JavaScript
    off — the rest of the site's interactive bits only approximate that. The
-   auto margin (moved here from .meetup-card__badge above) keeps this pinned
-   to the row's end whether or not a "This week" badge is also present. */
+   auto margin pins it to the row's end regardless of what precedes it. */
 .add-to-calendar {
 	position: relative;
 	flex-shrink: 0;
