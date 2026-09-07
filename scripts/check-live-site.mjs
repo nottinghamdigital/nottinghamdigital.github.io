@@ -16,6 +16,10 @@
  *  - Enough groups still resolved a next event. scripts/fetch-next-events.mjs
  *    treats feed failures as non-fatal by design, so the feature can degrade to
  *    nothing while every deploy stays green. This is the check that notices.
+ *  - The whole-site calendar feed (/events.ics) is reachable, served as
+ *    text/calendar, and has at least as many VEVENTs as the page has next
+ *    events. This feature degrades exactly the same silent way as the
+ *    next-event data itself, so it needs the same kind of watch.
  *
  * Usage: node scripts/check-live-site.mjs [url]
  *   SITE_URL              override the URL (default https://nottingham.digital)
@@ -42,11 +46,11 @@ const REQUEST_TIMEOUT_MS = 15_000;
  * to be broken — would otherwise hang the job until Actions kills it hours
  * later, reported as a cancelled run rather than a failed check.
  */
-async function fetchSite() {
+async function fetchWithRetries(url) {
 	let lastError;
 	for (let attempt = 1; attempt <= 3; attempt++) {
 		try {
-			const res = await fetch(SITE_URL, {
+			const res = await fetch(url, {
 				headers: { 'User-Agent': USER_AGENT },
 				redirect: 'follow',
 				signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
@@ -88,7 +92,7 @@ async function main() {
 
 	let res;
 	try {
-		res = await fetchSite();
+		res = await fetchWithRetries(SITE_URL);
 	} catch (err) {
 		const reason =
 			err.name === 'TimeoutError'
@@ -151,7 +155,57 @@ async function main() {
 		);
 	}
 
+	await checkCalendarFeed(checks, withNextEvent);
+
 	return report(checks);
+}
+
+/**
+ * The whole-site .ics feed (src/pages/events.ics.ts) degrades exactly the
+ * way the next-event data itself does — silently, one group at a time — so
+ * it gets the same kind of watch: reachable, served as the right content
+ * type, and carrying roughly as many events as the page just showed.
+ *
+ * `expectedEvents` is the page's own count rather than `MIN_NEXT_EVENTS`,
+ * so this check tracks whatever the page actually rendered instead of
+ * independently re-deciding how many events "enough" is.
+ */
+async function checkCalendarFeed(checks, expectedEvents) {
+	const fail = (name, detail) => checks.push({ name, ok: false, detail });
+	const pass = (name, detail) => checks.push({ name, ok: true, detail });
+
+	const feedUrl = new URL('/events.ics', SITE_URL).toString();
+	let res;
+	try {
+		res = await fetchWithRetries(feedUrl);
+	} catch (err) {
+		const reason =
+			err.name === 'TimeoutError'
+				? `no response within ${REQUEST_TIMEOUT_MS / 1000}s`
+				: err.message;
+		fail('Calendar feed', `${feedUrl} → ${reason}`);
+		return;
+	}
+
+	const contentType = res.headers.get('content-type') ?? '';
+	if (!res.ok || !contentType.includes('text/calendar')) {
+		fail(
+			'Calendar feed',
+			`${feedUrl} → HTTP ${res.status}, content-type "${contentType}"`,
+		);
+		return;
+	}
+
+	const ics = await res.text();
+	const veventCount = countMatches(ics, /^BEGIN:VEVENT\r?$/gm);
+	if (veventCount >= expectedEvents) {
+		pass('Calendar feed', `${veventCount} VEVENTs at ${feedUrl}`);
+	} else {
+		fail(
+			'Calendar feed',
+			`only ${veventCount} VEVENTs at ${feedUrl}, but the page showed ${expectedEvents} next events`,
+		);
+	}
 }
 
 /**
