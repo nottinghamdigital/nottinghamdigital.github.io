@@ -15,7 +15,8 @@
     "test:ui": "playwright test --ui",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
-    "test:all": "npm run test:unit && npm test"
+    "test:all": "npm run test:unit && npm test",
+    "render:og-image": "node scripts/render-og-image.mjs"
   },
   "repository": {
     "type": "git",
