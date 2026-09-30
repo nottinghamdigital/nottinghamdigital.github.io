@@ -43,6 +43,17 @@ npm run preview  # serve the built site
 npm run check    # type-check components and content
 ```
 
+### Open Graph image
+
+[`src/assets/social/og-image.html`](src/assets/social/og-image.html) is the
+1200 × 630 source for the social sharing image. After changing it, regenerate
+[`public/img/og-image.png`](public/img/og-image.png) with:
+
+```sh
+npx playwright install chromium # first time only
+npm run render:og-image
+```
+
 ### Project layout
 
 | Path | What it is |
@@ -53,6 +64,8 @@ npm run check    # type-check components and content
 | `src/styles/tokens.css` | **All** colours, fonts and spacing |
 | `src/components/Logo.astro` | The site wordmark |
 | `src/assets/nd-monogram.svg` | The "nd" mark, traced from the logo artwork |
+| `src/assets/social/og-image.html` | Source template for the 1200 × 630 Open Graph image |
+| `scripts/render-og-image.mjs` | Renders the Open Graph image template to `public/img/og-image.png` |
 | `src/data/analytics.ts` | The GoatCounter endpoint — the only analytics config |
 | `scripts/check-live-site.mjs` | Daily health check run against the published site |
 | `.github/workflows/deploy.yml` | Build and publish to GitHub Pages |

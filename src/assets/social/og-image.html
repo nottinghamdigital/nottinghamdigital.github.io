@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;600;700&display=block" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; }
+    body { background: #17191d; color: #eef1f4; font-family: 'Fira Sans', sans-serif; }
+    .orb { position: absolute; border-radius: 50%; background: #132326; }
+    .orb--top { width: 440px; height: 440px; right: -140px; top: -140px; }
+    .orb--bottom { width: 320px; height: 320px; right: -120px; bottom: -90px; }
+    .mark { position: absolute; top: 125px; left: 90px; width: 310px; height: auto;
+      --logo-ink: #eef1f4; --logo-accent: #51c9d8; }
+    .title { position: absolute; top: 350px; left: 99px; margin: 0; font-size: 59px;
+      line-height: 1.15; font-weight: 600; letter-spacing: -.4px; }
+    .title span { color: #51c9d8; }
+    .tagline { position: absolute; top: 430px; left: 99px; margin: 0; color: #aab4c0;
+      font-size: 29px; line-height: 1.2; letter-spacing: .1px; }
+    .rules { position: absolute; top: 500px; left: 98px; display: flex; gap: 8px; }
+    .rules span { display: block; width: 56px; height: 6px; border-radius: 4px; }
+    .rules span:nth-child(1) { background: #009aa8; }
+    .rules span:nth-child(2) { background: #286899; }
+    .rules span:nth-child(3) { background: #a15c2b; }
+    .url { position: absolute; top: 523px; left: 98px; margin: 0; font-size: 25px;
+      line-height: 1.2; font-weight: 700; letter-spacing: -.1px; }
+    .url span { color: #51c9d8; }
+  </style>
+</head>
+<body>
+  <div class="orb orb--top"></div><div class="orb orb--bottom"></div>
+  <!-- Replaced with an inline SVG by scripts/render-og-image.mjs. -->
+  <img class="mark" src="img/nd-monogram.svg" alt="" />
+  <h1 class="title">Nottingham <span>Digital</span></h1>
+  <p class="tagline">Local events for the tech community.</p>
+  <div class="rules"><span></span><span></span><span></span></div>
+  <p class="url"><span class="protocol">https://</span>nottingham<span>.digital</span></p>
+</body>
+</html>
