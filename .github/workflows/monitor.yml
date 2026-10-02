@@ -19,7 +19,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 22.12.0
 
       # Fetches https://nottingham.digital and asserts it is served, recently
       # built, showing every meetup file, and still resolving next events.

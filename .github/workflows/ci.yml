@@ -18,7 +18,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 22.12.0
           cache: npm
 
       - run: npm ci
@@ -61,7 +61,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 22.12.0
           cache: npm
 
       - run: npm ci
@@ -76,7 +76,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 22.12.0
           cache: npm
 
       - run: npm ci
@@ -112,7 +112,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 22.12.0
           cache: npm
 
       - run: npm ci

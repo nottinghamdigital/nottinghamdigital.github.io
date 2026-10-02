@@ -14,7 +14,7 @@ class, stored theme) in `BaseLayout.astro`, and the edit-mode pair
 proposed change to a prefilled GitHub issue. All of it is progressive
 enhancement — nothing here fetches data or renders content.
 
-Requires Node.js >= 20.3 (CI runs 22).
+Requires Node.js >= 22.12 (CI runs 22.12).
 
 ## Commands
 

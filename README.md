@@ -33,7 +33,7 @@ descriptions and titles.
 
 ## Development
 
-Requires Node.js 20.3 or newer.
+Requires Node.js 22.12 or newer.
 
 ```sh
 npm install
