@@ -14,7 +14,13 @@ class, stored theme) in `BaseLayout.astro`, and the edit-mode pair
 proposed change to a prefilled GitHub issue. All of it is progressive
 enhancement — nothing here fetches data or renders content.
 
-Requires Node.js >= 20.3 (CI runs 22).
+Requires Node.js >= 22.19 (CI runs the latest 22.x). The floor has crept up
+through transitive dependencies rather than any deliberate choice: `astro`
+itself requires >=22.12, and `undici` (pulled in transitively by astro's
+`unifont`) raised that further to >=22.19 once a security fix for it was
+taken. Check the actual `engines.node` on `astro` and on whatever resolved
+`undici` version is in `package-lock.json` before lowering this — don't
+just trust the last value that happened to be written down here.
 
 ## Commands
 
