@@ -226,12 +226,15 @@ accent colours change. Cards carry h-card microformat classes (`h-card`, `p-name
 - `playwright-report/` and `test-results/` are tracked in git rather than
   ignored, so a local test run leaves them dirty and can block `git stash pop`
   or a rebase. `npm run check` is deliberately not in CI: it currently reports
-  3 pre-existing errors — an implicit `any` on the `event` parameter in
-  `src/pages/index.astro`, and two implicit-`any` index expressions in
+  5 pre-existing errors — an implicit `any` on the `event` parameter in
+  `src/pages/index.astro`; two implicit-`any` index expressions in
   `tests/unit/apply-suggestion.test.ts` (`parseIssueBody` returns an untyped
-  map). The deprecated `z.string().url()` in the content schema is now a
-  warning rather than an error. Fixing those three is what would let `check`
-  become a CI gate.
+  map); and, added by the "Next up" multi-day fix, an implicit-`any`
+  `nodes` parameter and a resulting `unknown`-typed `el` in the
+  `page.evaluate()` callback in `tests/homepage.spec.ts`'s "carries every
+  upcoming event" test. The deprecated `z.string().url()` in the content
+  schema is now a warning rather than an error. Fixing those five is what
+  would let `check` become a CI gate.
 
 ## Contribution rules that affect edits
 
