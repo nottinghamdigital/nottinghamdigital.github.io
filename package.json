@@ -38,7 +38,7 @@
   },
   "dependencies": {
     "astro": "^7.2.8",
-    "fast-xml-parser": "^5.11.1",
+    "fast-xml-parser": "^5.11.2",
     "yaml": "^2.8.3"
   },
   "devDependencies": {
