@@ -67,6 +67,9 @@ npm run render:og-image
 | `src/assets/social/og-image.html` | Source template for the 1200 × 630 Open Graph image |
 | `scripts/render-og-image.mjs` | Renders the Open Graph image template to `public/img/og-image.png` |
 | `src/data/analytics.ts` | The GoatCounter endpoint — the only analytics config |
+| `src/lib/ics.mjs` | The RFC 5545 (iCalendar) writer, and reader, behind calendar export |
+| `src/lib/calendar-links.mjs` | Google/Outlook "add to calendar" links and each event's `.ics` path |
+| `src/lib/structured-data.mjs` | The schema.org JSON-LD graph rendered on the homepage |
 | `scripts/check-live-site.mjs` | Daily health check run against the published site |
 | `.github/workflows/deploy.yml` | Build and publish to GitHub Pages |
 | `.github/workflows/monitor.yml` | Daily check that the live site is up and fresh |
@@ -134,3 +137,4 @@ Longer-form implementation notes live in [`.claude/plans/`](.claude/plans):
 | [`2026-08-astro-rebuild.md`](.claude/plans/2026-08-astro-rebuild.md) | The move from hand-edited HTML to this Astro build |
 | [`2026-08-content-refresh.md`](.claude/plans/2026-08-content-refresh.md) | Acting on the July 2026 audit of which meetups are still running |
 | [`2026-08-monitoring.md`](.claude/plans/2026-08-monitoring.md) | Adding visitor analytics, live-site monitoring and Lighthouse budgets |
+| [`2026-09-calendar-export.md`](.claude/plans/2026-09-calendar-export.md) | h-event and schema.org markup for event dates, and per-card calendar export |
