@@ -33,7 +33,9 @@ descriptions and titles.
 
 ## Development
 
-Requires Node.js 20.3 or newer.
+Requires Node.js 22.19 or newer (`astro` itself already requires >=22.12;
+`undici`, pulled in transitively, raises that to >=22.19 — see CLAUDE.md
+for the full chain).
 
 ```sh
 npm install
