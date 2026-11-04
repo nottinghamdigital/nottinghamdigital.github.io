@@ -136,6 +136,9 @@ const moreCount = rest.filter((e) => e.day === first.day).length;
 		const toggle = document.querySelector('[data-next-up-toggle]');
 		const list = document.getElementById('next-up-more-list');
 
+		// How long after the event start the card should remain.
+		const GRACE_PERIOD_MS = 3 * 60 * 60 * 1000;
+
 		/**
 		 * The queued events, soonest first — every upcoming event bar the one in
 		 * the card above, whatever day it falls on. Only those sharing the shown
@@ -151,7 +154,7 @@ const moreCount = rest.filter((e) => e.day === first.day).length;
 
 		function hasPassed(card) {
 			const eventDate = new Date(card.dataset.eventDate).getTime();
-			return !Number.isNaN(eventDate) && eventDate <= Date.now();
+			return !Number.isNaN(eventDate) && eventDate + GRACE_PERIOD_MS <= Date.now();
 		}
 
 		function promote(primaryCard, sourceCard) {

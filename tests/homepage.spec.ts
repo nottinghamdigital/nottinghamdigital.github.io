@@ -366,9 +366,10 @@ test.describe('Past events', () => {
 			(a, b) => a - b,
 		);
 		test.skip(sorted.length < 2, 'fewer than 2 distinct hero event times in the current data');
-		const between = (sorted[0] + sorted[1]) / 2;
+		const graceMs = 3 * 60 * 60 * 1000;
+		const afterGrace = sorted[0] + graceMs + 60 * 1000;
 
-		await page.clock.install({ time: between });
+		await page.clock.install({ time: afterGrace });
 		await page.goto('/');
 
 		const hero = page.locator('.next-up');
@@ -397,7 +398,8 @@ test.describe('Past events', () => {
 		});
 		test.skip(days.length < 2, 'all hero events fall on one day in the current data');
 
-		await page.clock.install({ time: days[0].last + 60 * 1000 });
+		// N.B. this needs to be more than GRACE_PERIOD_MS (3h).
+		await page.clock.install({ time: days[0].last + 4 * 60 * 60 * 1000 });
 		await page.goto('/');
 
 		const primary = page.locator('.next-up__card[data-primary]');
@@ -416,8 +418,9 @@ test.describe('Past events', () => {
 				: [];
 		});
 		test.skip(heroDates.length === 0, 'no hero rendered in the current generated data');
+		// N.B. this needs to be more than GRACE_PERIOD_MS (3h).
 		const afterEverything =
-			Math.max(...heroDates.map((d) => new Date(d ?? '').getTime())) + 60 * 60 * 1000;
+			Math.max(...heroDates.map((d) => new Date(d ?? '').getTime())) + 4 * 60 * 60 * 1000;
 
 		await page.clock.install({ time: afterEverything });
 		await page.goto('/');
